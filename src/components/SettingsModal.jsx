@@ -13,6 +13,8 @@ import {
   Sun,
   Monitor,
   AlertCircle,
+  Check,
+  Lock,
 } from "lucide-react";
 import { toast } from "react-toastify";
 import StorageService from "../services/storageService.js";
@@ -41,6 +43,7 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
       localStorage.getItem("limitAlerts") || '{"enabled": true, "threshold": 1}'
     )
   );
+
   const [feedback, setFeedback] = useState("");
   const [isSendingFeedback, setIsSendingFeedback] = useState(false);
 
@@ -564,7 +567,10 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
                 Change Password
               </h3>
               {!user?.passwordIsUserSet && (
-                <div className="mb-4 p-3 bg-blue-100 border border-blue-300 text-blue-800 rounded-lg text-sm">
+                <div
+                  className="mb-4 p-3 bg-blue-100 border border-blue-300 text-blue-800 rounded-lg text-sm"
+                  id="custom-box"
+                >
                   💡 You signed up with OAuth. Set a password below to enable
                   email/password login on any device.
                 </div>
@@ -584,22 +590,28 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
                     />
                   </div>
                 )}
-                <div>
+                <div className="space-y-1 relative group">
                   <label className="block text-sm font-medium text-textMuted mb-2">
                     New Password
                   </label>
                   <div className="relative">
+                    <Lock className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
                     <input
                       type={showPassword ? "text" : "password"}
-                      placeholder="Enter new password (min 8 characters)"
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
-                      className="w-full px-4 py-2 rounded-lg bg-surfaceHighlight border border-border text-textMain focus:outline-none focus:ring-2 focus:ring-primary"
+                      className={`w-full pl-12 pr-10 py-3 bg-surfaceHighlight border rounded-xl text-textMain focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all placeholder-gray-400 ${
+                        newPassword &&
+                        !/^(?=.*[A-Z])(?=.*\d).{6,}$/.test(newPassword)
+                          ? "border-red-300 bg-red-50/10"
+                          : "border-border"
+                      }`}
+                      placeholder="••••••••"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-2.5 text-textMuted hover:text-textMain"
+                      className="absolute right-3 top-3.5 text-textMuted hover:text-textMain cursor-pointer"
                     >
                       {showPassword ? (
                         <EyeOff className="w-5 h-5" />
@@ -608,23 +620,53 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
                       )}
                     </button>
                   </div>
+                  {newPassword.length > 0 && (
+                    <div
+                      className={`text-[10px] mt-1 ml-1 leading-tight transition-colors duration-200 absolute -bottom-5 left-0 w-full ${
+                        !/^(?=.*[A-Z])(?=.*\d).{6,}$/.test(newPassword)
+                          ? "text-red-500 font-medium"
+                          : "text-green-600"
+                      }`}
+                    >
+                      Min 6 chars & include a number and uppercase letter
+                    </div>
+                  )}
                 </div>
-                <div>
+                <div className={`relative ${newPassword.length > 0 && "mt-8"}`}>
                   <label className="block text-sm font-medium text-textMuted mb-2">
                     Confirm New Password
                   </label>
-                  <input
-                    type="password"
-                    placeholder="Confirm new password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full px-4 py-2 rounded-lg bg-surfaceHighlight border border-border text-textMain focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className={`w-full pl-12 pr-10 py-3 bg-surfaceHighlight border rounded-xl text-textMain focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all placeholder-gray-400 ${
+                        confirmPassword && newPassword !== confirmPassword
+                          ? "border-red-300 bg-red-50/10"
+                          : confirmPassword && newPassword === confirmPassword
+                          ? "border-green-300 bg-green-50/10"
+                          : "border-border"
+                      }`}
+                    />
+                    {confirmPassword && newPassword === confirmPassword ? (
+                      <Check className="absolute right-3 top-3.5 w-5 h-5 text-green-500" />
+                    ) : confirmPassword && newPassword !== confirmPassword ? (
+                      <X className="absolute right-3 top-3.5 w-5 h-5 text-red-500" />
+                    ) : null}
+                  </div>
+                  {confirmPassword && newPassword !== confirmPassword && (
+                    <div className="text-[10px] -bottom-5 mt-1 ml-1 text-red-500 font-medium">
+                      Passwords do not match
+                    </div>
+                  )}
                 </div>
                 <button
                   type="submit"
                   disabled={isUpdatingPassword}
-                  className="w-full bg-primary text-white font-semibold py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                  className="w-full bg-primary text-white font-semibold py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors point"
                 >
                   {isUpdatingPassword ? "Updating..." : "Update Password"}
                 </button>
@@ -640,7 +682,7 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
               <div className="space-y-3">
                 <button
                   onClick={() => handleOAuthConnect("Google")}
-                  className="w-full flex items-center justify-between px-4 py-3 rounded-lg bg-surfaceHighlight border border-border hover:bg-surface transition-colors"
+                  className="w-full flex items-center justify-between px-4 py-3 rounded-lg bg-surfaceHighlight border border-border hover:bg-surface transition-colors point"
                 >
                   <span className="text-textMain font-medium">Google</span>
                   <span
@@ -655,7 +697,7 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
                 </button>
                 <button
                   onClick={() => handleOAuthConnect("GitHub")}
-                  className="w-full flex items-center justify-between px-4 py-3 rounded-lg bg-surfaceHighlight border border-border hover:bg-surface transition-colors"
+                  className="w-full flex items-center justify-between px-4 py-3 rounded-lg bg-surfaceHighlight border border-border hover:bg-surface transition-colors point"
                 >
                   <span className="text-textMain font-medium">GitHub</span>
                   <span
@@ -680,7 +722,8 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
               <div className="space-y-3">
                 <button
                   onClick={handleDeleteAccount}
-                  className="w-full px-4 py-3 rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 font-semibold hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors"
+                  className="w-full px-4 py-3 rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 font-semibold hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors point"
+                  id="delete-btn"
                 >
                   Delete Account
                 </button>
@@ -696,10 +739,8 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
         return (
           <div className="space-y-6">
             <div
-              style={{
-                background: "linear-gradient(to right, #f0f9ff, #e0e7ff)",
-              }}
-              className="border border-blue-200 rounded-lg p-6"
+              id="current-plan-box"
+              className="border border-blue-200 rounded-lg p-6 bg-linear-to-r from-sky-50 to-indigo-100"
             >
               <div className="flex items-center justify-between">
                 <div>
@@ -752,7 +793,7 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
 
             <button
               onClick={() => (window.location.href = "/subscription")}
-              className="w-full bg-primary text-white font-semibold py-3 rounded-lg hover:bg-blue-700 transition-colors"
+              className="w-full bg-primary text-white font-semibold py-3 rounded-lg hover:bg-blue-700 transition-colors point"
             >
               View All Plans
             </button>
@@ -785,7 +826,7 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
                       </span>
                     </div>
                     {maxQuizzes !== Infinity && (
-                      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                      <div className="custom-bar w-full bg-gray-200 rounded-full h-2">
                         <div
                           className="h-2 rounded-full bg-blue-500 dark:bg-blue-400 transition-all duration-300"
                           style={{
@@ -807,7 +848,7 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
                       </span>
                     </div>
                     {maxPdfs !== Infinity && (
-                      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                      <div className="custom-bar w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                         <div
                           className="h-2 rounded-full bg-indigo-500 dark:bg-indigo-400 transition-all duration-300"
                           style={{
@@ -839,15 +880,6 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
                   remaining
                 </span>
               </label>
-              {limitAlerts.enabled && (
-                <div className="mt-4 p-3 rounded-lg bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 flex items-start gap-3">
-                  <AlertCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0" />
-                  <p className="text-sm text-blue-700 dark:text-blue-300">
-                    You'll receive notifications when your daily quotas are
-                    running low.
-                  </p>
-                </div>
-              )}
             </div>
           </div>
         );
@@ -929,7 +961,7 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
                   <select
                     value={fontSize}
                     onChange={(e) => setFontSize(e.target.value)}
-                    className="w-full px-4 py-2 rounded-lg bg-surfaceHighlight border border-border text-textMain focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full px-4 py-2 rounded-lg text-textMain bg-surface border border-border focus:outline-none focus:ring-2 focus:ring-primary point"
                   >
                     <option value="small">Small (14px)</option>
                     <option value="normal">Normal (16px)</option>
@@ -951,7 +983,7 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
               <h3 className="text-lg font-bold text-textMain mb-4">
                 Two-Factor Authentication
               </h3>
-              <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-4">
+              <div className="bg-surface border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-4">
                 <p className="text-sm text-textMuted">
                   Add an extra layer of security to your account with time-based
                   OTP (TOTP) or SMS.
@@ -990,7 +1022,7 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
                     setShowTwoFASetup(true);
                     setTwoFASetupStep(1);
                   }}
-                  className="w-full bg-primary text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                  className="w-full bg-primary text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition-colors point"
                 >
                   Enable 2FA
                 </button>
@@ -1001,7 +1033,7 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
                       <p className="text-sm font-medium text-textMain">
                         Choose your 2FA method:
                       </p>
-                      <label className="flex items-center gap-3 p-3 border border-border rounded-lg cursor-pointer hover:bg-surface">
+                      <label className="flex items-center gap-3 p-3 border border-border rounded-lg cursor-pointer hover:bg-surface/30">
                         <input
                           type="radio"
                           name="twoFAMethod"
@@ -1019,7 +1051,7 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
                           </p>
                         </div>
                       </label>
-                      <label className="flex items-center gap-3 p-3 border border-border rounded-lg cursor-pointer hover:bg-surface">
+                      <label className="flex items-center gap-3 p-3 border border-border rounded-lg cursor-pointer hover:bg-surface/30">
                         <input
                           type="radio"
                           name="twoFAMethod"
@@ -1039,7 +1071,7 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
                       </label>
                       <button
                         onClick={handleInitiate2FA}
-                        className="w-full bg-primary text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                        className="w-full bg-primary text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition-colors point"
                       >
                         Next
                       </button>
@@ -1052,7 +1084,7 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
                         Scan this QR code with your authenticator app:
                       </p>
                       {twoFAQRCode && (
-                        <div className="flex justify-center p-4 bg-white rounded-lg border border-border">
+                        <div className="flex justify-center p-4 bg-surface rounded-lg border border-border">
                           <img
                             src={twoFAQRCode}
                             alt="2FA QR Code"
@@ -1060,7 +1092,10 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
                           />
                         </div>
                       )}
-                      <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      <div
+                        id="manual-code"
+                        className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg"
+                      >
                         <p className="text-xs text-yellow-700">
                           <strong>Can't scan?</strong> Enter this code manually:
                         </p>
@@ -1089,14 +1124,14 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
                             setTwoFASetupStep(1);
                             setTwoFAToken("");
                           }}
-                          className="flex-1 px-4 py-2 rounded-lg border border-border text-textMain font-semibold hover:bg-surface transition-colors"
+                          className="flex-1 px-4 py-2 rounded-lg border border-border text-textMain font-semibold hover:bg-surface transition-colors point"
                         >
                           Back
                         </button>
                         <button
                           onClick={handleEnable2FA}
                           disabled={isEnabling2FA}
-                          className="flex-1 bg-primary text-white font-semibold py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                          className="flex-1 bg-primary text-white font-semibold py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors point"
                         >
                           {isEnabling2FA ? "Verifying..." : "Verify & Enable"}
                         </button>
@@ -1212,7 +1247,7 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
                   </>
                 )}
               </div>
-              <button className="w-full mt-4 px-4 py-2 rounded-lg border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 font-semibold hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors">
+              <button className="delete-btn w-full mt-4 px-4 py-2 rounded-lg border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 font-semibold hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors point">
                 Logout from All Devices
               </button>
             </div>
@@ -1280,7 +1315,7 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
                 <button
                   type="submit"
                   disabled={isSendingFeedback || !feedback.trim()}
-                  className="w-full bg-primary text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-primary text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed point"
                 >
                   {isSendingFeedback ? "Sending..." : "Send Feedback"}
                 </button>
@@ -1313,7 +1348,7 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
           </div>
           <button
             onClick={onClose}
-            className="p-2 text-textMuted hover:text-textMain hover:bg-surfaceHighlight rounded-full transition-colors"
+            className="p-2 text-textMuted hover:text-textMain rounded-full transition-colors point hover:bg-surface"
             title="Close"
           >
             <X className="w-5 sm:w-6 h-5 sm:h-6" />
@@ -1323,7 +1358,7 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
         {/* Content */}
         <div className="flex-1 overflow-y-auto flex flex-col md:flex-row">
           {/* Sidebar Tabs */}
-          <div className="hidden md:flex md:w-48 bg-surfaceHighlight border-r gap-4 border-border flex-col p-2">
+          <div className="hidden md:flex md:w-48 bg-surface border-r gap-4 border-border flex-col p-2">
             {tabs.map((tab) => {
               const TabIcon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -1331,10 +1366,10 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-left font-medium ${
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-left font-medium point hover:pl-5.5 ${
                     isActive
-                      ? "bg-primary/10 text-primary shadow-sm"
-                      : "text-textMuted hover:bg-surface hover:text-textMain"
+                      ? "bg-primary/10 text-primary shadow-sm pl-5.5"
+                      : "text-textMuted hover:bg-primary/10 hover:text-primary"
                   }`}
                 >
                   <TabIcon className="w-5 h-5" />

@@ -114,14 +114,12 @@ const TierCard = ({ tier, currentTier, handleUpgrade }) => {
       className={`bg-surface rounded-2xl p-8 border ${
         data.colorClasses.border
       } ${shadowClass} flex flex-col h-full relative overflow-hidden transition-all hover:scale-[1.01] duration-300 ${
-        isCurrent
-          ? "ring-4 ring-offset-2 ring-offset-surfaceHighlight ring-opacity-50"
-          : ""
+        isCurrent ? "ring-4 ring-offset-2 ring-gray-400/50" : ""
       }`}
     >
       {tier === SubscriptionTier.Pro && (
         <>
-          <div className="absolute top-0 inset-x-0 bg-gradient-to-r from-amber-400 to-orange-500 h-1.5"></div>
+          <div className="absolute top-0 inset-x-0 h-1.5"></div>
           <div className="absolute top-4 right-4 bg-amber-100 text-amber-700 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide border border-amber-200 shadow-sm">
             Best Value
           </div>
@@ -148,9 +146,7 @@ const TierCard = ({ tier, currentTier, handleUpgrade }) => {
                 : "text-textMain font-medium"
             }`}
           >
-            <Check
-              className={`w-5 h-5 ${data.colorClasses.check} flex-shrink-0`}
-            />{" "}
+            <Check className={`w-5 h-5 ${data.colorClasses.check} shrink-0`} />{" "}
             {feature}
           </li>
         ))}
@@ -159,7 +155,9 @@ const TierCard = ({ tier, currentTier, handleUpgrade }) => {
       <button
         onClick={() => handleUpgrade(tier)}
         disabled={disabled}
-        className={`w-full py-4 rounded-xl ${data.colorClasses.buttonBg} ${
+        className={`w-full py-4 rounded-xl point ${
+          data.colorClasses.buttonBg
+        } ${
           data.colorClasses.buttonText
         } text-sm font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed mt-auto ${
           isCurrent ? "border border-border/50 shadow-none" : ""

@@ -307,7 +307,7 @@ const QuizGenerator = ({ user, onGenerateSuccess }) => {
           <button
             type="button"
             onClick={() => setMode("text")}
-            className={`flex-1 py-2 text-sm font-medium rounded-lg flex items-center justify-center gap-2 transition-all ${
+            className={`flex-1 py-2 text-sm font-medium rounded-lg flex items-center justify-center gap-2 transition-all cursor-pointer ${
               mode === "text"
                 ? "bg-white text-primary shadow-sm"
                 : "text-textMuted hover:text-textMain"
@@ -318,7 +318,7 @@ const QuizGenerator = ({ user, onGenerateSuccess }) => {
           <button
             type="button"
             onClick={() => setMode("pdf")}
-            className={`flex-1 py-2 text-sm font-medium rounded-lg flex items-center justify-center gap-2 transition-all ${
+            className={`flex-1 py-2 text-sm font-medium rounded-lg flex items-center justify-center gap-2 transition-all cursor-pointer ${
               mode === "pdf"
                 ? "bg-white text-primary shadow-sm"
                 : "text-textMuted hover:text-textMain"
@@ -578,7 +578,7 @@ const QuizGenerator = ({ user, onGenerateSuccess }) => {
                     key={type}
                     type="button"
                     onClick={() => toggleType(type)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all cursor-pointer ${
                       selectedTypes.includes(type)
                         ? "bg-primary/10 border-primary text-primary"
                         : "bg-white border-border text-textMuted hover:border-primary/50"
@@ -631,13 +631,13 @@ const QuizGenerator = ({ user, onGenerateSuccess }) => {
             <button
               type="button"
               onClick={() => setGenerateFlashcards(!generateFlashcards)}
-              className={`relative w-12 h-6 rounded-full transition-colors ${
+              className={`relative w-12 h-6 rounded-full transition-colors cursor-pointer ${
                 generateFlashcards ? "bg-primary" : "bg-gray-300"
               }`}
             >
               <span
                 className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform ${
-                  generateFlashcards ? "translate-x-3" : "translate-x-0"
+                  generateFlashcards ? "translate-x-6" : "translate-x-0"
                 }`}
               ></span>
             </button>
@@ -646,7 +646,7 @@ const QuizGenerator = ({ user, onGenerateSuccess }) => {
           <button
             type="submit"
             disabled={loading || !selectedTypes?.length}
-            className="w-full py-4 bg-primary hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-600/20 disabled:opacity-70 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 text-lg"
+            className="w-full py-4 bg-primary hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-600/20 disabled:opacity-70 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 text-lg cursor-pointer"
           >
             {loading ? (
               <>

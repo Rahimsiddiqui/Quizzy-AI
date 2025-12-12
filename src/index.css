@@ -6,9 +6,9 @@
   --color-secondary: #4f46e5;
   --color-background: #f8fafc;
   --color-surface: #ffffff;
-  --color-surface-highlight: #f1f5f9;
-  --color-text-main: #0f172a;
-  --color-text-muted: #64748b;
+  --color-surfaceHighlight: #f1f5f9;
+  --color-textMain: #0f172a;
+  --color-textMuted: #64748b;
   --color-border: #e2e8f0;
 
   /* Custom Font Family */
@@ -26,9 +26,9 @@
   html.dark * {
     --color-background: #0f172a;
     --color-surface: #1e293b;
-    --color-surface-highlight: #334155;
-    --color-text-main: #f1f5f9;
-    --color-text-muted: #cbd5e1;
+    --color-surfaceHighlight: #334155;
+    --color-textMain: #f1f5f9;
+    --color-textMuted: #cbd5e1;
     --color-border: #475569;
   }
 }
@@ -69,23 +69,9 @@
   }
 }
 
-/* 3D perspective utilities */
-@utility perspective-1000 {
-  perspective: 1000px;
-}
-
-@utility preserve-3d {
-  transform-style: preserve-3d;
-  -webkit-transform-style: preserve-3d;
-}
-
-@utility backface-hidden {
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-}
-
-@utility rotate-y-180 {
-  transform: rotateY(180deg);
+/* Custom Class */
+@utility point {
+  @apply cursor-pointer;
 }
 
 /* Hide number input arrows */
@@ -119,4 +105,38 @@ input[type="number"] {
 }
 .print-only {
   display: none;
+}
+
+html.dark #custom-box {
+  background: #1e3a8a;
+  color: #93c5fd;
+  border-color: #3b82f6;
+}
+
+html.dark .delete-btn {
+  background: rgba(127, 29, 29, 0.3);
+  border-color: #991b1b;
+  color: #f87171;
+
+  &:hover {
+    background: rgba(127, 29, 29, 0.5);
+  }
+}
+
+html.dark #current-plan-box {
+  background: linear-gradient(to right, #0f172a, #1e293b);
+  border-color: #1e40af;
+}
+
+html.dark .custom-bar {
+  background: #374151;
+}
+
+html.dark #manual-code {
+  background: rgba(113, 63, 18, 0.3);
+  border-color: #78350f;
+
+  & p {
+    color: #fa5615de;
+  }
 }

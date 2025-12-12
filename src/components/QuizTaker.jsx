@@ -111,14 +111,14 @@ const QuizResultsView = ({
           {quizFlashcards?.length === 0 || !quiz?.isFlashcardSet ? (
             <button
               onClick={manualCreateFlashcards}
-              className="w-full sm:w-auto px-4 py-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 flex items-center justify-center gap-2 text-sm font-semibold transition-colors border border-indigo-100"
+              className="w-full sm:w-auto px-4 py-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 flex items-center justify-center gap-2 text-sm font-semibold transition-colors border border-indigo-100 point"
             >
               <Layers className="w-4 h-4" /> Create Flashcards
             </button>
           ) : (
             <button
               onClick={() => setActiveTab("flashcards")}
-              className="w-full sm:w-auto px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center justify-center gap-2 text-sm font-bold shadow-md shadow-indigo-200 transition-colors"
+              className="w-full sm:w-auto px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center justify-center gap-2 text-sm font-bold shadow-md shadow-indigo-200 transition-colors point"
             >
               <BookOpen className="w-4 h-4" /> Study Flashcards
             </button>
@@ -196,7 +196,7 @@ const QuizResultsView = ({
 
     <button
       onClick={() => navigate("/")}
-      className="w-full py-4 bg-white hover:bg-surfaceHighlight text-textMain rounded-xl font-bold transition-colors border border-border shadow-sm"
+      className="w-full py-4 bg-white hover:bg-surfaceHighlight text-textMain rounded-xl font-bold transition-colors border border-border shadow-sm point"
     >
       Back to Dashboard
     </button>
@@ -294,14 +294,23 @@ const StudyFlashcards = ({ quizFlashcards, quiz, manualCreateFlashcards }) => {
         <span className="text-textMuted">Tap card to flip</span>
       </div>
 
-      <div className="flex-1 perspective-1000 relative mb-8">
+      <div className="flex-1 relative mb-8" style={{ perspective: "1000px" }}>
         <div
           onClick={() => setFlipped(!flipped)}
-          className={`w-full h-full relative cursor-pointer transition-transform duration-500 transform-style-3d ${
-            flipped ? "rotate-y-180" : ""
-          }`}
+          className="w-full h-full relative cursor-pointer"
+          style={{
+            transformStyle: "preserve-3d",
+            transform: flipped ? "rotateY(180deg)" : "rotateY(0deg)",
+            transition:
+              "transform 500ms cubic-bezier(0.68, -0.55, 0.265, 1.55)",
+            minHeight: "300px",
+          }}
         >
-          <div className="absolute inset-0 backface-hidden bg-white border border-border rounded-2xl shadow-lg p-8 flex flex-col items-center justify-center text-center">
+          {/* Front - Question */}
+          <div
+            className="absolute inset-0 bg-white border border-border rounded-2xl shadow-lg p-8 flex flex-col items-center justify-center text-center"
+            style={{ backfaceVisibility: "hidden" }}
+          >
             <span className="absolute top-4 left-4 text-xs font-bold text-primary tracking-widest uppercase">
               Question
             </span>
@@ -309,7 +318,15 @@ const StudyFlashcards = ({ quizFlashcards, quiz, manualCreateFlashcards }) => {
               {parseBoldText(card.front)}
             </div>
           </div>
-          <div className="absolute inset-0 backface-hidden bg-white border border-border rounded-2xl shadow-lg p-8 flex flex-col items-center justify-center text-center rotate-y-180">
+
+          {/* Back - Answer */}
+          <div
+            className="absolute inset-0 bg-white border border-border rounded-2xl shadow-lg p-8 flex flex-col items-center justify-center text-center"
+            style={{
+              backfaceVisibility: "hidden",
+              transform: "rotateY(180deg)",
+            }}
+          >
             <span className="absolute top-4 left-4 text-xs font-bold text-secondary tracking-widest uppercase">
               Answer
             </span>
@@ -589,7 +606,7 @@ const QuizTaker = ({ user, onComplete, onLimitUpdate }) => {
         <div className="flex bg-surfaceHighlight p-1 rounded-xl mb-8">
           <button
             onClick={() => setActiveTab("exam")}
-            className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${
+            className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all cursor-pointer ${
               activeTab === "exam"
                 ? "bg-white text-primary shadow-sm"
                 : "text-textMuted hover:text-textMain"
@@ -605,7 +622,7 @@ const QuizTaker = ({ user, onComplete, onLimitUpdate }) => {
                 ? "Complete the quiz to unlock flashcards"
                 : ""
             }
-            className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${
+            className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-2 cursor-pointer ${
               activeTab === "flashcards"
                 ? "bg-white text-primary shadow-sm"
                 : status !== "completed"
@@ -690,7 +707,7 @@ const QuizTaker = ({ user, onComplete, onLimitUpdate }) => {
                           <button
                             key={opt}
                             onClick={() => handleAnswer(opt)}
-                            className={`p-4 text-left rounded-xl border transition-all ${
+                            className={`p-4 text-left rounded-xl border transition-all cursor-pointer ${
                               answers[currentQId] === opt
                                 ? "bg-primary/10 border-primary text-primary shadow-sm ring-1 ring-primary font-semibold"
                                 : "bg-white border-border text-textMuted hover:bg-surfaceHighlight hover:text-textMain"
@@ -723,7 +740,7 @@ const QuizTaker = ({ user, onComplete, onLimitUpdate }) => {
                       setCurrentIdx((prev) => Math.max(0, prev - 1))
                     }
                     disabled={currentIdx === 0}
-                    className="px-6 py-2 text-textMuted hover:text-textMain disabled:opacity-30 disabled:hover:text-textMuted"
+                    className="px-6 py-2 text-textMuted hover:text-textMain disabled:opacity-30 disabled:hover:text-textMuted point"
                   >
                     Previous
                   </button>
@@ -732,7 +749,7 @@ const QuizTaker = ({ user, onComplete, onLimitUpdate }) => {
                     <button
                       onClick={handleSubmit}
                       disabled={!hasAnsweredCurrent}
-                      className="px-8 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold flex items-center gap-2 transition-colors shadow-lg shadow-green-600/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
+                      className="px-8 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold flex items-center gap-2 transition-colors shadow-lg shadow-green-600/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none cursor-pointer"
                     >
                       Submit Quiz <Check className="w-5 h-5" />
                     </button>
@@ -740,7 +757,7 @@ const QuizTaker = ({ user, onComplete, onLimitUpdate }) => {
                     <button
                       onClick={handleNext}
                       disabled={!hasAnsweredCurrent}
-                      className="px-8 py-3 bg-primary hover:bg-blue-700 text-white rounded-xl font-bold flex items-center gap-2 transition-colors shadow-lg shadow-blue-600/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
+                      className="px-8 py-3 bg-primary hover:bg-blue-700 text-white rounded-xl font-bold flex items-center gap-2 transition-colors shadow-lg shadow-blue-600/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none cursor-pointer"
                     >
                       Next Question <ArrowRight className="w-5 h-5" />
                     </button>

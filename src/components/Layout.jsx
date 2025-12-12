@@ -100,7 +100,11 @@ const Layout = ({ children, user, onLogout, refreshUser }) => {
       >
         <div className="p-6 border-b border-border">
           <div className="flex items-center gap-2 text-primary font-bold text-xl tracking-tight">
-            <div className="flex items-center justify-between">
+            <div
+              className={`flex items-center justify-between space-x-${
+                !sidebarCollapsed && "2"
+              }`}
+            >
               {!sidebarCollapsed && (
                 <Link
                   to="/"
@@ -116,9 +120,7 @@ const Layout = ({ children, user, onLogout, refreshUser }) => {
               )}
               <button
                 onClick={() => setSidebarCollapsed((s) => !s)}
-                className={`ml-${
-                  !sidebarCollapsed && "8"
-                } p-2 text-textMuted hover:bg-surfaceHighlight cursor-ew-resize rounded-md`}
+                className={`p-2 text-textMuted hover:bg-surfaceHighlight cursor-ew-resize rounded-md`}
                 aria-label={
                   sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"
                 }
@@ -127,7 +129,7 @@ const Layout = ({ children, user, onLogout, refreshUser }) => {
                   xmlns="http://www.w3.org/2000/svg"
                   className="h-4 w-4"
                   viewBox="0 0 20 20"
-                  fill="currentColor"
+                  fill="black"
                 >
                   <path
                     fillRule="evenodd"
@@ -140,7 +142,7 @@ const Layout = ({ children, user, onLogout, refreshUser }) => {
           </div>
         </div>
 
-        <nav className="flex-1 p-2">
+        <nav className="flex-1 px-2 py-4 pb-5">
           {navItems.map((item) => {
             const isActive = location.pathname === item.path;
             return (
@@ -148,12 +150,12 @@ const Layout = ({ children, user, onLogout, refreshUser }) => {
                 key={item.path}
                 to={item.path}
                 title={item.label}
-                className={`flex items-center py-3 px-4 ${
+                className={`flex items-center py-3 px-4 hover:pl-5 ${
                   sidebarCollapsed ? "justify-center" : "gap-3"
-                } rounded-xl transition-all duration-200 mt-4 group ${
+                } rounded-xl transition-all duration-200 mt-2 group ${
                   isActive
-                    ? "bg-primary/10 text-primary font-semibold shadow-inner"
-                    : "text-textMuted hover:bg-surfaceHighlight hover:text-textMain hover:shadow-sm"
+                    ? "bg-primary/10 text-primary font-semibold shadow-inner pl-5"
+                    : "text-textMuted hover:bg-surfaceHighlight hover:text-textMain"
                 }`}
                 aria-current={isActive ? "page" : undefined}
               >
@@ -303,7 +305,7 @@ const Layout = ({ children, user, onLogout, refreshUser }) => {
             onClick={() => setShowSettings(true)}
             className={`flex items-center gap-3 ${
               sidebarCollapsed ? "px-[13px]" : "px-4"
-            } py-2 text-textMuted hover:text-primary transition-colors w-full rounded-xl hover:bg-primary/5 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 mt-5`}
+            } py-2 text-textMuted hover:text-primary transition-colors w-full rounded-xl hover:bg-primary/5 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 mt-5 cursor-pointer`}
           >
             <Settings className="w-5 h-5" />
             {!sidebarCollapsed && <span>Settings</span>}
@@ -314,7 +316,7 @@ const Layout = ({ children, user, onLogout, refreshUser }) => {
             disabled={isLoggingOut}
             className={`flex items-center gap-3 ${
               sidebarCollapsed ? "px-[13px]" : "px-4"
-            } py-2 text-textMuted hover:text-red-600 transition-colors w-full rounded-xl hover:bg-red-50 disabled:opacity-70 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 mt-3`}
+            } py-2 text-textMuted hover:text-red-600 transition-colors w-full rounded-xl hover:bg-red-50 disabled:opacity-70 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 mt-3 cursor-pointer`}
           >
             {isLoggingOut ? (
               <Loader2 className="w-5 h-5 animate-spin text-red-500" />
@@ -361,7 +363,7 @@ const Layout = ({ children, user, onLogout, refreshUser }) => {
 
           <Link
             to="/subscription"
-            className="flex flex-col items-center justify-center px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-textMuted flex-shrink-0 active:scale-95 hover:text-orange-500 transition-colors whitespace-nowrap"
+            className="flex flex-col items-center justify-center px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-textMuted shrink-0 active:scale-95 hover:text-orange-500 transition-colors whitespace-nowrap"
             aria-label="Upgrade Plan"
           >
             <Crown className="w-4 h-4 sm:w-5 sm:h-5 mb-0.5 text-orange-500" />
@@ -372,7 +374,7 @@ const Layout = ({ children, user, onLogout, refreshUser }) => {
 
           <button
             onClick={() => setShowSettings(true)}
-            className="flex flex-col items-center justify-center px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-textMuted flex-shrink-0 active:scale-95 hover:text-primary transition-colors whitespace-nowrap"
+            className="flex flex-col items-center justify-center px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-textMuted shrink-0 active:scale-95 hover:text-primary transition-colors whitespace-nowrap"
             aria-label="Settings"
           >
             <Settings className="w-4 h-4 sm:w-5 sm:h-5 mb-0.5" />
