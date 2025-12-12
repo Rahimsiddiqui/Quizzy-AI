@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "server:dev": "nodemon server/index.js",
     "server:start": "node server/index.js",
-    "start:all": "concurrently \"npm run dev\" \"npm run server:dev\""
+    "dev:all": "concurrently \"npm run dev\" \"npm run server:dev\"",
+    "build:all": "concurrently \"npm run build\" \"npm run server:start[\""
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -53,5 +54,18 @@
     "tailwindcss": "^4.1.17",
     "typescript": "~5.8.2",
     "vite": "^6.2.0"
-  }
+  },
+  "description": "Quizzy AI is an AI-powered learning platform that transforms the way you study by generating personalized quizzes, flashcards, and study materials. It adapts to your progress, focusing on areas that need improvement, and helps maximize learning efficiency and knowledge retention for students, professionals, and lifelong learners.",
+  "main": "postcss.config.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Rahimsiddiqui/Quizzy-AI.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Rahimsiddiqui/Quizzy-AI/issues"
+  },
+  "homepage": "https://github.com/Rahimsiddiqui/Quizzy-AI#readme"
 }

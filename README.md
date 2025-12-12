@@ -1,5 +1,128 @@
-Quizzy AI is an AI-powered learning platform that transforms the way you study by generating personalized quizzes, flashcards, and study materials. It adapts to your progress, focusing on areas that need improvement, and helps maximize learning efficiency and knowledge retention for students, professionals, and lifelong learners.
+# Quizzy AI — AI-Powered Learning Platform
 
-With Quizzy AI, users can instantly create quizzes on any topic with various question types, including multiple-choice, true/false, and fill-in-the-blank. Interactive flashcards reinforce memory through spaced repetition and smart reminders, while real-world examples and case studies help connect theory with practice. The platform tracks performance and provides detailed analytics to monitor progress, all within a modern, mobile-friendly interface. Flexible pricing includes free access and premium plans at $4.99 and $9.99 for advanced AI-powered features.
+Quizzy AI is an AI-powered learning platform that transforms the way you study. It generates personalized quizzes, flashcards, and study materials, adapts to your progress, and focuses on areas that need improvement. Designed for students, professionals, and lifelong learners, Quizzy AI maximizes learning efficiency and knowledge retention.
 
-Unlike traditional study apps, Quizzy AI combines AI-driven content generation, adaptive learning, and interactive study tools to provide a truly personalized learning experience. It empowers users to master knowledge efficiently, stay motivated, and achieve academic or professional goals faster, making it an essential tool for anyone serious about learning.
+---
+
+## ✨ Features
+
+- 📝 **Instant Quiz Generation**  
+  Create quizzes on any topic with multiple question types including multiple-choice, true/false, and fill-in-the-blank
+- 🎴 **Interactive Flashcards**  
+  Reinforce memory with spaced repetition and smart reminders
+- 📊 **Performance Tracking**  
+  Monitor your progress with detailed analytics and insights
+- 📱 **Modern Interface**  
+  Sleek, responsive, and mobile-friendly design
+- 💡 **Adaptive Learning**  
+  Focus on areas where you need improvement
+- 🎯 **Personalized Learning Experience**  
+  Efficiently master knowledge and stay motivated
+- 💎 **Premium Features**  
+  Advanced AI-powered content for enhanced learning
+
+---
+
+## 🧰 Tech Stack
+
+### Frontend
+
+- React
+- Vite
+- Tailwind CSS
+- Framer Motion
+- React Router
+- Lucide Icons
+
+### Backend
+
+- Node.js
+- Express
+- MongoDB + Mongoose
+- JWT Authentication
+- OpenAI / Gemini API
+- CORS
+
+---
+
+## ⚡ Prerequisites
+
+- Node.js **18+**
+- MongoDB Atlas account
+- OpenAI/Gemini API Key
+- Google/GitHub OAuth credentials
+
+---
+
+## 📦 Installation
+
+1. **Clone the repository**
+
+```bash
+git clone <repository-url>
+cd Quizzy-AI
+```
+
+2. **Install Dependencies**
+
+```bash
+npm install
+```
+
+3. **Configure ENV Variables**
+
+```bash
+VITE_GEMINI_API_KEY=your_gemini_api_key
+
+JWT_SECRET=your_jwt_secret
+MONGODB_URI=your_mongodb_uri
+
+VITE_GOOGLE_CLIENT_ID=your_google_client_id
+VITE_GITHUB_CLIENT_ID=your_github_client_id
+VITE_GITHUB_CLIENT_SECRET=your_github_client_secret
+
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+
+GITHUB_CLIENT_ID=your_github_client_id
+GITHUB_CLIENT_SECRET=your_github_client_secret
+```
+
+## ▶️ Running The Project
+
+**Development**
+
+```bash
+npm run dev:all
+```
+
+**Production**
+
+```bash
+npm run build:all
+```
+
+<!-- ## ⌨ Quick Keyboard Shortcuts
+
+| Shortcut                       | Action               |
+| ------------------------------ | -------------------- |
+| `Ctrl+K` / `Cmd+K`             | Open Command Palette |
+| `Ctrl+N` / `Cmd+N`             | Create New Quiz      |
+| `Ctrl+\` / `Cmd+\`             | Toggle Sidebar       |
+| `Right-Click`                  | Open Context Menu    |
+| `Ctrl+B` / `Cmd+B`             | Bold Text            |
+| `Ctrl+I` / `Cmd+I`             | Italic Text          |
+| `Ctrl+U` / `Cmd+U`             | Underline Text       |
+| `Ctrl+Shift+C` / `Cmd+Shift+C` | Inline Code          |
+| `Ctrl+Alt+1` / `Cmd+Alt+1`     | Heading 1            |
+| `Ctrl+Alt+2` / `Cmd+Alt+2`     | Heading 2            |
+| `Ctrl+Alt+3` / `Cmd+Alt+3`     | Heading 3            |
+| `Ctrl+Shift+B` / `Cmd+Shift+B` | Create Flashcard     |
+| `Ctrl+Shift+O` / `Cmd+Shift+O` | Create Quiz          |
+| `Ctrl+C` / `Cmd+C`             | Copy Selection       |
+| `Ctrl+X` / `Cmd+X`             | Cut                  |
+| `Ctrl+V` / `Cmd+V`             | Paste                | -->
+
+## 📄 License
+
+**Private project — All rights reserved.**
