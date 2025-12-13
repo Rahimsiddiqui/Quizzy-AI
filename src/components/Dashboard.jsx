@@ -34,7 +34,7 @@ import { Difficulty } from "../../server/config/types.js";
 
 const KPI_STATS = [
   {
-    label: "Completed Quizzes", // [UX_IMPROVEMENT]: Use clearer label
+    label: "Completed Quizzes",
     dataKey: (quizzes) => quizzes.filter((q) => q.score !== undefined).length,
     icon: <Trophy className="w-6 h-6" />,
     colorClasses: {
@@ -44,7 +44,7 @@ const KPI_STATS = [
     diffClass: false,
   },
   {
-    label: "Avg Score", // [UX_IMPROVEMENT]: Use clearer label
+    label: "Avg Score",
     dataKey: (quizzes, totalAvgScore) =>
       quizzes.filter((q) => q.score !== undefined).length > 0
         ? totalAvgScore + "%"
@@ -84,11 +84,41 @@ const KPI_STATS = [
 
 // Difficulty Badge Styling Constant
 const DIFFICULTY_STYLES = {
-  [Difficulty.Easy]: { bg: "bg-green-100", text: "text-green-600" },
-  [Difficulty.Medium]: { bg: "bg-orange-100", text: "text-orange-600" },
-  [Difficulty.Hard]: { bg: "bg-red-100", text: "text-red-600" },
+  [Difficulty.Easy]: {
+    bg: "bg-green-100 dark:bg-green-900",
+    text: "text-green-600 dark:text-green-300",
+  },
+  [Difficulty.Medium]: {
+    bg: "bg-orange-100 dark:bg-orange-900/60",
+    text: "text-orange-700 dark:text-orange-300",
+  },
+  [Difficulty.Hard]: {
+    bg: "bg-red-100 dark:bg-red-900",
+    text: "text-red-600 dark:text-red-300",
+  },
 };
 // --- END EXTRACTED CONSTANTS ---
+
+function useTailwindDark() {
+  const [isDark, setIsDark] = useState(
+    document.documentElement.classList.contains("dark")
+  );
+
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setIsDark(document.documentElement.classList.contains("dark"));
+    });
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
+  return isDark;
+}
 
 const Dashboard = ({ user }) => {
   const [quizzes, setQuizzes] = useState([]);
@@ -121,6 +151,8 @@ const Dashboard = ({ user }) => {
       setIsLoading(false);
     }
   };
+
+  const isDark = useTailwindDark();
 
   const calculateAdvancedStats = (data) => {
     if (!data || data.length === 0) return;
@@ -197,7 +229,6 @@ const Dashboard = ({ user }) => {
   const handleDelete = (e, id) => {
     e.preventDefault();
     e.stopPropagation();
-    // [UX_IMPROVEMENT]: Replace native confirmation dialog with a modern modal/confirm component (suggested: for a professional app, avoid window.confirm).
     if (
       !window.confirm(
         "Are you sure you want to delete this quiz? This cannot be undone."
@@ -215,11 +246,26 @@ const Dashboard = ({ user }) => {
     }
   };
 
-  const difficultyData = [
-    { name: "Easy", score: stats.avgEasy, fill: "#10b981" },
-    { name: "Medium", score: stats.avgMedium, fill: "#f59e0b" },
-    { name: "Hard", score: stats.avgHard, fill: "#ef4444" },
-  ];
+  const difficultyData = useMemo(
+    () => [
+      {
+        name: "Easy",
+        score: stats.avgEasy,
+        fill: isDark ? "#ffffff" : "#10b981",
+      },
+      {
+        name: "Medium",
+        score: stats.avgMedium,
+        fill: isDark ? "#ffffff" : "#f59e0b",
+      },
+      {
+        name: "Hard",
+        score: stats.avgHard,
+        fill: isDark ? "#ffffff" : "#ef4444",
+      },
+    ],
+    [stats, isDark]
+  );
 
   const typeChartData = useMemo(() => {
     const typeMap = {};
@@ -279,20 +325,9 @@ const Dashboard = ({ user }) => {
           <div className="text-right">
             <div className="text-sm text-textMuted">Current Plan</div>
             <div
-              style={
-                user.tier === "Pro"
-                  ? {
-                      background:
-                        "linear-gradient(to right, #b57ff2, #5e35b1, #e65a8d)",
-                      backgroundSize: "200% 200%",
-                      WebkitBackgroundClip: "text",
-                      WebkitTextFillColor: "transparent",
-                    }
-                  : {}
-              }
               className={`text-lg font-bold ${
                 user.tier === "Pro"
-                  ? "bg-clip-text text-transparent animate-shimmer"
+                  ? "shimmerTextLight dark:shimmerTextDark"
                   : "text-textMain"
               }`}
             >
@@ -343,22 +378,21 @@ const Dashboard = ({ user }) => {
       {/* Analytics Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Difficulty Chart */}
-        <div className="bg-surface p-6 rounded-2xl border border-border shadow-sm h-[350px]">
+        <div className="bg-surface p-6 rounded-2xl border border-border shadow-sm h-87.5">
           <h2 className="text-lg font-bold text-textMain mb-6 text-center md:text-left">
             Performance by Difficulty
           </h2>
-          <div className="h-[250px] w-full">
+          <div className="h-62.5 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={difficultyData}
                 layout="vertical"
                 margin={{ left: 20 }}
               >
-                {/* [DESIGN_IMPROVEMENT]: Consider adding grid lines for better data reading */}
                 <XAxis
                   type="number"
                   domain={[0, 100]}
-                  stroke="#94a3b8"
+                  stroke={isDark ? "#cbd5e1" : "#475569"}
                   fontSize={12}
                   tickLine={false}
                   axisLine={false}
@@ -366,20 +400,24 @@ const Dashboard = ({ user }) => {
                 <YAxis
                   dataKey="name"
                   type="category"
-                  stroke="#475569"
+                  stroke={isDark ? "#cbd5e1" : "#475569"}
                   fontSize={12}
                   tickLine={false}
                   axisLine={false}
                   width={60}
                 />
                 <Tooltip
-                  cursor={{ fill: "#f1f5f9" }}
+                  cursor={{ fill: isDark ? "#334155" : "#f0f9ff" }}
                   contentStyle={{
-                    backgroundColor: "#ffffff",
-                    borderColor: "#e2e8f0",
-                    color: "#0f172a",
+                    backgroundColor: isDark ? "#334155" : "#ffffff",
+                    borderColor: isDark ? "#475569" : "#e2e8f0",
+                    color: isDark ? "#f1f5f9" : "#0f172a",
                     borderRadius: "8px",
                     boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                  }}
+                  itemStyle={{
+                    fontSize: 14,
+                    color: isDark ? "#f1f5f9" : "#0f172a",
                   }}
                 />
                 <Bar dataKey="score" radius={[0, 4, 4, 0]} barSize={30}>
@@ -393,12 +431,12 @@ const Dashboard = ({ user }) => {
         </div>
 
         {/* Question Type Radar */}
-        <div className="bg-surface p-6 rounded-2xl border border-border shadow-sm h-[350px]">
+        <div className="bg-surface p-6 rounded-2xl border border-border shadow-sm h-87.5">
           <h2 className="text-lg font-bold text-textMain mb-2">
             Weak Areas by Question Type
           </h2>
           {typeChartData.length > 0 ? (
-            <div className="h-[280px] w-full">
+            <div className="h-70 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <RadarChart
                   cx="50%"
@@ -406,10 +444,13 @@ const Dashboard = ({ user }) => {
                   outerRadius="80%"
                   data={typeChartData}
                 >
-                  <PolarGrid stroke="#e2e8f0" />
+                  <PolarGrid stroke={isDark ? "#cbd5e1" : "#64748b"} />
                   <PolarAngleAxis
                     dataKey="subject"
-                    tick={{ fill: "#64748b", fontSize: 10 }}
+                    tick={{
+                      fill: isDark ? "#cbd5e1" : "#64748b",
+                      fontSize: 10,
+                    }}
                   />
                   <PolarRadiusAxis
                     angle={30}
@@ -427,11 +468,15 @@ const Dashboard = ({ user }) => {
                   />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: "#ffffff",
-                      borderColor: "#e2e8f0",
-                      color: "#0f172a",
+                      backgroundColor: isDark ? "#334155" : "#ffffff",
+                      borderColor: isDark ? "#475569" : "#e2e8f0",
+                      color: isDark ? "#f1f5f9" : "#0f172a",
                       borderRadius: "8px",
                       boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                    }}
+                    itemStyle={{
+                      fontSize: 14,
+                      color: isDark ? "#f1f5f9" : "#0f172a",
                     }}
                   />
                 </RadarChart>
@@ -518,7 +563,7 @@ const Dashboard = ({ user }) => {
               filteredQuizzes.map((quiz) => (
                 <div
                   key={quiz.id}
-                  className="group relative bg-surfaceHighlight rounded-xl hover:bg-white transition-all duration-300 border border-transparent hover:border-primary/20 hover:shadow-lg hover:-translate-y-1"
+                  className="group relative bg-surfaceHighlight rounded-xl hover:bg-surface transition-all duration-300 border border-transparent hover:border-primary/20 hover:shadow-lg hover:-translate-y-1"
                 >
                   <button
                     type="button"
@@ -535,7 +580,6 @@ const Dashboard = ({ user }) => {
                   >
                     <div className="flex justify-between items-start mb-3">
                       <span
-                        // [DX_IMPROVEMENT]: Use extracted constant for Difficulty Styles
                         className={`px-2 py-0.5 rounded text-xs font-bold ${
                           DIFFICULTY_STYLES[quiz.difficulty]?.bg ||
                           "bg-gray-100"
@@ -554,12 +598,11 @@ const Dashboard = ({ user }) => {
                       {quiz.title}
                     </h3>
                     <p className="text-sm text-textMuted mb-4 flex items-center gap-2">
-                      <span className="bg-slate-200/50 px-1.5 py-0.5 rounded text-xs font-medium">
+                      <span className="bg-slate-200/50 dark:bg-slate-800/40 px-1.5 py-0.5 rounded text-xs font-medium">
                         {quiz.questions.length} Qs
                       </span>
                       <span className="text-xs text-gray-400">•</span>
                       <span className="text-xs">
-                        {/* [UX_IMPROVEMENT]: Use 'short' date format for conciseness */}
                         {new Date(quiz.createdAt).toLocaleDateString("en-US", {
                           month: "short",
                           day: "numeric",
@@ -574,16 +617,15 @@ const Dashboard = ({ user }) => {
                       <span className="text-xs text-textMuted font-medium">
                         {quiz.score !== undefined ? "Score" : "Incomplete"}
                       </span>
-                      {/* [DX_IMPROVEMENT]: Improve score text color readability by simplifying the conditional chain. */}
                       <span
                         className={`text-sm font-bold ${
                           quiz.score === undefined
-                            ? "text-textMain"
+                            ? "text-textMain dark:text-textMainDark"
                             : quiz.score >= 80
-                            ? "text-green-600"
+                            ? "text-green-600 dark:text-green-400"
                             : quiz.score >= 50
-                            ? "text-orange-600"
-                            : "text-red-600"
+                            ? "text-orange-600 dark:text-orange-400"
+                            : "text-red-600 dark:text-red-400"
                         }`}
                       >
                         {quiz.score !== undefined ? `${quiz.score}%` : "-"}

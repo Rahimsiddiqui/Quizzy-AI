@@ -5,11 +5,13 @@ import { v4 as uuidv4 } from "uuid";
 import { EXAM_STYLES } from "../config/constants.js";
 import { SubscriptionTier, QuestionType } from "../config/types.js";
 
+import { toast } from "react-toastify";
+
 // --- Gemini Configuration ---
 const BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models";
 const API_KEY = process.env.GEMINI_API_KEY;
 
-const PRO_MODEL = "gemini-2.5-pro";
+const PRO_MODEL = "gemini-2.5-flash";
 const BASIC_MODEL = "gemini-2.5-flash";
 
 async function retryGeminiRequest(fn, retries = 5, delay = 1500) {

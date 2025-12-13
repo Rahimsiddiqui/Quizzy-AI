@@ -137,43 +137,40 @@ const Overview = ({ user }) => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <StatCard
           icon={Trophy}
-          title="Quizzes Completed"
+          title="Completed Quizzes"
           value={completedQuizzes.length}
-          bgColorClass="bg-blue-600/10"
-          textColorClass="text-blue-700"
+          bgColorClass="bg-blue-100 dark:bg-blue-900"
+          textColorClass="text-blue-600 dark:text-blue-300"
           diffClass={false}
         />
         <StatCard
           icon={Target}
           title="Avg Score"
           value={avgScore ? avgScore + "%" : "N/A"}
-          bgColorClass="bg-green-600/10"
-          textColorClass="text-green-700"
+          bgColorClass="bg-green-100 dark:bg-green-900"
+          textColorClass="text-green-600 dark:text-green-300"
           diffClass={false}
         />
         <StatCard
           icon={Calendar}
           title="Joined Since"
           value={formatQuizDate(user?.limits?.lastReset ?? Date.now())}
-          bgColorClass="bg-purple-600/10"
-          textColorClass="text-purple-700"
+          bgColorClass="bg-purple-100 dark:bg-purple-900"
+          textColorClass="text-purple-600 dark:text-purple-300"
           diffClass={true}
         />
       </div>
 
-      <div
-        className="p-8 rounded-3xl border border-indigo-100 shadow-lg relative overflow-hidden group"
-        style={{ background: "linear-gradient(to right, #eef2ff, #eef2ff)" }}
-      >
+      <div className="p-8 rounded-3xl border border-indigo-100 dark:border-indigo-700/80 shadow-lg relative overflow-hidden group bg-linear-to-r from-[#e6e9f3] to-[#eef2ff] dark:bg-linear-to-r dark:from-[#1e293b] dark:to-[#0f172a]">
         <div className="flex flex-col md:flex-row items-start gap-6 relative z-10">
-          <div className="p-4 bg-indigo-600 text-white rounded-2xl shadow-xl shadow-indigo-200 shrink-0">
+          <div className="p-4 bg-indigo-600 text-white rounded-2xl shadow-xl shadow-indigo-200 shrink-0 dark:shadow-indigo-900">
             <Sparkles className="w-8 h-8" />
           </div>
           <div className="flex-1">
             <h2 className="text-xl font-bold text-textMain mb-3 flex items-center gap-2">
               AI Performance Coach
               {loading && (
-                <span className="text-xs font-normal text-indigo-600 animate-pulse">
+                <span className="text-xs font-normal text-indigo-600 dark:text-indigo-400 animate-pulse">
                   Analyzing...
                 </span>
               )}
@@ -184,12 +181,12 @@ const Overview = ({ user }) => {
                 aria-live="polite"
                 aria-label="Loading AI review"
               >
-                <div className="h-4 bg-indigo-200 rounded w-full animate-pulse"></div>
-                <div className="h-4 bg-indigo-200 rounded w-11/12 animate-pulse"></div>
-                <div className="h-4 bg-indigo-200 rounded w-4/6 animate-pulse"></div>
+                <div className="h-4 bg-indigo-200 dark:bg-indigo-800 rounded w-full animate-pulse"></div>
+                <div className="h-4 bg-indigo-200 dark:bg-indigo-800 rounded w-11/12 animate-pulse"></div>
+                <div className="h-4 bg-indigo-200 dark:bg-indigo-800 rounded w-4/6 animate-pulse"></div>
               </div>
             ) : (
-              <div className="prose prose-indigo text-gray-700 text-lg leading-relaxed font-medium whitespace-pre-line">
+              <div className="prose prose-indigo text-gray-700 dark:text-gray-300 text-lg leading-relaxed font-medium whitespace-pre-line">
                 {completedQuizzes.length > 0 ? (
                   <>{formatReviewText(aiReview)}</>
                 ) : (
@@ -234,12 +231,12 @@ const Overview = ({ user }) => {
                   return (
                     <tr
                       key={q?.id}
-                      className="hover:bg-slate-50 transition-colors group cursor-pointer"
+                      className="hover:bg-slate-50 dark:hover:bg-slate-900/30 transition-colors group cursor-pointer"
                       onClick={() =>
                         (q?._id || q?.id) && handleRowClick(q._id || q.id)
                       }
                     >
-                      <td className="p-5 pl-6 font-semibold text-textMain group-hover:text-primary transition-colors">
+                      <td className="p-5 pl-6 font-semibold text-textMain group-hover:text-primary dark:group-hover:text-blue-400 transition-colors">
                         {truncateText(q?.title ?? "", 40)}
                       </td>
                       <td className="p-5 text-textMuted text-center whitespace-nowrap">
@@ -249,10 +246,10 @@ const Overview = ({ user }) => {
                         <span
                           className={`px-2.5 py-1 rounded-lg text-xs font-bold inline-flex items-center gap-1.5 ${
                             q?.difficulty === "Easy"
-                              ? "bg-green-100 text-green-700"
+                              ? "bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300"
                               : q?.difficulty === "Medium"
-                              ? "bg-orange-100 text-orange-700"
-                              : "bg-red-100 text-red-700"
+                              ? "bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300"
+                              : "bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300"
                           }`}
                         >
                           <span

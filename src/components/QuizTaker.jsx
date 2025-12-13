@@ -113,7 +113,7 @@ const QuizResultsView = ({
           {quizFlashcards?.length === 0 || !quiz?.isFlashcardSet ? (
             <button
               onClick={manualCreateFlashcards}
-              className="w-full sm:w-auto px-4 py-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 flex items-center justify-center gap-2 text-sm font-semibold transition-colors border border-indigo-100 point"
+              className="w-full sm:w-auto px-4 py-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 dark:bg-indigo-900 dark:text-indigo-300 dark:hover:bg-indigo-800 flex items-center justify-center gap-2 text-sm font-semibold transition-colors border border-indigo-100 dark:border-indigo-700 point"
             >
               <Layers className="w-4 h-4" /> Create Flashcards
             </button>
@@ -570,7 +570,7 @@ const QuizTaker = ({ user, onComplete, onLimitUpdate }) => {
                   quiz.difficulty === "Easy"
                     ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
                     : quiz.difficulty === "Medium"
-                    ? "bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300"
+                    ? "bg-orange-100 text-orange-700 dark:bg-orange-900/60 dark:text-orange-300"
                     : "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300"
                 }
 `}

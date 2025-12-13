@@ -567,10 +567,7 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
                 Change Password
               </h3>
               {!user?.passwordIsUserSet && (
-                <div
-                  className="mb-4 p-3 bg-blue-100 border border-blue-300 text-blue-800 rounded-lg text-sm"
-                  id="custom-box"
-                >
+                <div className="mb-4 p-3 bg-blue-100 border border-blue-300 text-blue-800 rounded-lg text-sm dark:bg-blue-900 dark:text-blue-300 dark:border-blue-500">
                   💡 You signed up with OAuth. Set a password below to enable
                   email/password login on any device.
                 </div>
@@ -688,8 +685,8 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
                   <span
                     className={`text-xs px-3 py-1 rounded-full font-medium ${
                       connectedAccounts?.google
-                        ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
-                        : "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
+                        ? "bg-green-100 dark:bg-green-800 text-green-700 dark:text-green-300"
+                        : "bg-blue-100 dark:bg-blue-800/70 text-blue-700 dark:text-blue-300"
                     }`}
                   >
                     {connectedAccounts?.google ? "Connected" : "Connect"}
@@ -703,8 +700,8 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
                   <span
                     className={`text-xs px-3 py-1 rounded-full font-medium ${
                       connectedAccounts?.github
-                        ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
-                        : "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
+                        ? "bg-green-100 dark:bg-green-800 text-green-700 dark:text-green-300"
+                        : "bg-blue-100 dark:bg-blue-800/70 text-blue-700 dark:text-blue-300"
                     }`}
                   >
                     {connectedAccounts?.github ? "Connected" : "Connect"}
@@ -738,10 +735,7 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
       case "subscription":
         return (
           <div className="space-y-6">
-            <div
-              id="current-plan-box"
-              className="border border-blue-200 rounded-lg p-6 bg-linear-to-r from-sky-50 to-indigo-100"
-            >
+            <div className="border border-blue-200 rounded-lg p-6 bg-linear-to-r from-sky-50 to-indigo-100 dark:bg-linear-to-r dark:from-slate-900/50 dark:to-slate-800/50">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-textMuted">Current Plan</p>
@@ -752,10 +746,10 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
                 <div
                   className={`px-4 py-2 rounded-full font-semibold ${
                     user?.tier === "Pro"
-                      ? "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400"
+                      ? "bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-500"
                       : user?.tier === "Basic"
-                      ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
-                      : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                      ? "bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-500"
+                      : "bg-gray-100 dark:bg-gray-700/80 text-gray-700 dark:text-gray-400"
                   }`}
                 >
                   Active
@@ -826,7 +820,7 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
                       </span>
                     </div>
                     {maxQuizzes !== Infinity && (
-                      <div className="custom-bar w-full bg-gray-200 rounded-full h-2">
+                      <div className="dark:bg-[#374151] w-full bg-gray-200 rounded-full h-2">
                         <div
                           className="h-2 rounded-full bg-blue-500 dark:bg-blue-400 transition-all duration-300"
                           style={{
@@ -848,7 +842,7 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
                       </span>
                     </div>
                     {maxPdfs !== Infinity && (
-                      <div className="custom-bar w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                      <div className="dark:bg-[#374151] w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                         <div
                           className="h-2 rounded-full bg-indigo-500 dark:bg-indigo-400 transition-all duration-300"
                           style={{
@@ -1092,14 +1086,11 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
                           />
                         </div>
                       )}
-                      <div
-                        id="manual-code"
-                        className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg"
-                      >
-                        <p className="text-xs text-yellow-700">
+                      <div className="p-3 bg-yellow-50 dark:bg-[rgba(113, 63, 18, 0.3)] border border-yellow-200 dark:border-[#78350f] rounded-lg">
+                        <p className="text-xs text-yellow-700 dark:text-[#fa5615de]">
                           <strong>Can't scan?</strong> Enter this code manually:
                         </p>
-                        <p className="text-sm font-mono font-bold text-yellow-900 mt-1 break-all">
+                        <p className="text-sm font-mono font-bold text-yellow-900 dark:text-[#fa5615de] mt-1 break-all">
                           {twoFASecret}
                         </p>
                       </div>
@@ -1211,7 +1202,7 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
                       • {window.location.hostname}
                     </p>
                   </div>
-                  <span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-3 py-1 rounded-full">
+                  <span className="text-xs bg-green-100 dark:bg-green-800 text-green-700 dark:text-green-300 px-3 py-1 rounded-full">
                     Active
                   </span>
                 </div>
@@ -1266,7 +1257,7 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
                   href="https://github.com"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full flex items-center justify-between p-4 rounded-lg bg-surfaceHighlight border border-border hover:border-primary hover:bg-surface transition-colors"
+                  className="w-full flex items-center justify-between p-4 rounded-lg bg-surfaceHighlight border border-border hover:bg-surface transition-colors"
                 >
                   <span className="text-textMain font-medium">
                     Help Center & FAQs
@@ -1277,7 +1268,7 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
                   href="https://twitter.com"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full flex items-center justify-between p-4 rounded-lg bg-surfaceHighlight border border-border hover:border-primary hover:bg-surface transition-colors"
+                  className="w-full flex items-center justify-between p-4 rounded-lg bg-surfaceHighlight border border-border hover:bg-surface transition-colors"
                 >
                   <span className="text-textMain font-medium">
                     Contact Support
@@ -1288,7 +1279,7 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
                   href="https://github.com/issues"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full flex items-center justify-between p-4 rounded-lg bg-surfaceHighlight border border-border hover:border-primary hover:bg-surface transition-colors"
+                  className="w-full flex items-center justify-between p-4 rounded-lg bg-surfaceHighlight border border-border hover:bg-surface transition-colors"
                 >
                   <span className="text-textMain font-medium">
                     Report a Bug
@@ -1368,8 +1359,8 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-left font-medium point hover:pl-5.5 ${
                     isActive
-                      ? "bg-primary/10 text-primary shadow-sm pl-5.5"
-                      : "text-textMuted hover:bg-primary/10 hover:text-primary"
+                      ? "bg-primary/10 text-primary dark:text-blue-400 shadow-sm pl-5.5"
+                      : "text-textMuted hover:bg-surfaceHighlight"
                   }`}
                 >
                   <TabIcon className="w-5 h-5" />

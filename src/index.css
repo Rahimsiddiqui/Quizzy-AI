@@ -76,6 +76,27 @@
   @apply cursor-pointer;
 }
 
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.shimmerTextLight {
+  background: linear-gradient(to right, #b57ff2, #5e35b1, #e65a8d);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 6s linear infinite;
+}
+
+.shimmerTextDark {
+  background: linear-gradient(to right, #8b5cf6, #6b21a8, #db2777);
+}
+
 /* Hide number input arrows */
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
@@ -109,12 +130,6 @@ input[type="number"] {
   display: none;
 }
 
-html.dark #custom-box {
-  background: #1e3a8a;
-  color: #93c5fd;
-  border-color: #3b82f6;
-}
-
 html.dark .delete-btn {
   background: rgba(127, 29, 29, 0.3);
   border-color: #991b1b;
@@ -122,23 +137,5 @@ html.dark .delete-btn {
 
   &:hover {
     background: rgba(127, 29, 29, 0.5);
-  }
-}
-
-html.dark #current-plan-box {
-  background: linear-gradient(to right, #0f172a, #1e293b);
-  border-color: #1e40af;
-}
-
-html.dark .custom-bar {
-  background: #374151;
-}
-
-html.dark #manual-code {
-  background: rgba(113, 63, 18, 0.3);
-  border-color: #78350f;
-
-  & p {
-    color: #fa5615de;
   }
 }

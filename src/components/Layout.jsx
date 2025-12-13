@@ -108,7 +108,7 @@ const Layout = ({ children, user, onLogout, refreshUser }) => {
               {!sidebarCollapsed && (
                 <Link
                   to="/"
-                  className={`flex items-center gap-2 text-primary dark:text-blue-400 font-bold tracking-tight transition-opacity hover:opacity-80 ${
+                  className={`flex items-center gap-2 text-primary dark:text-blue-400 font-bold tracking-tight transition-opacity hover:opacity-90 ${
                     sidebarCollapsed ? "justify-center" : "text-xl"
                   }`}
                   aria-label="Go to Quizzy AI Dashboard"
@@ -121,7 +121,7 @@ const Layout = ({ children, user, onLogout, refreshUser }) => {
               <button
                 onClick={() => setSidebarCollapsed((s) => !s)}
                 className={`p-2 text-textMuted hover:bg-surfaceHighlight cursor-ew-resize rounded-md ${
-                  !sidebarCollapsed ? "ml-4" : ""
+                  !sidebarCollapsed ? "ml-8" : ""
                 }`}
                 aria-label={
                   sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"
@@ -200,11 +200,12 @@ const Layout = ({ children, user, onLogout, refreshUser }) => {
                     <span
                       className={`text-[10px] font-extrabold px-2 py-1 rounded-full uppercase tracking-wider shrink-0 ml-3 shadow-sm ${
                         user.tier === "Pro"
-                          ? "bg-amber-100 text-amber-700"
+                          ? "bg-orange-100 text-orange-700 dark:bg-orange-900/60 dark:text-orange-300"
                           : user.tier === "Basic"
-                          ? "bg-blue-100 text-blue-700"
-                          : "bg-gray-200 text-gray-600"
-                      }`}
+                          ? "bg-blue-100 text-blue-700 dark:bg-blue-900/80 dark:text-blue-300"
+                          : "bg-gray-200 text-gray-600 dark:bg-gray-900/40 dark:text-gray-300"
+                      }
+`}
                     >
                       {user.tier}
                     </span>
@@ -218,17 +219,17 @@ const Layout = ({ children, user, onLogout, refreshUser }) => {
                         <span
                           className={`font-bold ${
                             isPro || quizzesLeft > 0
-                              ? "text-green-600"
-                              : "text-red-600"
+                              ? "text-green-600 dark:text-green-400"
+                              : "text-red-600 dark:text-red-400"
                           }`}
                         >
                           {isPro ? "∞" : quizzesLeft}
                         </span>
                       </div>
                       {user.tier !== "Pro" && (
-                        <div className="w-full bg-gray-200 rounded-full h-1.5">
+                        <div className="w-full bg-gray-200 dark:bg-gray-500 rounded-full h-1.5">
                           <div
-                            className="h-1.5 rounded-full bg-indigo-500 transition-all duration-500"
+                            className="h-1.5 rounded-full bg-indigo-500 dark:bg-indigo-400 transition-all duration-500"
                             style={{
                               width: getProgressWidth(quizzesLeft, MAX_QUIZZES),
                             }}
@@ -245,9 +246,9 @@ const Layout = ({ children, user, onLogout, refreshUser }) => {
                         </span>
                       </div>
                       {user.tier !== "Pro" && (
-                        <div className="w-full bg-gray-200 rounded-full h-1.5">
+                        <div className="w-full bg-gray-200 dark:bg-gray-500 rounded-full h-1.5">
                           <div
-                            className="h-1.5 rounded-full bg-indigo-500 transition-all duration-500"
+                            className="h-1.5 rounded-full bg-indigo-500 dark:bg-indigo-400 transition-all duration-500"
                             style={{
                               width: getProgressWidth(pdfLeft, MAX_PDF_UPLOADS),
                             }}
@@ -305,8 +306,8 @@ const Layout = ({ children, user, onLogout, refreshUser }) => {
           <button
             onClick={() => setShowSettings(true)}
             className={`flex items-center gap-3 ${
-              sidebarCollapsed ? "px-[13px]" : "px-4"
-            } py-2 text-textMuted hover:text-primary transition-colors w-full rounded-xl hover:bg-primary/5 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 mt-5 cursor-pointer`}
+              sidebarCollapsed ? "px-3.25" : "px-4"
+            } py-2 text-textMuted hover:text-primary dark:hover:text-blue-400 transition-colors w-full rounded-xl hover:bg-primary/5 dark:hover:bg-primary/20 focus:outline-none focus:ring-2 focus:ring-primary dark:focus:ring-blue-400 focus:ring-offset-2 mt-5 cursor-pointer`}
           >
             <Settings className="w-5 h-5" />
             {!sidebarCollapsed && <span>Settings</span>}
@@ -316,8 +317,11 @@ const Layout = ({ children, user, onLogout, refreshUser }) => {
             onClick={handleLogoutClick}
             disabled={isLoggingOut}
             className={`flex items-center gap-3 ${
-              sidebarCollapsed ? "px-[13px]" : "px-4"
-            } py-2 text-textMuted hover:text-red-600 transition-colors w-full rounded-xl hover:bg-red-50 disabled:opacity-70 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 mt-3 cursor-pointer`}
+              sidebarCollapsed ? "px-3.25" : "px-4"
+            } py-2 text-textMuted hover:text-red-600 transition-colors w-full rounded-xl 
+           hover:bg-red-50 dark:hover:bg-red-900/30 dark:hover:text-red-300 
+           disabled:opacity-70 disabled:cursor-not-allowed 
+           focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 mt-3 point`}
           >
             {isLoggingOut ? (
               <Loader2 className="w-5 h-5 animate-spin text-red-500" />

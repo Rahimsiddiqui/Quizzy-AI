@@ -12,9 +12,9 @@ const TIER_DATA = {
     icon: Star,
     diffClass: false,
     colorClasses: {
-      iconBg: "bg-gray-100",
-      iconText: "text-gray-500",
-      check: "text-green-500",
+      iconBg: "bg-gray-100 dark:bg-gray-300",
+      iconText: "text-gray-500 dark:text-gray-600",
+      check: "text-green-500 dark:text-green-400",
       border: "border-border",
       buttonBg: "bg-surfaceHighlight",
       buttonText: "text-textMuted",
@@ -35,11 +35,13 @@ const TIER_DATA = {
     icon: Zap,
     diffClass: false,
     colorClasses: {
-      iconBg: "bg-blue-100",
-      iconText: "text-blue-600",
-      check: "text-blue-600",
-      border: "border-blue-300 ring-2 ring-blue-100",
-      buttonBg: "bg-blue-600 hover:bg-blue-700",
+      iconBg: "bg-blue-100 dark:bg-blue-300",
+      iconText: "text-blue-600 dark:text-blue-700",
+      check: "text-blue-600 dark:text-blue-500",
+      border:
+        "border-blue-300 ring-2 ring-blue-100 dark:border-blue-900 dark:ring-blue-800",
+      buttonBg:
+        "bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700",
       buttonText: "text-white",
     },
     features: [
@@ -58,10 +60,11 @@ const TIER_DATA = {
     icon: Crown,
     diffClass: true,
     colorClasses: {
-      iconBg: "bg-amber-100",
-      iconText: "text-amber-600",
-      check: "text-amber-500",
-      border: "border-amber-400 ring-2 ring-amber-200",
+      iconBg: "bg-amber-100 dark:bg-amber-200",
+      iconText: "text-amber-600 dark:text-amber-700",
+      check: "text-amber-500 dark:text-amber-600",
+      border:
+        "border-amber-400 ring-2 ring-amber-200 dark:border-amber-500 dark:ring-amber-700",
       buttonBg: "",
       buttonText: "text-white",
     },
@@ -104,23 +107,17 @@ const TierCard = ({ tier, currentTier, handleUpgrade }) => {
 
   const shadowClass =
     tier === SubscriptionTier.Basic
-      ? "shadow-lg shadow-blue-200"
-      : tier === SubscriptionTier.Pro
-      ? "shadow-xl shadow-amber-300"
-      : "shadow-lg";
+      ? "shadow-lg shadow-blue-500"
+      : tier === SubscriptionTier.Pro && "shadow-lg shadow-amber-300";
 
   return (
     <div
-      className={`bg-surface rounded-2xl p-8 border ${
-        data.colorClasses.border
-      } ${shadowClass} flex flex-col h-full relative overflow-hidden transition-all hover:scale-[1.01] duration-300 ${
-        isCurrent ? "ring-4 ring-offset-2 ring-gray-400/50" : ""
-      }`}
+      className={`bg-surface rounded-2xl p-8 border ${data.colorClasses.border} ${shadowClass} flex flex-col h-full relative overflow-hidden transition-all hover:scale-[1.01] duration-300`}
     >
       {tier === SubscriptionTier.Pro && (
         <>
           <div className="absolute top-0 inset-x-0 h-1.5"></div>
-          <div className="absolute top-4 right-4 bg-amber-100 text-amber-700 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide border border-amber-200 shadow-sm">
+          <div className="absolute top-4 right-4 bg-amber-100 dark:bg-amber-300 text-amber-700 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide border border-amber-200 shadow-sm">
             Best Value
           </div>
         </>

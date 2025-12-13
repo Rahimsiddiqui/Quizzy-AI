@@ -475,7 +475,7 @@ const QuizGenerator = ({ user, onGenerateSuccess }) => {
                     className={`relative p-4 rounded-xl min-h-38 border-2 transition-all cursor-pointer flex flex-col justify-between h-full ${
                       examStyleId === style.id
                         ? "border-primary dark:border-blue-400 bg-primary/5"
-                        : "border-border bg-surface hover:border-primary/30 dark:hover:border-blue-400/50"
+                        : "border-border bg-surface hover:bg-surfaceHighlight hover:border-primary/30 dark:hover:border-blue-400/50"
                     } ${isLocked ? "opacity-70 bg-gray-50" : ""}`}
                   >
                     <div>
@@ -501,7 +501,7 @@ const QuizGenerator = ({ user, onGenerateSuccess }) => {
                       </p>
                     </div>
                     {isLocked && (
-                      <div className="mt-2 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider bg-orange-50 text-orange-500 dark:text-orange-200 dark:bg-orange-700 px-2 py-1 rounded w-fit">
+                      <div className="mt-2 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider bg-orange-100 text-orange-700 dark:text-orange-200 dark:bg-orange-900/90 px-2 py-1 rounded w-fit">
                         {style.tier} Plan
                       </div>
                     )}
@@ -581,7 +581,7 @@ const QuizGenerator = ({ user, onGenerateSuccess }) => {
                     className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all cursor-pointer ${
                       selectedTypes.includes(type)
                         ? "bg-primary/10 dark:bg-blue-400/10 border-primary dark:border-blue-400 text-primary dark:text-blue-400 p-4 rounded"
-                        : "bg-surface border-border text-textMuted hover:border-primary/50 dark:hover:border-blue-400/50 hover:text-textMain"
+                        : "bg-surface border-border text-textMuted hover:border-primary/50 dark:hover:border-blue-400/50 hover:bg-surfaceHighlight"
                     }`}
                   >
                     {type}
