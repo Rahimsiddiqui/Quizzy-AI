@@ -3,6 +3,7 @@ import { useEffect } from "react";
 /**
  * Hook to manage theme throughout the application
  * Supports light, dark, and system preference modes
+ * Works with both class-based dark mode and system preferences
  */
 export const useTheme = () => {
   const initializeTheme = () => {
@@ -55,15 +56,22 @@ export const useTheme = () => {
 
     // Listen for system theme changes
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-    const handleChange = () => {
+    const handleChange = (e) => {
       const currentTheme = localStorage.getItem("theme") || "system";
       if (currentTheme === "system") {
-        setTheme("system");
+        // Update the class based on the new system preference
+        const htmlElement = document.documentElement;
+        if (e.matches) {
+          htmlElement.classList.add("dark");
+        } else {
+          htmlElement.classList.remove("dark");
+        }
       }
     };
 
-    mediaQuery.addListener(handleChange);
-    return () => mediaQuery.removeListener(handleChange);
+    // Use addEventListener instead of deprecated addListener
+    mediaQuery.addEventListener("change", handleChange);
+    return () => mediaQuery.removeEventListener("change", handleChange);
   }, []);
 
   return { initializeTheme, setTheme };

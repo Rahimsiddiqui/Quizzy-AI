@@ -309,7 +309,7 @@ const QuizGenerator = ({ user, onGenerateSuccess }) => {
             onClick={() => setMode("text")}
             className={`flex-1 py-2 text-sm font-medium rounded-lg flex items-center justify-center gap-2 transition-all cursor-pointer ${
               mode === "text"
-                ? "bg-white text-primary shadow-sm"
+                ? "bg-surface text-primary dark:text-blue-400 shadow-sm"
                 : "text-textMuted hover:text-textMain"
             }`}
           >
@@ -320,7 +320,7 @@ const QuizGenerator = ({ user, onGenerateSuccess }) => {
             onClick={() => setMode("pdf")}
             className={`flex-1 py-2 text-sm font-medium rounded-lg flex items-center justify-center gap-2 transition-all cursor-pointer ${
               mode === "pdf"
-                ? "bg-white text-primary shadow-sm"
+                ? "bg-surface text-primary dark:text-blue-400 shadow-sm"
                 : "text-textMuted hover:text-textMain"
             }`}
           >
@@ -457,9 +457,9 @@ const QuizGenerator = ({ user, onGenerateSuccess }) => {
           <div className="h-px bg-border/50 w-full" />
 
           <div>
-            <label className="block text-sm font-bold text-textMain mb-3 flex items-center gap-2">
-              <GraduationCap className="w-4 h-4 text-primary" /> Exam Board /
-              Style
+            <label className="text-sm font-bold text-textMain mb-3 flex items-center gap-2">
+              <GraduationCap className="w-4 h-4 text-primary dark:text-blue-400" />{" "}
+              Exam Board / Style
             </label>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {EXAM_STYLES.map((style) => {
@@ -474,8 +474,8 @@ const QuizGenerator = ({ user, onGenerateSuccess }) => {
                     onClick={() => handleExamStyleSelect(style.id, style.tier)}
                     className={`relative p-4 rounded-xl min-h-38 border-2 transition-all cursor-pointer flex flex-col justify-between h-full ${
                       examStyleId === style.id
-                        ? "border-primary bg-primary/5"
-                        : "border-border bg-white hover:border-primary/30"
+                        ? "border-primary dark:border-blue-400 bg-primary/5"
+                        : "border-border bg-surface hover:border-primary/30 dark:hover:border-blue-400/50"
                     } ${isLocked ? "opacity-70 bg-gray-50" : ""}`}
                   >
                     <div>
@@ -483,7 +483,7 @@ const QuizGenerator = ({ user, onGenerateSuccess }) => {
                         <h4
                           className={`font-bold text-sm ${
                             examStyleId === style.id
-                              ? "text-primary"
+                              ? "text-primary dark:text-blue-400"
                               : "text-textMain"
                           }`}
                         >
@@ -501,7 +501,7 @@ const QuizGenerator = ({ user, onGenerateSuccess }) => {
                       </p>
                     </div>
                     {isLocked && (
-                      <div className="mt-2 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-orange-500 bg-orange-50 px-2 py-1 rounded w-fit">
+                      <div className="mt-2 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider bg-orange-50 text-orange-500 dark:text-orange-200 dark:bg-orange-700 px-2 py-1 rounded w-fit">
                         {style.tier} Plan
                       </div>
                     )}
@@ -580,8 +580,8 @@ const QuizGenerator = ({ user, onGenerateSuccess }) => {
                     onClick={() => toggleType(type)}
                     className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all cursor-pointer ${
                       selectedTypes.includes(type)
-                        ? "bg-primary/10 border-primary text-primary"
-                        : "bg-white border-border text-textMuted hover:border-primary/50"
+                        ? "bg-primary/10 dark:bg-blue-400/10 border-primary dark:border-blue-400 text-primary dark:text-blue-400 p-4 rounded"
+                        : "bg-surface border-border text-textMuted hover:border-primary/50 dark:hover:border-blue-400/50 hover:text-textMain"
                     }`}
                   >
                     {type}
@@ -596,8 +596,8 @@ const QuizGenerator = ({ user, onGenerateSuccess }) => {
               <div
                 className={`p-2 rounded-lg ${
                   generateFlashcards
-                    ? "bg-indigo-100 text-indigo-600"
-                    : "bg-gray-200 text-gray-500"
+                    ? "bg-indigo-100 text-indigo-600 dark:bg-indigo-800 dark:text-indigo-300"
+                    : "bg-gray-200 text-gray-500 dark:bg-surface/40 dark:text-gray-300"
                 }`}
               >
                 <Layers className="w-5 h-5" />
@@ -609,11 +609,10 @@ const QuizGenerator = ({ user, onGenerateSuccess }) => {
                   </h4>
                   <span
                     className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${
-                      user?.tier === "Pro"
-                        ? "bg-blue-50 text-blue-600 border-blue-200"
-                        : user?.limits?.flashcardGenerationsRemaining > 0
-                        ? "bg-blue-50 text-blue-600 border-blue-200"
-                        : "bg-red-50 text-red-600 border-red-200"
+                      user?.tier === "Pro" ||
+                      user?.limits?.flashcardGenerationsRemaining > 0
+                        ? "bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-400/20 dark:text-blue-300 dark:border-blue-400"
+                        : "bg-red-50 text-red-600 border-red-200 dark:bg-red-900 dark:text-red-300 dark:border-red-700"
                     }`}
                   >
                     {user?.tier === "Pro"
@@ -632,7 +631,9 @@ const QuizGenerator = ({ user, onGenerateSuccess }) => {
               type="button"
               onClick={() => setGenerateFlashcards(!generateFlashcards)}
               className={`relative w-12 h-6 rounded-full transition-colors cursor-pointer ${
-                generateFlashcards ? "bg-primary" : "bg-gray-300"
+                generateFlashcards
+                  ? "bg-primary dark:bg-blue-400"
+                  : "bg-gray-300 dark:bg-surface/40"
               }`}
             >
               <span

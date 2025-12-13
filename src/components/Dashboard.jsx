@@ -37,7 +37,10 @@ const KPI_STATS = [
     label: "Completed Quizzes", // [UX_IMPROVEMENT]: Use clearer label
     dataKey: (quizzes) => quizzes.filter((q) => q.score !== undefined).length,
     icon: <Trophy className="w-6 h-6" />,
-    colorClasses: { bg: "bg-blue-100", text: "text-blue-600" },
+    colorClasses: {
+      bg: "bg-blue-100 dark:bg-blue-900",
+      text: "text-blue-600 dark:text-blue-300",
+    },
     diffClass: false,
   },
   {
@@ -47,14 +50,20 @@ const KPI_STATS = [
         ? totalAvgScore + "%"
         : "N/A",
     icon: <Target className="w-6 h-6" />,
-    colorClasses: { bg: "bg-green-100", text: "text-green-600" },
+    colorClasses: {
+      bg: "bg-green-100 dark:bg-green-900",
+      text: "text-green-600 dark:text-green-300",
+    },
     diffClass: false,
   },
   {
     label: "Weakest Topic",
     dataKey: (quizzes, totalAvgScore, stats) => stats.weakestTopic,
     icon: <AlertTriangle className="w-6 h-6" />,
-    colorClasses: { bg: "bg-red-100", text: "text-red-600" },
+    colorClasses: {
+      bg: "bg-red-100 dark:bg-red-900",
+      text: "text-red-600 dark:text-red-300",
+    },
     diffClass: true,
   },
   {
@@ -65,7 +74,10 @@ const KPI_STATS = [
         : user.limits.flashcardGenerationsRemaining,
 
     icon: <Zap className="w-6 h-6" />,
-    colorClasses: { bg: "bg-indigo-100", text: "text-indigo-600" },
+    colorClasses: {
+      bg: "bg-indigo-100 dark:bg-indigo-900",
+      text: "text-indigo-600 dark:text-indigo-300",
+    },
     diffClass: false,
   },
 ];
@@ -493,7 +505,7 @@ const Dashboard = ({ user }) => {
                     No quizzes yet.{" "}
                     <Link
                       to="/generate"
-                      className="text-primary hover:underline"
+                      className="text-primary dark:text-blue-400 hover:underline"
                     >
                       Create one!
                     </Link>

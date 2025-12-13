@@ -108,7 +108,7 @@ const Layout = ({ children, user, onLogout, refreshUser }) => {
               {!sidebarCollapsed && (
                 <Link
                   to="/"
-                  className={`flex items-center gap-2 text-primary font-bold tracking-tight transition-opacity hover:opacity-80 ${
+                  className={`flex items-center gap-2 text-primary dark:text-blue-400 font-bold tracking-tight transition-opacity hover:opacity-80 ${
                     sidebarCollapsed ? "justify-center" : "text-xl"
                   }`}
                   aria-label="Go to Quizzy AI Dashboard"
@@ -120,16 +120,17 @@ const Layout = ({ children, user, onLogout, refreshUser }) => {
               )}
               <button
                 onClick={() => setSidebarCollapsed((s) => !s)}
-                className={`p-2 text-textMuted hover:bg-surfaceHighlight cursor-ew-resize rounded-md`}
+                className={`p-2 text-textMuted hover:bg-surfaceHighlight cursor-ew-resize rounded-md ${
+                  !sidebarCollapsed ? "ml-4" : ""
+                }`}
                 aria-label={
                   sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"
                 }
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-4 w-4"
+                  className="h-4 w-4 fill-black dark:fill-white"
                   viewBox="0 0 20 20"
-                  fill="black"
                 >
                   <path
                     fillRule="evenodd"
@@ -154,7 +155,7 @@ const Layout = ({ children, user, onLogout, refreshUser }) => {
                   sidebarCollapsed ? "justify-center" : "gap-3"
                 } rounded-xl transition-all duration-200 mt-2 group ${
                   isActive
-                    ? "bg-primary/10 text-primary font-semibold shadow-inner pl-5"
+                    ? "bg-primary/10 text-primary dark:text-blue-400 font-semibold shadow-inner pl-5"
                     : "text-textMuted hover:bg-surfaceHighlight hover:text-textMain"
                 }`}
                 aria-current={isActive ? "page" : undefined}
