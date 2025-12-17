@@ -146,7 +146,7 @@ const VerifyEmail = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-primary text-white font-semibold py-3 rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+            className="w-full bg-primary text-white font-semibold py-3 rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 point"
           >
             {loading ? (
               <>
@@ -166,7 +166,7 @@ const VerifyEmail = () => {
           <button
             onClick={handleResendCode}
             disabled={resending}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2 text-primary font-semibold border-2 border-primary rounded-lg hover:bg-primary/5 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="w-full flex items-center justify-center gap-2 px-4 py-2 text-primary font-semibold border-2 border-primary rounded-lg hover:bg-primary/5 disabled:opacity-50 disabled:cursor-not-allowed transition-all point"
           >
             {resending ? (
               <>

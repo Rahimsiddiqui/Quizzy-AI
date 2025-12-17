@@ -1349,7 +1349,7 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
         {/* Content */}
         <div className="flex-1 overflow-y-auto flex flex-col md:flex-row">
           {/* Sidebar Tabs */}
-          <div className="hidden md:flex md:w-48 bg-surface border-r gap-4 border-border flex-col p-2">
+          <div className="hidden md:flex md:w-48 bg-surface border-r gap-3 border-border flex-col p-2">
             {tabs.map((tab) => {
               const TabIcon = tab.icon;
               const isActive = activeTab === tab.id;

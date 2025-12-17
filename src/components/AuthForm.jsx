@@ -242,7 +242,7 @@ const AuthForm = ({ onLogin }) => {
               {/* Inline Hint - Only show if user has started typing */}
               {formData.name.length > 0 && (
                 <div
-                  className={`text-[10px] mt-1 ml-1 transition-colors duration-200 absolute -bottom-[22px] left-0 w-full truncate ${
+                  className={`text-[10px] mt-1 ml-1 transition-colors duration-200 absolute -bottom-5.5 left-0 w-full truncate ${
                     !validations.name(formData.name)
                       ? "text-red-500 font-medium"
                       : "text-green-600"

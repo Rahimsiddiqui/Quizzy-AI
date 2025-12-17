@@ -94,7 +94,7 @@ const Layout = ({ children, user, onLogout, refreshUser }) => {
     <div className="min-h-screen bg-background text-textMain flex font-sans no-print selection:bg-primary/20 selection:text-primary">
       {/* Desktop Sidebar */}
       <aside
-        className={`hidden md:flex flex-col fixed h-full z-10 transition-all duration-300 bg-surface border-r border-border shadow-sm overflow-auto ${
+        className={`hidden md:flex flex-col fixed h-full z-5 transition-all duration-300 bg-surface border-r border-border shadow-sm overflow-auto ${
           sidebarCollapsed ? "w-20" : "w-64"
         }`}
       >
