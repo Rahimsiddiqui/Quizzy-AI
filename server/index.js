@@ -1,23 +1,31 @@
+console.log("🔥 Server starting...");
+console.log("NODE_ENV:", process.env.NODE_ENV);
+
 // Load environment variables (only in development)
 import dotenv from "dotenv";
 if (process.env.NODE_ENV !== "production") {
   dotenv.config();
 }
+console.log("✅ Dotenv loaded");
 
 // 1. Packages
 import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
+console.log("✅ Core packages imported");
 
 // 2. Models
 import User from "./models/User.js";
+console.log("✅ Models imported");
 
 // 3. Middleware & Helpers
 import checkDailyReset from "./middleware/limitReset.js";
 import protect from "./middleware/auth.js";
+console.log("✅ Middleware imported");
 
 // 4. Constants
 import { TIER_LIMITS } from "./config/constants.js";
+console.log("✅ Constants imported");
 
 // 5. App setup
 const app = express();
@@ -48,6 +56,7 @@ import reviewRoutes from "./routes/reviewRoutes.js";
 import flashcardRoutes from "./routes/flashcardRoutes.js";
 import supportRoutes from "./routes/supportRoutes.js";
 import twoFARoutes from "./routes/twoFARoutes.js";
+console.log("✅ All routes imported");
 
 app.get("/api/users/me", protect, async (req, res) => {
   try {
