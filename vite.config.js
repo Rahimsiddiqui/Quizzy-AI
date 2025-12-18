@@ -10,7 +10,7 @@ export default defineConfig({
     port: 5173,
     proxy: {
       "/api": {
-        target: "somerandom/api",
+        target: "https://quizzy-ai-production.up.railway.app/api",
         changeOrigin: true,
         secure: false,
       },

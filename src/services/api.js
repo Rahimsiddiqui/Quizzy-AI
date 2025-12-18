@@ -1,4 +1,4 @@
-const API_URL = `somerandom`;
+const API_URL = `https://quizzy-ai-production.up.railway.app`;
 
 export async function request(endpoint, method = "GET", body) {
   const token = localStorage.getItem("token");

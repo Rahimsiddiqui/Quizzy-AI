@@ -164,9 +164,9 @@ async function startServer() {
     console.log("MongoDB Atlas Connected successfully! 🚀");
 
     // Disable logs after startup
-    // if (isProduction) {
-    //   console.log = () => {};
-    // }
+    if (isProduction) {
+      console.log = () => {};
+    }
 
     // Start server
     app.listen(PORT, () =>
