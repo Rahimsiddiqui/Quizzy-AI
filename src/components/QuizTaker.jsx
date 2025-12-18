@@ -627,7 +627,7 @@ const QuizTaker = ({ user, onComplete, onLimitUpdate }) => {
                 ? "Complete the quiz to unlock flashcards"
                 : ""
             }
-            className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-2 cursor-pointer ${
+            className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-2 point ${
               activeTab === "flashcards"
                 ? "bg-surface text-primary dark:text-blue-400 shadow-sm"
                 : status !== "completed"

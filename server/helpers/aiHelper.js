@@ -170,7 +170,7 @@ ${
     : ""
 }
 - For each question, include a field "type" exactly as one of: MCQ, TrueFalse, ShortAnswer, Essay, FillInTheBlank.
-- For 'MCQ', provide 4 options.
+- For 'MCQ', provide 4 options, DON'T PROVIDE WITH OPTIONS PREFIXES LIKE 'A. or B.'.
 - For 'TrueFalse', provide 2 options (True, False).
 - For Short/Long Answer, 'options' can be empty array.
 - Return JSON only.
