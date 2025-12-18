@@ -33,8 +33,6 @@ const PORT = process.env.PORT || 5000;
 const MONGODB_URI = process.env.MONGODB_URI;
 const isProduction = process.env.NODE_ENV === "production";
 
-console.log("✅ App initialized");
-
 // Debug: Log if MongoDB URI is missing
 if (!MONGODB_URI) {
   console.error("❌ MONGODB_URI is not set in environment variables!");
@@ -186,7 +184,10 @@ if (isProduction) {
   console.log = () => {};
 }
 
+console.log("📍 About to call startServer()");
+
 async function startServer() {
+  console.log("📍 Inside startServer()");
   try {
     // Check if MONGODB_URI exists
     if (!MONGODB_URI) {
@@ -215,4 +216,11 @@ async function startServer() {
   }
 }
 
-startServer();
+console.log("📍 startServer function defined");
+
+try {
+  startServer();
+  console.log("📍 startServer() called successfully");
+} catch (err) {
+  console.error("❌ Error calling startServer:", err);
+}
