@@ -33,20 +33,29 @@ const PORT = process.env.PORT || 5000;
 const MONGODB_URI = process.env.MONGODB_URI;
 const isProduction = process.env.NODE_ENV === "production";
 
+console.log("✅ App initialized");
+
 // Debug: Log if MongoDB URI is missing
 if (!MONGODB_URI) {
   console.error("❌ MONGODB_URI is not set in environment variables!");
   console.error("Available vars:", Object.keys(process.env).slice(0, 10));
 }
 
+console.log("Starting middleware setup...");
+
 app.use(express.json({ limit: "20mb" }));
+console.log("✅ JSON middleware added");
+
 app.use(express.urlencoded({ limit: "20mb", extended: true }));
+console.log("✅ URLEncoded middleware added");
+
 app.use(
   cors({
     origin: process.env.FRONTEND_URL || "http://localhost:5173",
     credentials: true,
   })
 );
+console.log("✅ CORS middleware added");
 
 // 6. Routes
 import aiRoutes from "./routes/aiRoutes.js";
@@ -157,12 +166,21 @@ app.post("/api/subscription/upgrade", protect, async (req, res) => {
 
 // Mount route handlers
 app.use("/api/ai", aiRoutes);
+console.log("✅ AI routes mounted");
 app.use("/api/auth", authRoutes);
+console.log("✅ Auth routes mounted");
 app.use("/api/auth/2fa", twoFARoutes);
+console.log("✅ 2FA routes mounted");
 app.use("/api/quizzes", quizRoutes);
+console.log("✅ Quiz routes mounted");
 app.use("/api/reviews", reviewRoutes);
+console.log("✅ Review routes mounted");
 app.use("/api/flashcards", flashcardRoutes);
+console.log("✅ Flashcard routes mounted");
 app.use("/api/support", supportRoutes);
+console.log("✅ Support routes mounted");
+
+console.log("🚀 Starting server...");
 
 if (isProduction) {
   console.log = () => {};
