@@ -72,10 +72,18 @@ npm install
 3. **Configure ENV Variables**
 
 ```bash
-VITE_GEMINI_API_KEY=your_gemini_api_key
-
 JWT_SECRET=your_jwt_secret
 MONGODB_URI=your_mongodb_uri
+
+GEMINI_API_KEY=your_gemini_api_key
+
+EMAIL_SERVICE=gmail
+EMAIL_USER=your_email_address
+EMAIL_PASSWORD=your_email_app_password
+
+FRONTEND_URL=http://localhost:5173
+VITE_API_URL=http://localhost:5000/api
+NODE_ENV=development
 
 VITE_GOOGLE_CLIENT_ID=your_google_client_id
 VITE_GITHUB_CLIENT_ID=your_github_client_id
@@ -99,7 +107,7 @@ npm run dev:all
 **Production**
 
 ```bash
-npm run build:all
+npm run build
 ```
 
 <!-- ## ⌨ Quick Keyboard Shortcuts
