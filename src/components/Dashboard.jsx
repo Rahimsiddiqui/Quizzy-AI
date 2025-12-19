@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
+import { motion } from "framer-motion";
 
 import {
   BarChart,
@@ -684,8 +685,20 @@ const Dashboard = ({ user }) => {
 
       {/* Delete Confirmation Modal */}
       {deleteModal.isOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-300">
-          <div className="bg-surface border border-border rounded-2xl shadow-2xl max-w-sm w-full animate-in zoom-in duration-300">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+        >
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.95, opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="bg-surface border border-border rounded-2xl shadow-2xl max-w-sm w-full"
+          >
             <div className="p-6 text-center">
               {deleteModal.isDeleting ? (
                 <div className="flex flex-col items-center justify-center py-12">
@@ -745,8 +758,8 @@ const Dashboard = ({ user }) => {
                 </>
               )}
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
     </div>
   );
