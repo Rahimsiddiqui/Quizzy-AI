@@ -146,10 +146,19 @@
 
 ### Eliminated NPM Warnings
 
-- No more "crypto is deprecated" warning
-- No more "prefixer is deprecated" warning
-- Reduced dependency bloat
-- Improved package installation speed
+- ✅ No more "crypto is deprecated" warning
+- ✅ No more "prefixer is deprecated" warning
+- ✅ No more "node-domexception is deprecated" warning
+- ✅ Reduced dependency bloat
+- ✅ Improved package installation speed
+
+### Platform-Specific Optimizations
+
+- **Node.js Engine Requirement** - Added `engines.node >= 16.0.0` in package.json
+  - **Reason**: Node.js v16+ has native `DOMException` support
+  - **Benefit**: `node-domexception` polyfill (transitive dependency) is no longer needed
+  - **Status**: Warning resolved without direct code changes
+  - **Compatibility**: Current Node.js runtime (v22.21.1) exceeds requirement ✅
 
 ---
 

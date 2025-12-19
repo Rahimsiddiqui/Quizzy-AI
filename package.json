@@ -67,5 +67,8 @@
   "bugs": {
     "url": "https://github.com/Rahimsiddiqui/Quizzy-AI/issues"
   },
-  "homepage": "https://github.com/Rahimsiddiqui/Quizzy-AI#readme"
+  "homepage": "https://github.com/Rahimsiddiqui/Quizzy-AI#readme",
+  "engines": {
+    "node": ">=16.0.0"
+  }
 }
