@@ -441,12 +441,12 @@ const QuizTaker = ({ user, onComplete, onLimitUpdate }) => {
   };
 
   const calculateScore = () => {
-    if (!quiz) return 0;
+    if (!quiz || !quiz.questions || quiz.questions.length === 0) return 0;
     let correct = 0;
     quiz.questions.forEach((q) => {
-      const qid = q.id || q._id; // Use question ID for answers lookup
-      const userAns = answers[qid]?.toLowerCase().trim();
-      const correctAns = q.correctAnswer?.toLowerCase().trim(); // Add optional chaining
+      const qid = q.id || q._id;
+      const userAns = answers[qid]?.toLowerCase().trim() || "";
+      const correctAns = q.correctAnswer?.toLowerCase().trim() || "";
       if (userAns === correctAns) correct++;
       else if (q.type === "MCQ" && answers[qid] === q.correctAnswer) correct++;
     });

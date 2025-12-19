@@ -3,40 +3,51 @@ const API_URL = `${import.meta.env.VITE_API_URL}`;
 /** Generic request helper with auto user storage */
 async function request(endpoint, method = "GET", body) {
   const token = localStorage.getItem("token");
+  if (!token && method !== "GET") {
+    throw new Error("Authentication token missing");
+  }
+
   const headers = {
     "Content-Type": "application/json",
     ...(token && { Authorization: `Bearer ${token}` }),
   };
 
-  const res = await fetch(`${API_URL}${endpoint}`, {
-    method,
-    headers,
-    body: body ? JSON.stringify(body) : undefined,
-  });
+  try {
+    const res = await fetch(`${API_URL}${endpoint}`, {
+      method,
+      headers,
+      body: body ? JSON.stringify(body) : undefined,
+    });
 
-  if (!res.ok) {
-    const errorData = await res.json();
-    throw new Error(errorData.message || "Request failed");
-  }
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(
+        errorData.message || `Request failed with status ${res.status}`
+      );
+    }
 
-  const data = await res.json();
+    const data = await res.json();
 
-  if (data.user) {
-    localStorage.setItem("user", JSON.stringify(data.user));
+    if (data.user) {
+      localStorage.setItem("user", JSON.stringify(data.user));
 
-    // Dispatch events based on the endpoint
-    if (endpoint.includes("/limits/decrement/")) {
-      if (endpoint.includes("flashcard")) {
-        window.dispatchEvent(new Event("quizGenerated"));
-      } else if (endpoint.includes("pdfupload")) {
-        window.dispatchEvent(new Event("pdfUploaded"));
-      } else if (endpoint.includes("pdfexport")) {
-        window.dispatchEvent(new Event("pdfExported"));
+      // Dispatch events based on the endpoint
+      if (endpoint.includes("/limits/decrement/")) {
+        if (endpoint.includes("flashcard")) {
+          window.dispatchEvent(new Event("quizGenerated"));
+        } else if (endpoint.includes("pdfupload")) {
+          window.dispatchEvent(new Event("pdfUploaded"));
+        } else if (endpoint.includes("pdfexport")) {
+          window.dispatchEvent(new Event("pdfExported"));
+        }
       }
     }
-  }
 
-  return data;
+    return data;
+  } catch (err) {
+    console.error(`Request failed for ${endpoint}:`, err);
+    throw err;
+  }
 }
 
 /** Generic decrement function */

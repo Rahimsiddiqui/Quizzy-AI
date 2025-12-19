@@ -5,8 +5,6 @@ import { v4 as uuidv4 } from "uuid";
 import { EXAM_STYLES } from "../config/constants.js";
 import { SubscriptionTier, QuestionType } from "../config/types.js";
 
-import { toast } from "react-toastify";
-
 // --- Gemini Configuration ---
 const BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models";
 const API_KEY = process.env.GEMINI_API_KEY;
