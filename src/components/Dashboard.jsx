@@ -262,7 +262,7 @@ const Dashboard = ({ user }) => {
   const handleConfirmDelete = async () => {
     setDeleteModal((prev) => ({ ...prev, isDeleting: true }));
     try {
-      StorageService.deleteQuiz(deleteModal.quizId);
+      await StorageService.deleteQuiz(deleteModal.quizId);
       await refreshQuizzes();
       toast.success("Quiz deleted successfully!");
       setDeleteModal({
