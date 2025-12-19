@@ -693,9 +693,15 @@ const Dashboard = ({ user }) => {
                   <div className="relative w-16 h-16 mb-6">
                     <div className="absolute inset-0 rounded-full border-4 border-red-200 dark:border-red-900/40"></div>
                     <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-red-500 dark:border-t-red-400 animate-spin"></div>
-                    <div className="absolute inset-2 rounded-full border-4 border-transparent border-b-red-400 dark:border-b-red-300 animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
+                    <div
+                      className="absolute inset-2 rounded-full border-4 border-transparent border-b-red-400 dark:border-b-red-300 animate-spin"
+                      style={{
+                        animationDirection: "reverse",
+                        animationDuration: "1.5s",
+                      }}
+                    ></div>
                   </div>
-                  
+
                   {/* Status text with animation */}
                   <p className="text-textMain font-semibold mb-2 animate-pulse">
                     Deleting quiz...
@@ -706,7 +712,7 @@ const Dashboard = ({ user }) => {
                 </div>
               ) : (
                 <>
-                  <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-100 dark:bg-red-900 mb-4">
+                  <div className="flex items-center justify-center text-center w-12 h-12 rounded-full bg-red-100 dark:bg-red-900 mb-4">
                     <Trash2 className="w-6 h-6 text-red-600 dark:text-red-300" />
                   </div>
                   <h3 className="text-xl font-semibold text-textMain mb-2">
@@ -731,7 +737,7 @@ const Dashboard = ({ user }) => {
                     <button
                       onClick={handleConfirmDelete}
                       disabled={deleteModal.isDeleting}
-                      className="flex-1 px-4 py-2.5 rounded-lg bg-red-500 hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed text-white transition-colors font-medium point"
+                      className="flex-1 px-4 py-2.5 rounded-lg bg-red-500 hover:bg-red-600 dark:bg-red-700 dark:hover:bg-red-800 disabled:opacity-50 disabled:cursor-not-allowed text-white transition-colors font-medium point"
                     >
                       Delete
                     </button>
