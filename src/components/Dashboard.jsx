@@ -265,7 +265,12 @@ const Dashboard = ({ user }) => {
       StorageService.deleteQuiz(deleteModal.quizId);
       await refreshQuizzes();
       toast.success("Quiz deleted successfully!");
-      setDeleteModal({ isOpen: false, quizId: null, quizTitle: "", isDeleting: false });
+      setDeleteModal({
+        isOpen: false,
+        quizId: null,
+        quizTitle: "",
+        isDeleting: false,
+      });
     } catch (error) {
       console.error("Delete failed", error);
       toast.error("Failed to delete quiz.");
@@ -275,7 +280,12 @@ const Dashboard = ({ user }) => {
 
   const handleCancelDelete = () => {
     if (!deleteModal.isDeleting) {
-      setDeleteModal({ isOpen: false, quizId: null, quizTitle: "", isDeleting: false });
+      setDeleteModal({
+        isOpen: false,
+        quizId: null,
+        quizTitle: "",
+        isDeleting: false,
+      });
     }
   };
 
@@ -685,6 +695,43 @@ const Dashboard = ({ user }) => {
               ) : (
                 <>
                   <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-100 dark:bg-red-900 mb-4">
-                    <Trash2 className="w-6 h-6 text-red-600 dark:text-red-300\" />\n                  </div>\n                  <h3 className=\"text-lg font-semibold text-textMain mb-2\">Delete Quiz?</h3>\n                  <p className=\"text-textMuted text-sm mb-6\">\n                    Are you sure you want to delete <span className=\"font-medium text-textMain\">"{deleteModal.quizTitle}"</span>? This cannot be undone.\n                  </p>\n\n                  <div className=\"flex gap-3 w-full\">\n                    <button\n                      onClick={handleCancelDelete}\n                      disabled={deleteModal.isDeleting}\n                      className=\"flex-1 px-4 py-2.5 rounded-lg border border-border text-textMain hover:bg-surfaceHighlight disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium\"\n                    >\n                      Cancel\n                    </button>\n                    <button\n                      onClick={handleConfirmDelete}\n                      disabled={deleteModal.isDeleting}\n                      className=\"flex-1 px-4 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white transition-colors font-medium\"\n                    >\n                      Delete\n                    </button>\n                  </div>\n                </>\n              )}\n            </div>\n          </div>\n        </div>\n      )}\n    </div>\n  );\n};
+                    <Trash2 className="w-6 h-6 text-red-600 dark:text-red-300" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-textMain mb-2">
+                    Delete Quiz?
+                  </h3>
+                  <p className="text-textMuted text-sm mb-6">
+                    Are you sure you want to delete{" "}
+                    <span className="font-medium text-textMain">
+                      "{deleteModal.quizTitle}"
+                    </span>
+                    ? This cannot be undone.
+                  </p>
+
+                  <div className="flex gap-3 w-full">
+                    <button
+                      onClick={handleCancelDelete}
+                      disabled={deleteModal.isDeleting}
+                      className="flex-1 px-4 py-2.5 rounded-lg border border-border text-textMain hover:bg-surfaceHighlight disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleConfirmDelete}
+                      disabled={deleteModal.isDeleting}
+                      className="flex-1 px-4 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white transition-colors font-medium"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 export default Dashboard;
