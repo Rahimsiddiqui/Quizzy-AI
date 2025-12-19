@@ -611,7 +611,7 @@ const Dashboard = ({ user }) => {
                   <button
                     type="button"
                     onClick={(e) => handleDeleteClick(e, quiz._id, quiz.title)}
-                    className="absolute top-3 right-3 z-50 p-2 text-gray-400 hover:text-red-500 rounded-lg cursor-pointer transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                    className="absolute top-3 right-3 z-50 w-10 h-10 flex items-center justify-center text-gray-400 hover:text-red-500 rounded-lg cursor-pointer transition-colors opacity-100 md:opacity-0 md:group-hover:opacity-100"
                     title="Delete Quiz"
                   >
                     <Trash2 className="w-4 h-4 pointer-events-none" />
