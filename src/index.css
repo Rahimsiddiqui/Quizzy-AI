@@ -66,11 +66,10 @@
   }
   &::-webkit-scrollbar-thumb {
     background: var(--color-primary);
-    border-radius: 10px;
     transition: background 0.3s ease;
   }
   &::-webkit-scrollbar-thumb:hover {
-    background: #1d4ed8;
+    background: var(--color-secondary);
   }
 }
 
