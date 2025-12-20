@@ -56,7 +56,7 @@ const VerifyEmail = () => {
       );
 
       toast.success("Email verified successfully!");
-      navigate("/");
+      navigate("/dashboard");
     } catch (err) {
       if (err.message.includes("expired")) {
         toast.error("Code expired. Please request a new one.");
@@ -91,7 +91,7 @@ const VerifyEmail = () => {
             No email found. Please register again.
           </p>
           <button
-            onClick={() => navigate("/login")}
+            onClick={() => navigate("/auth")}
             className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90"
           >
             Back to Login

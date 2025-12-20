@@ -19,6 +19,7 @@ import Subscription from "./components/Subscription.jsx";
 import AuthForm from "./components/AuthForm.jsx";
 import VerifyEmail from "./components/VerifyEmail.jsx";
 import OAuthCallback from "./components/OAuthCallback.jsx";
+import LandingPage from "./components/LandingPage.jsx";
 import StorageService from "./services/storageService.js";
 import { useTheme } from "./hooks/useTheme.js";
 
@@ -27,11 +28,11 @@ const ProtectedRoute = ({ children, auth }) => {
   const location = useLocation();
 
   if (!auth.isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 
   if (!auth.user) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/auth" replace />;
   }
 
   return <>{children}</>;
@@ -118,20 +119,31 @@ const App = () => {
           <Route path="/auth/callback" element={<OAuthCallback />} />
 
           <Route
-            path="/login"
+            path="/auth"
             element={
               auth.isAuthenticated ? (
-                <Navigate to="/" replace />
+                <Navigate to="/dashboard" replace />
               ) : (
                 <AuthForm onLogin={handleLoginSuccess} />
               )
             }
           />
 
-          <Route path="/verify-email" element={<VerifyEmail />} />
+          <Route path="/auth/verify-email" element={<VerifyEmail />} />
 
           <Route
             path="/"
+            element={
+              auth.isAuthenticated ? (
+                <Navigate to="/dashboard" replace />
+              ) : (
+                <LandingPage onLogin={handleLoginSuccess} />
+              )
+            }
+          />
+
+          <Route
+            path="/dashboard"
             element={
               <ProtectedRoute auth={auth}>
                 <Layout

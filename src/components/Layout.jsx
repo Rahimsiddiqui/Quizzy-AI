@@ -107,7 +107,7 @@ const Layout = ({ children, user, onLogout, refreshUser }) => {
             >
               {!sidebarCollapsed && (
                 <Link
-                  to="/"
+                  to="/dashboard"
                   className={`flex items-center gap-2 text-primary dark:text-blue-400 font-bold tracking-tight transition-opacity hover:opacity-90 ${
                     sidebarCollapsed ? "justify-center" : "text-xl"
                   }`}

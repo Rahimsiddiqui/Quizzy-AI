@@ -215,7 +215,7 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
       if (response.ok) {
         toast.success("Account deleted. Redirecting...");
         StorageService.logout();
-        window.location.href = "/login";
+        window.location.href = "/auth";
       } else {
         toast.error("Failed to delete account");
       }

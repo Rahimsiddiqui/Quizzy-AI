@@ -198,7 +198,7 @@ const QuizResultsView = ({
     </div>
 
     <button
-      onClick={() => navigate("/")}
+      onClick={() => navigate("/dashboard")}
       className="w-full py-4 bg-surface hover:bg-surfaceHighlight text-textMain rounded-xl font-bold transition-colors border border-border shadow-sm point"
     >
       Back to Dashboard
@@ -385,7 +385,7 @@ const QuizTaker = ({ user, onComplete, onLimitUpdate }) => {
 
         if (!q) {
           console.warn("Quiz not found:", id);
-          navigate("/");
+          navigate("/dashboard");
           return;
         }
 
@@ -413,7 +413,7 @@ const QuizTaker = ({ user, onComplete, onLimitUpdate }) => {
         }
       } catch (err) {
         console.error("Failed to fetch quiz:", err);
-        navigate("/");
+        navigate("/dashboard");
       } finally {
         setIsFetching(false);
       }
@@ -550,7 +550,7 @@ const QuizTaker = ({ user, onComplete, onLimitUpdate }) => {
           <div className="overflow-hidden">
             <div className="flex items-center gap-2 mb-1">
               <button
-                onClick={() => navigate("/")}
+                onClick={() => navigate("/dashboard")}
                 className="text-textMuted hover:text-textMain flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-surfaceHighlight"
               >
                 <ArrowLeft className="w-4 h-4" />

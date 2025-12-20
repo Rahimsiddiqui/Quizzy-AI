@@ -20,7 +20,7 @@ const OAuthCallback = () => {
 
         if (!code || !provider) {
           toast.error("Invalid OAuth callback");
-          navigate("/login");
+          navigate("/auth");
           return;
         }
 
@@ -54,20 +54,20 @@ const OAuthCallback = () => {
           toast.success("Successfully logged in with " + provider);
 
           if (authMode === "settings") {
-            navigate("/", { replace: true });
+            navigate("/dashboard", { replace: true });
             window.location.reload();
           } else {
-            navigate("/", { replace: true });
+            navigate("/dashboard", { replace: true });
           }
         } else {
           const error = await response.json();
           toast.error(error.message || "OAuth authentication failed");
-          navigate("/login");
+          navigate("/auth");
         }
       } catch (error) {
         console.error("OAuth callback error:", error);
         toast.error("Error processing OAuth callback");
-        navigate("/login");
+        navigate("/auth");
       }
     };
 

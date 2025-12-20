@@ -102,7 +102,7 @@ const AuthForm = ({ onLogin }) => {
       if (!isLogin) {
         if (!response.ok)
           throw new Error(data.message || "Registration failed");
-        navigate("/verify-email", {
+        navigate("/auth/verify-email", {
           state: { email: formData.email },
           replace: true,
         });
