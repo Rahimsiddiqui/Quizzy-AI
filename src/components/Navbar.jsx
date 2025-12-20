@@ -83,13 +83,13 @@ const Navbar = () => {
             : "translate-x-full opacity-0 pointer-events-none"
         } w-max max-w-xs max-h-[calc(100vh-64px)] overflow-y-auto`}
       >
-        <div className="px-6 py-6 space-y-4 flex flex-col rounded-sm">
+        <div className="px-6 py-6 space-y-4 flex flex-col rounded-lg">
           <a
             href="/features"
             onClick={() => setMobileMenuOpen(false)}
             className={`px-4 py-3 rounded-[5px] transition-all text-textMain duration-200 ${
               isActive("/features")
-                ? "bg-surfaceHighlight font-semibold"
+                ? "bg-surfaceHighlight font-semibold translate-x-1"
                 : "hover:text-textMain hover:bg-surfaceHighlight hover:translate-x-1"
             }`}
           >
@@ -100,7 +100,7 @@ const Navbar = () => {
             onClick={() => setMobileMenuOpen(false)}
             className={`px-4 py-3 rounded-[5px] transition-all text-textMain duration-200 ${
               isActive("/testimonials")
-                ? "bg-surfaceHighlight font-semibold"
+                ? "bg-surfaceHighlight font-semibold translate-x-1"
                 : "hover:text-textMain hover:bg-surfaceHighlight hover:translate-x-1"
             }`}
           >
