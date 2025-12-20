@@ -1,6 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Brain, Star } from "lucide-react";
+import { Star } from "lucide-react";
+import Navbar from "./Navbar.jsx";
 
 const TestimonialsPage = () => {
   const navigate = useNavigate();
@@ -82,21 +83,7 @@ const TestimonialsPage = () => {
 
   return (
     <div className="min-h-screen bg-background text-textMain">
-      {/* Header */}
-      <div className="bg-surface border-b border-border py-6 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-6xl mx-auto flex items-center gap-4">
-          <button
-            onClick={() => navigate("/")}
-            className="p-2 hover:bg-surfaceHighlight rounded-lg transition-colors point"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <div className="flex items-center gap-2 font-bold text-xl text-primary dark:text-blue-400">
-            <Brain className="w-6 h-6" />
-            <span>Quizzy AI</span>
-          </div>
-        </div>
-      </div>
+      <Navbar />
 
       {/* Hero Section */}
       <section className="py-20 px-4 sm:px-6 lg:px-8">

@@ -12,90 +12,15 @@ import {
   Linkedin,
   Twitter,
   Mail,
-  Menu,
-  X,
 } from "lucide-react";
+import Navbar from "./Navbar.jsx";
 
 const LandingPage = () => {
   const navigate = useNavigate();
-  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
 
   return (
     <div className="min-h-screen bg-background text-textMain">
-      {/* Navigation */}
-      <nav className="fixed top-0 w-full bg-background/80 backdrop-blur-md border-b border-border z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-2 font-bold text-xl text-primary dark:text-blue-400">
-            <Brain className="w-7 h-7" />
-            <span>Quizzy AI</span>
-          </div>
-
-          {/* Mobile menu button */}
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 hover:bg-surfaceHighlight rounded-lg transition-colors point"
-          >
-            {mobileMenuOpen ? (
-              <X className="w-6 h-6" />
-            ) : (
-              <Menu className="w-6 h-6" />
-            )}
-          </button>
-
-          {/* Desktop nav */}
-          <div className="hidden md:flex items-center gap-8">
-            <a
-              href="/features"
-              className="text-textMuted hover:text-textMain transition-colors"
-            >
-              Features
-            </a>
-            <a
-              href="/testimonials"
-              className="text-textMuted hover:text-textMain transition-colors"
-            >
-              Testimonials
-            </a>
-            <button
-              onClick={() => navigate("/auth")}
-              className="px-6 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-blue-700 transition-colors shadow-lg shadow-primary/20 point"
-            >
-              Get Started
-            </button>
-          </div>
-        </div>
-
-        {/* Mobile menu */}
-        {mobileMenuOpen && (
-          <div className="md:hidden border-t border-border bg-surface">
-            <div className="px-4 py-4 space-y-4">
-              <a
-                href="/features"
-                className="block text-textMuted hover:text-textMain transition-colors"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Features
-              </a>
-              <a
-                href="/testimonials"
-                className="block text-textMuted hover:text-textMain transition-colors"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Testimonials
-              </a>
-              <button
-                onClick={() => {
-                  navigate("/auth");
-                  setMobileMenuOpen(false);
-                }}
-                className="w-full px-6 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-blue-700 transition-colors point"
-              >
-                Get Started
-              </button>
-            </div>
-          </div>
-        )}
-      </nav>
+      <Navbar />
 
       {/* Hero Section */}
       <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8">
@@ -114,8 +39,8 @@ const LandingPage = () => {
             className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 leading-tight animate-fade-in-up"
             style={{ animationDelay: "200ms" }}
           >
-            Master Any Topic with{" "}
-            <span className="bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
+            Master Any Topic with <br />
+            <span className="bg-linear-to-r from-primary to-blue-600 bg-clip-text text-transparent">
               Quizzy AI
             </span>
           </h1>
@@ -292,13 +217,20 @@ const LandingPage = () => {
                   />
                 ))}
               </div>
-              <p className="text-textMuted mb-4">
+              <p className="text-textMuted mb-6">
                 "Quizzy AI completely transformed how I study. The AI-generated
                 quizzes are so relevant and the flashcards help me retain
                 information way better."
               </p>
-              <div className="font-semibold">Sarah Chen</div>
-              <div className="text-sm text-textMuted">Pre-Med Student</div>
+              <div className="flex items-center gap-3 pt-6 border-t border-border">
+                <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                  SC
+                </div>
+                <div>
+                  <div className="font-semibold text-textMain">Sarah Chen</div>
+                  <div className="text-sm text-textMuted">Pre-Med Student</div>
+                </div>
+              </div>
             </div>
 
             {/* Testimonial 2 */}
@@ -314,13 +246,20 @@ const LandingPage = () => {
                   />
                 ))}
               </div>
-              <p className="text-textMuted mb-4">
+              <p className="text-textMuted mb-6">
                 "I improved my exam scores by 30% in just one month of using
                 Quizzy AI. The analytics showed exactly what I needed to focus
                 on."
               </p>
-              <div className="font-semibold">Marcus Johnson</div>
-              <div className="text-sm text-textMuted">College Junior</div>
+              <div className="flex items-center gap-3 pt-6 border-t border-border">
+                <div className="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                  MJ
+                </div>
+                <div>
+                  <div className="font-semibold text-textMain">Marcus Johnson</div>
+                  <div className="text-sm text-textMuted">College Junior</div>
+                </div>
+              </div>
             </div>
 
             {/* Testimonial 3 */}
@@ -329,13 +268,20 @@ const LandingPage = () => {
               style={{ animationDelay: "500ms" }}
             >
               <div className="flex gap-1 mb-4">
-                {[...Array(5)].map((_, i) => (
-                  <Star
-                    key={i}
-                    className="w-5 h-5 fill-yellow-400 text-yellow-400"
-                  />
-                ))}
-              </div>
+                {[...Array(5)].map((_, i) => (6">
+                "As a teacher, I use Quizzy AI to create assessments for my
+                students. It saves me so much time and the AI suggestions are
+                spot-on."
+              </p>
+              <div className="flex items-center gap-3 pt-6 border-t border-border">
+                <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                  ER
+                </div>
+                <div>
+                  <div className="font-semibold text-textMain">Dr. Emily Rodriguez</div>
+                  <div className="text-sm text-textMuted">High School Teacher</div>
+                </div>
+              
               <p className="text-textMuted mb-4">
                 "As a teacher, I use Quizzy AI to create assessments for my
                 students. It saves me so much time and the AI suggestions are

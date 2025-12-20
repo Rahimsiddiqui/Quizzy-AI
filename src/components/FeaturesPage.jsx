@@ -1,6 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Brain, Zap, BookOpen, BarChart3 } from "lucide-react";
+import { Zap, BookOpen, BarChart3, Brain } from "lucide-react";
+import Navbar from "./Navbar.jsx";
 
 const FeaturesPage = () => {
   const navigate = useNavigate();
@@ -58,28 +59,14 @@ const FeaturesPage = () => {
 
   return (
     <div className="min-h-screen bg-background text-textMain">
-      {/* Header */}
-      <div className="bg-surface border-b border-border py-6 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-6xl mx-auto flex items-center gap-4">
-          <button
-            onClick={() => navigate("/")}
-            className="p-2 hover:bg-surfaceHighlight rounded-lg transition-colors point"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <div className="flex items-center gap-2 font-bold text-xl text-primary dark:text-blue-400">
-            <Brain className="w-6 h-6" />
-            <span>Quizzy AI</span>
-          </div>
-        </div>
-      </div>
+      <Navbar />
 
       {/* Hero Section */}
       <section className="py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6">
-            Powerful Features for{" "}
-            <span className="bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-6">
+            Powerful Features for <br />
+            <span className="bg-linear-to-r from-primary to-blue-600 bg-clip-text text-transparent">
               Smarter Learning
             </span>
           </h1>
