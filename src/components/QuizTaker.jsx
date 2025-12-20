@@ -400,18 +400,16 @@ const QuizTaker = ({ user, onComplete, onLimitUpdate }) => {
         setQuiz(updatedQuiz);
         setQuizFlashcards(relevantCards);
 
-        if (status === "loading") {
-          if (q.score !== undefined) {
-            setStatus("completed");
-            const prevAnswers = {};
-            q.questions.forEach((ques) => {
-              const qid = ques.id || ques._id;
-              prevAnswers[qid] = ques.userAnswer || "";
-            });
-            setAnswers(prevAnswers);
-          } else {
-            setStatus("intro");
-          }
+        if (q.score !== undefined) {
+          setStatus("completed");
+          const prevAnswers = {};
+          q.questions.forEach((ques) => {
+            const qid = ques.id || ques._id;
+            prevAnswers[qid] = ques.userAnswer || "";
+          });
+          setAnswers(prevAnswers);
+        } else {
+          setStatus("intro");
         }
       } catch (err) {
         console.error("Failed to fetch quiz:", err);
@@ -422,7 +420,7 @@ const QuizTaker = ({ user, onComplete, onLimitUpdate }) => {
     }
 
     fetchQuiz();
-  }, [id, navigate, user, status]);
+  }, [id, navigate, user]);
 
   if (isFetching || !quiz) {
     return (
