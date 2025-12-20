@@ -86,7 +86,7 @@ const TestimonialsPage = () => {
       <Navbar />
 
       {/* Hero Section */}
-      <section className="pt-35 py-20 px-4 sm:px-6 lg:px-8">
+      <section className="pt-40 py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6">
             Loved by <br />

@@ -19,7 +19,7 @@ const FeaturesPage = () => {
         "Covers all major subjects and topics",
       ],
       image:
-        "https://images.unsplash.com/photo-1516321318423-f06f70d504f0?w=600&h=400&fit=crop",
+        "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=600&h=400&fit=crop",
     },
     {
       icon: BookOpen,
@@ -33,7 +33,7 @@ const FeaturesPage = () => {
         "Progress tracking and analytics",
       ],
       image:
-        "https://images.unsplash.com/photo-1507842217343-583f20270319?w=600&h=400&fit=crop",
+        "https://images.unsplash.com/photo-1577720643272-265f434fd3b5?w=600&h=400&fit=crop",
     },
     {
       icon: BarChart3,
@@ -70,7 +70,7 @@ const FeaturesPage = () => {
       <Navbar />
 
       {/* Hero Section */}
-      <section className="pt-35 py-20 px-4 sm:px-6 lg:px-8">
+      <section className="pt-40 py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-6">
             Powerful Features for <br />
