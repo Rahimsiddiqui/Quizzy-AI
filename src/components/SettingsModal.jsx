@@ -162,7 +162,7 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
     setIsUpdatingPassword(true);
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/auth/change-password`,
+        `${import.meta.env.VITE_API_URL}/api/auth/change-password`,
         {
           method: "POST",
           headers: {
@@ -203,7 +203,7 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
 
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/auth/delete-account`,
+        `${import.meta.env.VITE_API_URL}/api/auth/delete-account`,
         {
           method: "DELETE",
           headers: {
@@ -248,7 +248,7 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
     setIsSendingFeedback(true);
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/support/feedback`,
+        `${import.meta.env.VITE_API_URL}/api/support/feedback`,
         {
           method: "POST",
           headers: {
@@ -280,7 +280,7 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
   const handleInitiate2FA = async () => {
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/auth/2fa/initiate`,
+        `${import.meta.env.VITE_API_URL}/api/auth/2fa/initiate`,
         {
           method: "GET",
           headers: {
@@ -314,7 +314,7 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
     setIsEnabling2FA(true);
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/auth/2fa/enable`,
+        `${import.meta.env.VITE_API_URL}/api/auth/2fa/enable`,
         {
           method: "POST",
           headers: {
@@ -356,7 +356,7 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
 
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/auth/2fa/disable`,
+        `${import.meta.env.VITE_API_URL}/api/auth/2fa/disable`,
         {
           method: "POST",
           headers: {
@@ -402,7 +402,7 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
 
       try {
         const response = await fetch(
-          `${import.meta.env.VITE_API_URL}/auth/2fa/status`,
+          `${import.meta.env.VITE_API_URL}/api/auth/2fa/status`,
           {
             method: "GET",
             headers: {

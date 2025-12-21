@@ -82,7 +82,7 @@ EMAIL_USER=your_email_address
 EMAIL_PASSWORD=your_email_app_password
 
 FRONTEND_URL=http://localhost:5173
-VITE_API_URL=http://localhost:5000/api
+VITE_API_URL=http://localhost:5000
 NODE_ENV=development
 
 VITE_GOOGLE_CLIENT_ID=your_google_client_id

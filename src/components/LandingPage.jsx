@@ -54,18 +54,18 @@ const LandingPage = () => {
           </p>
 
           <div
-            className="flex flex-col sm:flex-row gap-4 justify-center mb-12 animate-fade-in-up"
+            className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center mb-12 animate-fade-in-up"
             style={{ animationDelay: "400ms" }}
           >
             <button
               onClick={() => navigate("/auth")}
-              className="px-8 py-4 rounded-xl bg-primary text-white font-bold text-lg hover:bg-blue-700 transition-all hover:shadow-xl hover:shadow-primary/30 active:scale-95 hover:scale-102 flex items-center justify-center gap-2 point"
+              className="px-8 py-4 w-[90%] md:w-[45%] mx-auto rounded-xl bg-primary text-white font-bold text-md xl:text-lg hover:bg-blue-700 transition-all hover:shadow-xl hover:shadow-primary/30 active:scale-95 hover:scale-102 flex items-center justify-center gap-2 point"
             >
               Start Learning Free <ArrowRight className="w-5 h-5" />
             </button>
             <button
               onClick={() => navigate("/auth")}
-              className="px-8 py-4 rounded-xl border border-border text-textMain font-bold text-lg hover:bg-surfaceHighlight transition-all hover:border-primary/50 hover:scale-102 point"
+              className="px-8 py-4 w-[90%] md:w-[45%] mx-auto rounded-xl border border-border text-textMain font-bold text-md xl:text-lg hover:bg-surfaceHighlight transition-all hover:border-primary/50 hover:scale-102 point"
             >
               View Demo
             </button>

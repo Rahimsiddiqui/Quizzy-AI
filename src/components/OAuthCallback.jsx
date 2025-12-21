@@ -25,7 +25,7 @@ const OAuthCallback = () => {
         }
 
         const response = await fetch(
-          `${import.meta.env.VITE_API_URL}/auth/oauth/callback`,
+          `${import.meta.env.VITE_API_URL}/api/auth/oauth/callback`,
           {
             method: "POST",
             headers: {

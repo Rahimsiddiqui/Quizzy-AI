@@ -52,14 +52,14 @@ async function request(endpoint, method = "GET", body) {
 
 /** Generic decrement function */
 async function decrementLimit(type) {
-  const data = await request(`/limits/decrement/${type}`, "POST");
+  const data = await request(`/api/limits/decrement/${type}`, "POST");
   return data.success;
 }
 
 const StorageService = {
   // --- AUTH ---
   register: async (name, email, password) => {
-    const data = await request("/auth/register", "POST", {
+    const data = await request("/api/auth/register", "POST", {
       name,
       email,
       password,
@@ -70,7 +70,7 @@ const StorageService = {
   },
 
   login: async (email, password) => {
-    const data = await request("/auth/login", "POST", { email, password });
+    const data = await request("/api/auth/login", "POST", { email, password });
     localStorage.setItem("token", data.token);
     localStorage.setItem("user", JSON.stringify(data.user));
     return data.user;
@@ -91,7 +91,7 @@ const StorageService = {
   },
 
   refreshUser: async () => {
-    const data = await request("/users/me");
+    const data = await request("/api/users/me");
     if (data.user) {
       localStorage.setItem("user", JSON.stringify(data.user));
       // Dispatch event so Layout component re-syncs state
@@ -105,7 +105,7 @@ const StorageService = {
   // --- QUIZZES ---
   getQuizzes: async (userId) => {
     try {
-      const data = await request("/quizzes");
+      const data = await request("/api/quizzes");
 
       // Ensure an array
       let quizzes = [];
@@ -123,27 +123,28 @@ const StorageService = {
   },
 
   saveQuiz: async (quiz) => {
-    if (quiz._id) return request(`/quizzes/${quiz._id}`, "PUT", quiz);
-    return request("/quizzes", "POST", quiz);
+    if (quiz._id) return request(`/api/quizzes/${quiz._id}`, "PUT", quiz);
+    return request("/api/quizzes", "POST", quiz);
   },
 
-  deleteQuiz: async (quizId) => request(`/quizzes/${quizId}`, "DELETE"),
+  deleteQuiz: async (quizId) => request(`/api/quizzes/${quizId}`, "DELETE"),
 
   // --- FLASHCARDS ---
   getFlashcards: async (userId) => {
-    const data = await request("/flashcards");
+    const data = await request("/api/flashcards");
     if (!userId) return data;
     return data.filter((c) => c.userId === userId);
   },
 
-  saveFlashcards: async (cards) => request("/flashcards/bulk", "POST", cards),
+  saveFlashcards: async (cards) =>
+    request("/api/flashcards/bulk", "POST", cards),
 
   updateFlashcard: async (card) =>
-    request(`/flashcards/${card.id}`, "PUT", card),
+    request(`/api/flashcards/${card.id}`, "PUT", card),
 
   // --- TIERS & LIMITS ---
   upgradeTier: async (tier) => {
-    const data = await request("/subscription/upgrade", "POST", { tier });
+    const data = await request("/api/subscription/upgrade", "POST", { tier });
     return data.user || data;
   },
 
@@ -154,7 +155,7 @@ const StorageService = {
   // --- AI REVIEWS ---
   getLastReview: async () => {
     try {
-      const data = await request("/reviews/last");
+      const data = await request("/api/reviews/last");
       return data.review || null;
     } catch (err) {
       console.error("No previous AI review found.");
@@ -167,7 +168,7 @@ const StorageService = {
       text: reviewText,
       createdAt: Date.now(),
     };
-    return request("/reviews", "POST", payload);
+    return request("/api/reviews", "POST", payload);
   },
 };
 

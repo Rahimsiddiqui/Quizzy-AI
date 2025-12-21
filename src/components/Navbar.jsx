@@ -79,9 +79,9 @@ const Navbar = () => {
           <a
             href="/features"
             onClick={() => setMobileMenuOpen(false)}
-            className={`px-4 py-3 rounded-[5px] transition-all text-textMain duration-200 ${
+            className={`pl-2 pr-4 py-3 rounded-[5px] transition-all text-textMain duration-200 border-b border-border ${
               isActive("/features")
-                ? "bg-surfaceHighlight text-textMain/80 font-semibold translate-x-1"
+                ? "bg-surfaceHighlight text-textMain/80 font-semibold pl-5"
                 : "hover:text-textMain hover:bg-surfaceHighlight hover:translate-x-1"
             }`}
           >
@@ -90,9 +90,9 @@ const Navbar = () => {
           <a
             href="/testimonials"
             onClick={() => setMobileMenuOpen(false)}
-            className={`px-4 py-3 rounded-[5px] transition-all text-textMain duration-200 ${
+            className={`pl-2 pr-4 py-3 rounded-[5px] transition-all text-textMain duration-200 border-b border-border ${
               isActive("/testimonials")
-                ? "bg-surfaceHighlight text-textMain/80 font-semibold translate-x-1"
+                ? "bg-surfaceHighlight text-textMain/80 font-semibold pl-4"
                 : "hover:text-textMain hover:bg-surfaceHighlight hover:translate-x-1"
             }`}
           >

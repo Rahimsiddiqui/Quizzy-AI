@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 
 import { useNavigate } from "react-router-dom";
-const API_URL = `${import.meta.env.VITE_API_URL}/auth`;
+const API_URL = `${import.meta.env.VITE_API_URL}/api/auth`;
 
 const GoogleIcon = () => (
   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">

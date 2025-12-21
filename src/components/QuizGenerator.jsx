@@ -230,14 +230,17 @@ const QuizGenerator = ({ user, onGenerateSuccess }) => {
       quiz.isFlashcardSet = generateFlashcards;
 
       const token = localStorage.getItem("token");
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/quizzes`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ ...quiz, isFlashcardSet: generateFlashcards }),
-      });
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/quizzes`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ ...quiz, isFlashcardSet: generateFlashcards }),
+        }
+      );
 
       const savedQuiz = await response.json();
 
