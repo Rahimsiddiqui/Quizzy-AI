@@ -10,7 +10,7 @@ export default defineConfig({
     port: 5173,
     proxy: {
       "/api": {
-        target: "https://quizzy-ai-production.up.railway.app/api",
+        target: "http://localhost:5000/api",
         changeOrigin: true,
         secure: false,
       },
@@ -21,5 +21,33 @@ export default defineConfig({
     outDir: "dist",
     sourcemap: true,
     chunkSizeWarningLimit: 2000,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ["react", "react-dom", "react-router-dom"],
+        },
+      },
+    },
+  },
+
+  define: {
+    global: "globalThis",
+  },
+
+  resolve: {
+    alias: {
+      crypto: "crypto-browserify",
+    },
+  },
+
+  optimizeDeps: {
+    esbuildOptions: {
+      define: {
+        global: "globalThis",
+      },
+      supported: {
+        bigint: false,
+      },
+    },
   },
 });
