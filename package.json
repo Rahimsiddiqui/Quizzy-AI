@@ -67,6 +67,6 @@
   },
   "homepage": "https://github.com/Rahimsiddiqui/Quizzy-AI#readme",
   "engines": {
-    "node": ">=16.0.0"
+    "node": ">18 <23"
   }
 }
