@@ -29,25 +29,4 @@ export default defineConfig({
       },
     },
   },
-
-  define: {
-    global: "globalThis",
-  },
-
-  resolve: {
-    alias: {
-      crypto: "crypto-browserify",
-    },
-  },
-
-  optimizeDeps: {
-    esbuildOptions: {
-      define: {
-        global: "globalThis",
-      },
-      supported: {
-        bigint: false,
-      },
-    },
-  },
 });
