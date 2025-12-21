@@ -27,9 +27,17 @@ const isProduction = process.env.NODE_ENV === "production";
 
 app.use(express.json({ limit: "20mb" }));
 app.use(express.urlencoded({ limit: "20mb", extended: true }));
+
+// CORS Configuration
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://quizzy-ai-d6yb.vercel.app",
+  process.env.FRONTEND_URL,
+].filter(Boolean);
+
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    origin: allowedOrigins,
     credentials: true,
   })
 );
