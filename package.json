@@ -10,7 +10,6 @@
     "server:dev": "nodemon server/index.js",
     "server:start": "node server/index.js",
     "dev:all": "concurrently \"npm run dev\" \"npm run server:dev\"",
-    "build:all": "npm run build",
     "start": "node server/index.js"
   },
   "dependencies": {
