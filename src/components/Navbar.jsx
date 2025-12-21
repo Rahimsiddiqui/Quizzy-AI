@@ -77,13 +77,13 @@ const Navbar = () => {
 
       {/* Mobile sidebar menu - slides from right */}
       <div
-        className={`fixed top-16 right-0 h-max bg-surface border-l border-border md:hidden z-50 transition-all duration-300 ease-out transform rounded-bl-[5px] ${
+        className={`fixed top-16 right-0 h-max bg-surface border-l border-border md:hidden z-50 transition-all duration-300 ease-out transform rounded-lg ${
           mobileMenuOpen
             ? "translate-x-0 opacity-100"
             : "translate-x-full opacity-0 pointer-events-none"
         } w-max max-w-xs max-h-[calc(100vh-64px)] overflow-y-auto`}
       >
-        <div className="px-6 py-6 space-y-4 flex flex-col rounded-lg">
+        <div className="px-6 py-6 space-y-4 flex flex-col">
           <a
             href="/features"
             onClick={() => setMobileMenuOpen(false)}
