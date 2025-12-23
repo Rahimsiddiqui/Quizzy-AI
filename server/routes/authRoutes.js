@@ -111,19 +111,24 @@ router.post("/login", async (req, res) => {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    const token = jwt.sign({ id: user._id }, JWT_SECRET, {
-      expiresIn: "7d",
-    });
-
     // Track session - capture real IP and device info
     const userAgent = req.headers["user-agent"] || "";
 
     // Get real IP address - try multiple sources
-    let ipAddress = req.ip;
-    if (req.headers["x-forwarded-for"]) {
-      ipAddress = req.headers["x-forwarded-for"].split(",")[0].trim();
-    } else if (req.connection.remoteAddress) {
-      ipAddress = req.connection.remoteAddress;
+    let ipAddress =
+      req.headers["x-forwarded-for"]?.split(",")[0].trim() ||
+      req.socket?.remoteAddress ||
+      req.connection?.remoteAddress ||
+      "127.0.0.1";
+
+    // Remove IPv6 prefix if present (::ffff:)
+    if (ipAddress.includes("::")) {
+      ipAddress = ipAddress.replace(/^.*:/, "") || "127.0.0.1";
+    }
+
+    // Fallback for localhost
+    if (ipAddress === "-1" || !ipAddress) {
+      ipAddress = "127.0.0.1";
     }
 
     // Extract browser/device info from user agent
@@ -180,6 +185,12 @@ router.post("/login", async (req, res) => {
 
     await user.save();
 
+    // Sign token with session id so per-session logout can be enforced
+    const sessionId = user.sessions[user.sessions.length - 1]._id;
+    const token = jwt.sign({ id: user._id, sessionId }, JWT_SECRET, {
+      expiresIn: "7d",
+    });
+
     res.status(200).json({
       token,
       user: {
@@ -227,7 +238,43 @@ router.post("/verify-email", async (req, res) => {
     user.verificationCodeExpires = null;
     await user.save();
 
-    const token = jwt.sign({ id: user._id }, JWT_SECRET, {
+    // Create a session for this verification flow and sign a token with sessionId
+    const userAgent = req.headers["user-agent"] || "";
+    let ipAddress =
+      req.headers["x-forwarded-for"]?.split(",")[0].trim() ||
+      req.socket?.remoteAddress ||
+      req.connection?.remoteAddress ||
+      "127.0.0.1";
+
+    // Remove IPv6 prefix if present
+    if (ipAddress.includes("::")) {
+      ipAddress = ipAddress.replace(/^.*:/, "") || "127.0.0.1";
+    }
+
+    // Fallback for localhost
+    if (ipAddress === "-1" || !ipAddress) {
+      ipAddress = "127.0.0.1";
+    }
+
+    user.sessions = user.sessions || [];
+    user.sessions.push({
+      deviceName: userAgent.split(" ")[0] || "Unknown Device",
+      userAgent,
+      ipAddress,
+      lastActive: new Date(),
+      isCurrent: true,
+      createdAt: new Date(),
+    });
+
+    // Mark old sessions as not current
+    user.sessions.forEach((session, idx) => {
+      session.isCurrent = idx === user.sessions.length - 1;
+    });
+
+    await user.save();
+
+    const sessionId = user.sessions[user.sessions.length - 1]._id;
+    const token = jwt.sign({ id: user._id, sessionId }, JWT_SECRET, {
       expiresIn: "7d",
     });
 
@@ -407,9 +454,14 @@ router.delete("/sessions/:sessionId/logout", protect, async (req, res) => {
         console.log(
           `Session ${sessionId} removed for user ${user._id}. Sessions remaining: ${newLength}`
         );
+
+        const currentSessionDeleted =
+          String(sessionId) === String(req.sessionId);
+
         res.status(200).json({
           message: "Session logout successful",
           sessionsRemaining: newLength,
+          currentSessionDeleted,
         });
       } else {
         console.warn(`Session ${sessionId} not found for user ${user._id}`);
@@ -498,15 +550,23 @@ router.post("/oauth/callback", async (req, res) => {
     // Refresh user to get latest data
     const updatedUser = await User.findById(user._id);
 
-    // Generate JWT token
-    const token = jwt.sign({ id: updatedUser._id }, JWT_SECRET, {
-      expiresIn: "7d",
-    });
-
     // Track session
     const userAgent = req.headers["user-agent"] || "Unknown";
-    const ipAddress =
-      req.headers["x-forwarded-for"]?.split(",")[0] || req.ip || "Unknown";
+    let ipAddress =
+      req.headers["x-forwarded-for"]?.split(",")[0].trim() ||
+      req.socket?.remoteAddress ||
+      req.connection?.remoteAddress ||
+      "127.0.0.1";
+
+    // Remove IPv6 prefix if present
+    if (ipAddress.includes("::")) {
+      ipAddress = ipAddress.replace(/^.*:/, "") || "127.0.0.1";
+    }
+
+    // Fallback for localhost
+    if (ipAddress === "-1" || !ipAddress) {
+      ipAddress = "127.0.0.1";
+    }
 
     // Extract browser/device info from user agent
     let deviceName = "Unknown Device";
@@ -534,6 +594,12 @@ router.post("/oauth/callback", async (req, res) => {
     });
 
     await updatedUser.save();
+
+    // Sign token with session id
+    const sessionId = updatedUser.sessions[updatedUser.sessions.length - 1]._id;
+    const token = jwt.sign({ id: updatedUser._id, sessionId }, JWT_SECRET, {
+      expiresIn: "7d",
+    });
 
     res.status(200).json({
       message: "OAuth authentication successful",

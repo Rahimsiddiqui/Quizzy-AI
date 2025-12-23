@@ -31,7 +31,25 @@ const protect = asyncHandler(async (req, res, next) => {
         return res.status(401).json({ message: "Invalid token structure" });
       }
 
+      // Require sessionId in token for per-session logout support
+      if (!decoded.sessionId) {
+        return res.status(401).json({ message: "Session ID missing in token" });
+      }
+
       req.userId = decoded.id;
+      req.sessionId = decoded.sessionId;
+
+      // Verify that session is still active for the user
+      const User = (await import("../models/User.js")).default;
+      const user = await User.findById(req.userId);
+      if (
+        !user ||
+        !user.sessions ||
+        !Array.isArray(user.sessions) ||
+        !user.sessions.some((s) => String(s._id) === String(req.sessionId))
+      ) {
+        return res.status(401).json({ message: "Session invalid or expired" });
+      }
 
       next();
     } catch (error) {

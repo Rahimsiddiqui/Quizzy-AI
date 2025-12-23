@@ -60,8 +60,17 @@ const App = () => {
       if (updatedUser) setAuth({ isAuthenticated: true, user: updatedUser });
     };
 
+    // Listen for session logout event (no page reload)
+    const handleSessionLogout = () => {
+      setAuth({ isAuthenticated: false, user: null });
+    };
+
     window.addEventListener("userUpdated", handleUserUpdated);
-    return () => window.removeEventListener("userUpdated", handleUserUpdated);
+    window.addEventListener("sessionLogout", handleSessionLogout);
+    return () => {
+      window.removeEventListener("userUpdated", handleUserUpdated);
+      window.removeEventListener("sessionLogout", handleSessionLogout);
+    };
   }, []);
 
   const handleLoginSuccess = () => {

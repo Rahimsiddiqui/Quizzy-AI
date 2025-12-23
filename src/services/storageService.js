@@ -47,6 +47,15 @@ async function request(endpoint, method = "GET", body) {
 
     if (!res.ok) {
       const errorData = await res.json().catch(() => ({}));
+      // If token or session is invalid, clear local auth state and redirect to login
+      if (res.status === 401) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        REQUEST_CACHE.clear();
+        // Redirect to login/root
+        window.location.href = "/";
+        throw new Error(errorData.message || "Unauthorized");
+      }
       throw new Error(
         errorData.message || `Request failed with status ${res.status}`
       );

@@ -453,8 +453,20 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
       );
 
       if (response.ok) {
+        const data = await response.json();
         toast.success("Session ended");
-        fetchSessions();
+        // If the deleted session is the current session, clear local auth and redirect
+        if (data && data.currentSessionDeleted) {
+          StorageService.logout();
+          // Emit event to trigger App.jsx logout without reload
+          window.dispatchEvent(new CustomEvent("sessionLogout"));
+        } else {
+          fetchSessions();
+        }
+      } else if (response.status === 401) {
+        // If token/session is invalid, clear local state
+        StorageService.logout();
+        window.dispatchEvent(new CustomEvent("sessionLogout"));
       } else {
         toast.error("Failed to end session");
       }
@@ -503,7 +515,8 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
 
       if (response.ok) {
         StorageService.logout();
-        window.location.href = "/";
+        // Emit event to trigger App.jsx logout without reload
+        window.dispatchEvent(new CustomEvent("sessionLogout"));
       } else {
         toast.error("Failed to logout from all devices");
         setShowLogoutAllModal(false);
