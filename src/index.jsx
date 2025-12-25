@@ -27,6 +27,15 @@ const initializeTheme = () => {
 
 initializeTheme();
 
+// Load Vercel Analytics script in production only
+if (import.meta.env.NODE_ENV === "production") {
+  const script = document.createElement("script");
+  script.src = "https://vercel.live/_next-live/feedback/feedback.js";
+  script.defer = true;
+  script.async = true;
+  document.head.appendChild(script);
+}
+
 const rootElement = document.getElementById("root");
 if (!rootElement) {
   throw new Error("Could not find root element to mount to");
