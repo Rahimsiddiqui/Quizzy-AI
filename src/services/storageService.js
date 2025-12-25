@@ -270,6 +270,17 @@ const StorageService = {
   // --- AI REVIEWS ---
   getLastReview: async () => {
     try {
+      // Check localStorage first for instant access
+      const cachedReview = localStorage.getItem("lastAIReview");
+      if (cachedReview) {
+        try {
+          return JSON.parse(cachedReview);
+        } catch (err) {
+          console.warn("Failed to parse cached review:", err);
+        }
+      }
+
+      // Fall back to fetching from server if not in cache
       const data = await request("/api/reviews/last");
       return data.review || null;
     } catch (err) {
@@ -283,7 +294,22 @@ const StorageService = {
       text: reviewText,
       createdAt: Date.now(),
     };
-    return request("/api/reviews", "POST", payload);
+    const result = await request("/api/reviews", "POST", payload);
+
+    // Also save to localStorage for instant access on overview page
+    try {
+      localStorage.setItem(
+        "lastAIReview",
+        JSON.stringify({
+          text: reviewText,
+          createdAt: Date.now(),
+        })
+      );
+    } catch (err) {
+      console.warn("Failed to save review to localStorage:", err);
+    }
+
+    return result;
   },
 };
 

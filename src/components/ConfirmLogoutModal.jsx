@@ -60,7 +60,7 @@ const ConfirmLogoutModal = ({
                   >
                     {isProcessing ? (
                       <>
-                        <Loader2 className="w-4 h-4 animate-spin text-amber-400" />
+                        <Loader2 className="w-4 h-4 animate-spin text-amber-500" />
                         <span>Processing...</span>
                       </>
                     ) : (
