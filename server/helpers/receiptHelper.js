@@ -31,7 +31,7 @@ const generateReceiptHTML = (data) => {
     <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Quizzy AI - Receipt</title>
+      <title>Qubli AI - Receipt</title>
       <style>
         * {
           margin: 0;
@@ -273,7 +273,7 @@ const generateReceiptHTML = (data) => {
             <!-- Support -->
             <div class="support">
               <p><strong>Questions?</strong></p>
-              <p>If you need help or have any questions about your subscription, feel free to <a href="https://quizzy-ai.vercel.app/contact">contact our support team</a>.</p>
+              <p>If you need help or have any questions about your subscription, feel free to <a href="https://qubli-ai-d6yb.vercel.app/contact">contact our support team</a>.</p>
               <p>We're here to help and typically respond within 48 hours.</p>
             </div>
           </div>

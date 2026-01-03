@@ -21,7 +21,7 @@ const Navbar = () => {
           className="flex items-center gap-2 font-bold text-xl text-primary dark:text-blue-400 hover:opacity-80 transition-opacity point"
         >
           <Brain className="w-7 h-7" />
-          <span>Quizzy AI</span>
+          <span>Qubli AI</span>
         </button>
 
         {/* Mobile Menu Button */}

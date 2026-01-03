@@ -11,7 +11,7 @@ const TestimonialsPage = () => {
       name: "Sarah Chen",
       role: "Pre-Med Student",
       rating: 5,
-      text: "Quizzy AI completely transformed how I study. The AI-generated quizzes are so relevant and the flashcards help me retain information way better. I've improved my grades significantly!",
+      text: "Qubli AI completely transformed how I study. The AI-generated quizzes are so relevant and the flashcards help me retain information way better. I've improved my grades significantly!",
       image: "SC",
       color: "bg-blue-500",
     },
@@ -19,7 +19,7 @@ const TestimonialsPage = () => {
       name: "Marcus Johnson",
       role: "College Junior",
       rating: 5,
-      text: "I improved my exam scores by 30% in just one month of using Quizzy AI. The analytics showed exactly what I needed to focus on, and the study recommendations were spot-on.",
+      text: "I improved my exam scores by 30% in just one month of using Qubli AI. The analytics showed exactly what I needed to focus on, and the study recommendations were spot-on.",
       image: "MJ",
       color: "bg-purple-500",
     },
@@ -27,7 +27,7 @@ const TestimonialsPage = () => {
       name: "Dr. Emily Rodriguez",
       role: "High School Teacher",
       rating: 5,
-      text: "As a teacher, I use Quizzy AI to create assessments for my students. It saves me so much time and the AI suggestions are incredibly accurate. My students love the interactive format!",
+      text: "As a teacher, I use Qubli AI to create assessments for my students. It saves me so much time and the AI suggestions are incredibly accurate. My students love the interactive format!",
       image: "ER",
       color: "bg-green-500",
     },
@@ -35,7 +35,7 @@ const TestimonialsPage = () => {
       name: "James Lee",
       role: "MBA Student",
       rating: 5,
-      text: "The flashcard system with spaced repetition is incredible. I've tried many study apps, but Quizzy AI is by far the most effective. The time I save allows me to focus on deeper learning.",
+      text: "The flashcard system with spaced repetition is incredible. I've tried many study apps, but Qubli AI is by far the most effective. The time I save allows me to focus on deeper learning.",
       image: "JL",
       color: "bg-orange-500",
     },
@@ -43,7 +43,7 @@ const TestimonialsPage = () => {
       name: "Priya Patel",
       role: "GMAT Test Taker",
       rating: 5,
-      text: "I used Quizzy AI to prepare for the GMAT and scored 750! The AI-generated practice questions are incredibly close to the actual test format. Highly recommend!",
+      text: "I used Qubli AI to prepare for the GMAT and scored 750! The AI-generated practice questions are incredibly close to the actual test format. Highly recommend!",
       image: "PP",
       color: "bg-pink-500",
     },
@@ -67,7 +67,7 @@ const TestimonialsPage = () => {
       name: "Ahmed Hassan",
       role: "Engineering Student",
       rating: 5,
-      text: "Quizzy AI's ability to generate quizzes on complex technical topics is exceptional. The questions test real understanding, not just memorization. Best study tool I've found!",
+      text: "Qubli AI's ability to generate quizzes on complex technical topics is exceptional. The questions test real understanding, not just memorization. Best study tool I've found!",
       image: "AH",
       color: "bg-cyan-500",
     },
@@ -96,7 +96,7 @@ const TestimonialsPage = () => {
           </h1>
           <p className="text-lg sm:text-xl text-textMuted mb-8 max-w-2xl mx-auto">
             Join thousands of students who've transformed their learning with
-            Quizzy AI. Read their success stories below.
+            Qubli AI. Read their success stories below.
           </p>
         </div>
       </section>
@@ -175,13 +175,13 @@ const TestimonialsPage = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-primary/10 to-blue-600/10 border-t border-b border-border">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-linear-to-br from-primary/10 to-blue-600/10 border-t border-b border-border">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl sm:text-4xl font-bold mb-4">
             Ready to Join Our Community?
           </h2>
           <p className="text-lg text-textMuted mb-8">
-            Start your learning journey with Quizzy AI today.
+            Start your learning journey with Qubli AI today.
           </p>
           <button
             onClick={() => navigate("/auth")}

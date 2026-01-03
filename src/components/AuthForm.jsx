@@ -184,7 +184,7 @@ const AuthForm = ({ onLogin }) => {
             <Brain className="w-8 h-8 text-primary dark:text-blue-500" />
           </div>
           <h1 className="text-3xl font-bold text-textMain mb-2">
-            {isLogin ? "Welcome Back" : "Join Quizzy AI"}
+            {isLogin ? "Welcome Back" : "Join Qubli AI"}
           </h1>
           <p className="text-textMuted">
             {isLogin

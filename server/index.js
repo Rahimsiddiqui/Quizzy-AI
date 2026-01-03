@@ -47,7 +47,7 @@ app.set("trust proxy", 1);
 // CORS Configuration
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://quizzy-ai-d6yb.vercel.app",
+  "https://qubli-ai-d6yb.vercel.app",
   process.env.FRONTEND_URL,
 ].filter(Boolean);
 
@@ -201,7 +201,7 @@ app.post("/api/subscription/upgrade", protect, async (req, res) => {
       await transporter.sendMail({
         from: process.env.EMAIL_USER,
         to: user.email,
-        subject: `Payment Receipt - Quizzy AI ${
+        subject: `Payment Receipt - Qubli AI ${
           tier === "pro" ? "Pro" : "Basic"
         } Subscription`,
         html: receiptHTML,
@@ -262,7 +262,7 @@ app.post("/api/subscription/refund", protect, async (req, res) => {
               user.name || "User"
             },</p>
             
-            <p style="color: #666; line-height: 1.6;">Thank you for using Quizzy AI. Your refund request has been processed successfully.</p>
+            <p style="color: #666; line-height: 1.6;">Thank you for using Qubli AI. Your refund request has been processed successfully.</p>
             
             <div style="background-color: #f9f9f9; padding: 20px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #6366f1;">
               <h3 style="color: #333; margin-top: 0;">Refund Details</h3>
@@ -287,7 +287,7 @@ app.post("/api/subscription/refund", protect, async (req, res) => {
             
             <p style="color: #666; line-height: 1.6;">If you have any questions or need further assistance, please don't hesitate to contact our support team.</p>
             
-            <p style="color: #999; font-size: 12px; margin-top: 30px;">Best regards,<br>Quizzy AI Team</p>
+            <p style="color: #999; font-size: 12px; margin-top: 30px;">Best regards,<br>Qubli AI Team</p>
           </div>
         </div>
       `;
@@ -295,7 +295,7 @@ app.post("/api/subscription/refund", protect, async (req, res) => {
       await transporter.sendMail({
         from: process.env.EMAIL_USER,
         to: user.email,
-        subject: `Refund Confirmation - Quizzy AI (${previousTier} → Free)`,
+        subject: `Refund Confirmation - Qubli AI (${previousTier} → Free)`,
         html: emailHtml,
       });
     } catch (emailError) {

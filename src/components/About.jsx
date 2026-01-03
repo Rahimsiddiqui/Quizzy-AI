@@ -5,7 +5,7 @@ import Navbar from "./Navbar.jsx";
 const About = () => {
   const aboutData = {
     intro:
-      "Quizzy AI helps learners study smarter by turning study material into targeted quizzes and spaced-repetition flashcards. We combine research-backed learning techniques with AI to make studying faster and more effective.",
+      "Qubli AI helps learners study smarter by turning study material into targeted quizzes and spaced-repetition flashcards. We combine research-backed learning techniques with AI to make studying faster and more effective.",
     sections: [
       {
         id: "mission",
@@ -50,7 +50,7 @@ const About = () => {
         id: "how-it-works",
         title: "How It Works",
         content:
-          "Provide text, upload notes, or describe the topic you want to study. Quizzy AI generates quizzes and flashcards, which you can review using our study interface powered by spaced repetition.",
+          "Provide text, upload notes, or describe the topic you want to study. Qubli AI generates quizzes and flashcards, which you can review using our study interface powered by spaced repetition.",
       },
       {
         id: "features",
@@ -67,7 +67,7 @@ const About = () => {
       },
       {
         id: "why-choose",
-        title: "Why Choose Quizzy AI?",
+        title: "Why Choose Qubli AI?",
         content: null,
         reasons: [
           {
@@ -105,7 +105,7 @@ const About = () => {
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-6">
             About <br />
             <span className="text-primary dark:text-blue-500 bg-clip-text">
-              Quizzy AI
+              Qubli AI
             </span>
           </h1>
           <p className="text-lg sm:text-xl text-textMuted mb-8 max-w-2xl mx-auto">

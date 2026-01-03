@@ -79,7 +79,7 @@ const FeaturesPage = () => {
             </span>
           </h1>
           <p className="text-lg sm:text-xl text-textMuted mb-8 max-w-2xl mx-auto">
-            Discover how Quizzy AI's advanced features help you study more
+            Discover how Qubli AI's advanced features help you study more
             effectively and ace your exams.
           </p>
         </div>
@@ -164,7 +164,7 @@ const FeaturesPage = () => {
             Ready to Experience the Power of AI Learning?
           </h2>
           <p className="text-lg text-textMuted mb-8">
-            Start using Quizzy AI today and transform the way you study.
+            Start using Qubli AI today and transform the way you study.
           </p>
           <button
             onClick={() => navigate("/auth")}

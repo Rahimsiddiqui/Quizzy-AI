@@ -51,7 +51,7 @@ const LandingPage = () => {
           >
             Master Any Topic with <br />
             <span className="text-primary dark:text-blue-500 bg-clip-text">
-              Quizzy AI
+              Qubli AI
             </span>
           </h1>
 
@@ -228,7 +228,7 @@ const LandingPage = () => {
                 ))}
               </div>
               <p className="text-textMuted mb-6">
-                "Quizzy AI completely transformed how I study. The AI-generated
+                "Qubli AI completely transformed how I study. The AI-generated
                 quizzes are so relevant and the flashcards help me retain
                 information way better."
               </p>
@@ -258,7 +258,7 @@ const LandingPage = () => {
               </div>
               <p className="text-textMuted mb-6">
                 "I improved my exam scores by 30% in just one month of using
-                Quizzy AI. The analytics showed exactly what I needed to focus
+                Qubli AI. The analytics showed exactly what I needed to focus
                 on."
               </p>
               <div className="flex items-center gap-3 pt-6 border-t border-border">
@@ -288,7 +288,7 @@ const LandingPage = () => {
                 ))}
               </div>
               <p className="text-textMuted mb-6">
-                "As a teacher, I use Quizzy AI to create assessments for my
+                "As a teacher, I use Qubli AI to create assessments for my
                 students. It saves me so much time and the AI suggestions are
                 spot-on."
               </p>
@@ -329,7 +329,7 @@ const LandingPage = () => {
             Ready to Ace Your Exams?
           </h2>
           <p className="text-lg text-textMuted mb-8">
-            Join thousands of students using Quizzy AI to boost their learning
+            Join thousands of students using Qubli AI to boost their learning
           </p>
           <button
             onClick={() => navigate("/auth")}
@@ -351,7 +351,7 @@ const LandingPage = () => {
             <div>
               <div className="flex items-center gap-2 font-bold text-lg text-primary dark:text-blue-400 mb-4 justify-center md:justify-start">
                 <Brain className="w-6 h-6" />
-                <span>Quizzy AI</span>
+                <span>Qubli AI</span>
               </div>
               <p className="text-textMuted text-sm">
                 Making learning smarter with AI-powered quizzes and flashcards.
@@ -442,7 +442,7 @@ const LandingPage = () => {
           <div className="border-t border-border py-8">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
               <p className="text-textMuted text-sm">
-                &copy; {new Date().getFullYear()} Quizzy AI | All rights
+                &copy; {new Date().getFullYear()} Qubli AI | All rights
                 reserved.
               </p>
               <div className="flex gap-6">

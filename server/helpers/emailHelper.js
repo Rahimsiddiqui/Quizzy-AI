@@ -37,7 +37,7 @@ export const sendVerificationEmail = async (email, code) => {
             This code will expire in 30 minutes.
           </p>
           <p style="color: #999; text-align: center; font-size: 12px;">
-            If you didn't sign up for Quizzy AI, please ignore this email.
+            If you didn't sign up for Qubli AI, please ignore this email.
           </p>
         </div>
       </div>
@@ -46,7 +46,7 @@ export const sendVerificationEmail = async (email, code) => {
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: email,
-      subject: "Quizzy AI - Verify Your Email",
+      subject: "Qubli AI - Verify Your Email",
       html: htmlContent,
     });
 

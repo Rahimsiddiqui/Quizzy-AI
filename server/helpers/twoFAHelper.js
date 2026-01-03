@@ -6,8 +6,8 @@ import crypto from "crypto";
 export async function initiate2FA(userEmail) {
   try {
     const secret = speakeasy.generateSecret({
-      name: `Quizzy AI (${userEmail})`,
-      issuer: "Quizzy AI",
+      name: `Qubli AI (${userEmail})`,
+      issuer: "Qubli AI",
       length: 32,
     });
 

@@ -32,14 +32,14 @@ router.post("/feedback", async (req, res) => {
     const htmlContent = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <div style="background-color: #f5f5f5; padding: 20px; border-radius: 10px;">
-          <h2 style="color: #333;">New Feedback from Quizzy AI</h2>
+          <h2 style="color: #333;">New Feedback from Qubli AI</h2>
           <p style="color: #666;"><strong>From:</strong> ${email}</p>
           <p style="color: #666;"><strong>Message:</strong></p>
           <div style="background-color: #fff; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #2563eb;">
             <p style="color: #333; margin: 0; white-space: pre-wrap;">${feedback}</p>
           </div>
           <p style="color: #999; text-align: center; font-size: 12px; margin-top: 20px;">
-            This is an automated message from Quizzy AI feedback form.
+            This is an automated message from Qubli AI feedback form.
           </p>
         </div>
       </div>

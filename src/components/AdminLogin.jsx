@@ -53,7 +53,7 @@ export default function AdminLogin() {
             {/* Branding */}
             <div className="text-center mb-8">
               <h1 className="text-3xl font-bold text-textMain tracking-tight">
-                Quizzy Admin
+                Qubli Admin
               </h1>
               <p className="text-textMuted mt-2 font-medium">
                 Please enter your details to sign in

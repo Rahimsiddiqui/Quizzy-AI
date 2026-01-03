@@ -11,7 +11,7 @@ const Policies = () => {
         {
           heading: "30-Day Money-Back Guarantee",
           content:
-            "We offer a 30-day money-back guarantee on all paid subscriptions. If you're not satisfied with Quizzy AI within 30 days of purchase, you can request a full refund with no questions asked.",
+            "We offer a 30-day money-back guarantee on all paid subscriptions. If you're not satisfied with Qubli AI within 30 days of purchase, you can request a full refund with no questions asked.",
         },
         {
           heading: "How to Request a Refund",
@@ -71,7 +71,7 @@ const Policies = () => {
         {
           heading: "Fair Use",
           content:
-            "Quizzy AI is designed for personal and educational use. Users must not use the service to generate content for commercial resale, mass distribution, or other unauthorized purposes without explicit written consent.",
+            "Qubli AI is designed for personal and educational use. Users must not use the service to generate content for commercial resale, mass distribution, or other unauthorized purposes without explicit written consent.",
         },
         {
           heading: "Rate Limits",
@@ -110,7 +110,7 @@ const Policies = () => {
         {
           heading: "Content Ownership",
           content:
-            "You retain all rights to content you create and upload. By using Quizzy AI, you grant us a non-exclusive license to process, store, and display your content as necessary to provide the service. We do not claim ownership of your study materials.",
+            "You retain all rights to content you create and upload. By using Qubli AI, you grant us a non-exclusive license to process, store, and display your content as necessary to provide the service. We do not claim ownership of your study materials.",
         },
       ],
     },
@@ -121,12 +121,12 @@ const Policies = () => {
         {
           heading: "IP Rights",
           content:
-            "Quizzy AI, including its software, designs, and trademarks, is the intellectual property of Quizzy AI or its licensors. You may not reproduce, modify, or distribute any part of the service without explicit written permission.",
+            "Qubli AI, including its software, designs, and trademarks, is the intellectual property of Qubli AI or its licensors. You may not reproduce, modify, or distribute any part of the service without explicit written permission.",
         },
         {
           heading: "Third-Party Content",
           content:
-            "Quizzy AI may include third-party content and integrations. Use of such content is subject to the applicable third-party terms and licenses.",
+            "Qubli AI may include third-party content and integrations. Use of such content is subject to the applicable third-party terms and licenses.",
         },
       ],
     },
@@ -137,7 +137,7 @@ const Policies = () => {
         {
           heading: "Service Availability",
           content:
-            'Quizzy AI is provided "as is" and "as available." We aim for 99.9% uptime but do not guarantee uninterrupted service. We are not responsible for outages, data loss, or service interruptions.',
+            'Qubli AI is provided "as is" and "as available." We aim for 99.9% uptime but do not guarantee uninterrupted service. We are not responsible for outages, data loss, or service interruptions.',
         },
         {
           heading: "Accuracy of Content",
@@ -147,7 +147,7 @@ const Policies = () => {
         {
           heading: "Limitation of Liability",
           content:
-            "To the fullest extent permitted by law, Quizzy AI and its owners shall not be liable for any indirect, incidental, special, or consequential damages arising from your use of the service.",
+            "To the fullest extent permitted by law, Qubli AI and its owners shall not be liable for any indirect, incidental, special, or consequential damages arising from your use of the service.",
         },
       ],
     },
@@ -190,7 +190,7 @@ const Policies = () => {
             </span>
           </h1>
           <p className="text-lg sm:text-xl text-textMuted mb-8 max-w-2xl mx-auto">
-            At Quizzy AI, we strive for transparency and fairness. Learn about
+            At Qubli AI, we strive for transparency and fairness. Learn about
             our refund process, payment terms, and policies to ensure a smooth
             experience for all users.
           </p>

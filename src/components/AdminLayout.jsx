@@ -120,8 +120,8 @@ export default function AdminLayout() {
                       ? "justify-center opacity-0"
                       : "text-xl opacity-100"
                   }`}
-                  aria-label="Go to Quizzy AI Dashboard"
-                  title="Quizzy AI"
+                  aria-label="Go to Qubli AI Dashboard"
+                  title="Qubli AI"
                 >
                   <Brain className="w-7 h-7" />
                   {!sidebarCollapsed && (
@@ -130,7 +130,7 @@ export default function AdminLayout() {
                         sidebarCollapsed ? "opacity-0" : "opacity-100"
                       }`}
                     >
-                      Quizzy AI
+                      Qubli AI
                     </span>
                   )}
                 </Link>

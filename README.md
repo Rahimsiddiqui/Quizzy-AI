@@ -1,6 +1,6 @@
-# Quizzy AI — AI-Powered Learning Platform
+# Qubli AI — AI-Powered Learning Platform
 
-Quizzy AI is an AI-powered learning platform that transforms the way you study. It generates personalized quizzes, flashcards, and study materials, adapts to your progress, and focuses on areas that need improvement. Designed for students, professionals, and lifelong learners, Quizzy AI maximizes learning efficiency and knowledge retention.
+Qubli AI is an AI-powered learning platform that transforms the way you study. It generates personalized quizzes, flashcards, and study materials, adapts to your progress, and focuses on areas that need improvement. Designed for students, professionals, and lifelong learners, Qubli AI maximizes learning efficiency and knowledge retention.
 
 ---
 
@@ -60,7 +60,7 @@ Quizzy AI is an AI-powered learning platform that transforms the way you study. 
 
 ```bash
 git clone <repository-url>
-cd Quizzy-AI
+cd Qubli-AI
 ```
 
 2. **Install Dependencies**
@@ -114,7 +114,7 @@ npm run build
 
 ## 🛡️ Admin Dashboard
 
-Quizzy AI includes a complete admin dashboard for managing users, quizzes, and results.
+Qubli AI includes a complete admin dashboard for managing users, quizzes, and results.
 
 ### Quick Start
 
@@ -129,8 +129,6 @@ npm run seed:admin
 npm run dev:all
 
 # 4. Login at http://localhost:5173/admin/login
-# Email: admin@quizzy.com
-# Password: admin123
 ```
 
 ### Features

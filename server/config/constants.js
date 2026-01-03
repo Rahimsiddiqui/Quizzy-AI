@@ -1,6 +1,6 @@
 import { SubscriptionTier } from "./types.js";
 
-export const APP_NAME = "Quizzy AI";
+export const APP_NAME = "Qubli AI";
 
 // Options available for selection
 export const QUESTION_COUNTS = [3, 5, 7, 10, 15, 20, 25, 30, 35, 40, 45];

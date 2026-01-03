@@ -1,5 +1,5 @@
 {
-  "name": "quizzy-ai",
+  "name": "qubli-ai",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -61,19 +61,19 @@
     "@types/node": "^22.14.0",
     "typescript": "~5.8.2"
   },
-  "description": "Quizzy AI is an AI-powered learning platform that transforms the way you study by generating personalized quizzes, flashcards, and study materials. It adapts to your progress, focusing on areas that need improvement, and helps maximize learning efficiency and knowledge retention for students, professionals, and lifelong learners.",
+  "description": "Qubli AI is an AI-powered learning platform that transforms the way you study by generating personalized quizzes, flashcards, and study materials. It adapts to your progress, focusing on areas that need improvement, and helps maximize learning efficiency and knowledge retention for students, professionals, and lifelong learners.",
   "main": "postcss.config.js",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Rahimsiddiqui/Quizzy-AI.git"
+    "url": "git+https://github.com/Rahimsiddiqui/Qubli-AI.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/Rahimsiddiqui/Quizzy-AI/issues"
+    "url": "https://github.com/Rahimsiddiqui/Qubli-AI/issues"
   },
-  "homepage": "https://github.com/Rahimsiddiqui/Quizzy-AI#readme",
+  "homepage": "https://github.com/Rahimsiddiqui/Qubli-AI#readme",
   "engines": {
     "node": ">18 <=25"
   }

@@ -48,7 +48,7 @@ const Contact = () => {
           </h1>
           <p className="text-lg sm:text-xl text-textMuted mb-8 max-w-2xl mx-auto">
             Have questions, need assistance, or want to share feedback? Reach
-            out to us, and we’ll get back to you promptly to make your Quizzy AI
+            out to us, and we’ll get back to you promptly to make your Qubli AI
             experience seamless.
           </p>
         </div>

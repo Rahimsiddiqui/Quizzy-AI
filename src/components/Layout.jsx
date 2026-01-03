@@ -130,8 +130,8 @@ const Layout = ({ children, user, onLogout, refreshUser }) => {
                   className={`flex items-center gap-2 text-primary dark:text-blue-400 font-bold tracking-tight transition-opacity hover:opacity-90 min-w-fit ${
                     sidebarCollapsed ? "justify-center" : "text-xl"
                   }`}
-                  aria-label="Go to Quizzy AI Dashboard"
-                  title="Quizzy AI"
+                  aria-label="Go to Qubli AI Dashboard"
+                  title="Qubli AI"
                 >
                   <Brain className="w-7 h-7" />
                   {!sidebarCollapsed && (
@@ -140,7 +140,7 @@ const Layout = ({ children, user, onLogout, refreshUser }) => {
                         sidebarCollapsed ? "opacity-0" : "opacity-100"
                       }`}
                     >
-                      Quizzy AI
+                      Qubli AI
                     </span>
                   )}
                 </Link>
@@ -470,10 +470,10 @@ const Layout = ({ children, user, onLogout, refreshUser }) => {
             <button
               onClick={() => navigate("/dashboard")}
               className="flex items-center gap-2 text-primary font-bold text-xl hover:opacity-80 transition-opacity cursor-pointer bg-none border-none p-0"
-              aria-label="Go to Quizzy AI Dashboard"
+              aria-label="Go to Qubli AI Dashboard"
             >
               <Brain className="w-7 h-7" />
-              <span>Quizzy AI</span>
+              <span>Qubli AI</span>
             </button>
 
             <button
