@@ -37,7 +37,7 @@ const KPI_STATS = [
   {
     label: "Completed Quizzes",
     dataKey: (quizzes) => quizzes.filter((q) => q.score !== undefined).length,
-    icon: <Trophy className="w-6 h-6" />,
+    icon: <BookOpen className="w-6 h-6" />,
     colorClasses: {
       bg: "bg-blue-100 dark:bg-blue-900",
       text: "text-blue-600 dark:text-blue-300",
@@ -764,7 +764,7 @@ const Dashboard = ({ user }) => {
                       <button
                         onClick={handleConfirmDelete}
                         disabled={deleteModal.isDeleting}
-                        className="flex-1 px-4 py-2.5 rounded-lg bg-red-500 hover:bg-red-600 dark:bg-red-800 dark:hover:bg-red-800/90 disabled:opacity-50 disabled:cursor-not-allowed text-white transition-colors font-medium point"
+                        className="flex-1 px-4 py-2.5 rounded-lg bg-red-500 hover:bg-red-600 dark:bg-red-700 dark:hover:bg-red-700/80 disabled:opacity-50 disabled:cursor-not-allowed text-white transition-colors font-medium point"
                       >
                         Delete
                       </button>

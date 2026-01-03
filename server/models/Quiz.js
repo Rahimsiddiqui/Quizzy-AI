@@ -17,6 +17,8 @@ const QuizSchema = new mongoose.Schema(
     totalMarks: Number,
     examStyle: String,
     score: Number,
+    timeSpentMinutes: { type: Number, default: 0 }, // Track time spent on quiz
+    isActive: { type: Boolean, default: true }, // Track if quiz is enabled/disabled
     createdAt: { type: Number, default: Date.now },
   },
   { collection: "quizzes" }

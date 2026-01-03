@@ -1,6 +1,9 @@
 # Node modules
 node_modules/
 
+# Admin Seeder
+server/scripts/seedAdmin.js
+
 # Environment files
 .env
 .env.local

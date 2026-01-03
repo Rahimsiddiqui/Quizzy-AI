@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { Check, ArrowRight, ChevronDown } from "lucide-react";
+import { Check, ArrowRight, ChevronDown, Star, Zap, Crown } from "lucide-react";
 import Navbar from "./Navbar.jsx";
 
 const Pricing = () => {
@@ -18,14 +18,19 @@ const Pricing = () => {
         highlighted: false,
         cta: "Get Started",
         ctaPath: "/auth",
+        icon: Star,
+        iconBg: "bg-gray-100 dark:bg-gray-300",
+        iconText: "text-gray-500 dark:text-gray-600",
+        checkColor: "text-green-500 dark:text-green-400",
         features: [
-          { name: "7 Quizzes / Day" },
-          { name: "3 Flashcard Sets / Day" },
-          { name: "Max 10 Questions" },
-          { name: "Max 30 Marks" },
-          { name: "3 PDF Uploads / Day" },
-          { name: "3 PDF Exports / Day" },
-          { name: "Upload 1 PDF per quiz" },
+          { name: "7 Quizzes / Month", included: true },
+          { name: "3 Flashcard Sets / Month", included: true },
+          { name: "Max 10 Questions", included: true },
+          { name: "Max 30 Marks", included: true },
+          { name: "3 PDF Uploads / Month", included: true },
+          { name: "3 PDF Exports / Month", included: true },
+          { name: "Upload 1 PDF per quiz", included: true },
+          { name: "Gemini 2.5 Lite", included: true },
         ],
       },
       {
@@ -37,51 +42,61 @@ const Pricing = () => {
         highlighted: false,
         cta: "Upgrade Now",
         ctaPath: "/auth",
+        icon: Zap,
+        iconBg: "bg-blue-100 dark:bg-blue-300",
+        iconText: "text-blue-600 dark:text-blue-700",
+        checkColor: "text-blue-600 dark:text-blue-500",
         features: [
-          { name: "30 Quizzes / Day" },
-          { name: "15 Flashcard Sets / Day" },
-          { name: "Max 25 Questions" },
-          { name: "Max 60 Marks" },
-          { name: "15 PDF Uploads / Day" },
-          { name: "15 PDF Exports / Day" },
-          { name: "Upload 1 PDF per quiz" },
+          { name: "35 Quizzes / Month", included: true },
+          { name: "17 Flashcard Sets / Month", included: true },
+          { name: "Max 25 Questions", included: true },
+          { name: "Max 60 Marks", included: true },
+          { name: "15 PDF Uploads / Month", included: true },
+          { name: "15 PDF Exports / Month", included: true },
+          { name: "Upload 1 PDF per quiz", included: true },
+          { name: "Gemini 2.5 Flash", included: true },
         ],
       },
       {
         id: "pro",
         name: "Mastermind Pro",
-        price: "$9.99",
+        price: "$11.99",
         period: "/month",
         description: "Maximum power for maximum results",
         highlighted: true,
         cta: "Go Pro",
         ctaPath: "/auth",
+        icon: Crown,
+        iconBg: "bg-amber-100 dark:bg-amber-200",
+        iconText: "text-amber-600 dark:text-amber-700",
+        checkColor: "text-amber-500 dark:text-amber-600",
         features: [
-          { name: "Unlimited Quizzes" },
-          { name: "Unlimited Flashcards" },
-          { name: "Max 45 Questions" },
-          { name: "Max 100 Marks" },
-          { name: "Unlimited PDF Uploads" },
-          { name: "Unlimited PDF Exports" },
-          { name: "Upload multiple PDF's per quiz" },
+          { name: "Unlimited Quizzes", included: true },
+          { name: "Unlimited Flashcards", included: true },
+          { name: "Max 45 Questions", included: true },
+          { name: "Max 100 Marks", included: true },
+          { name: "Unlimited PDF Uploads", included: true },
+          { name: "Unlimited PDF Exports", included: true },
+          { name: "Upload multiple PDF's per quiz", included: true },
+          { name: "Gemini 3 Pro", included: true },
         ],
       },
     ],
     comparison: [
       {
-        feature: "Daily Quiz Generations",
+        feature: "Monthly Quiz Generations",
         free: "7",
-        basic: "30",
+        basic: "35",
         pro: "Unlimited",
       },
       {
-        feature: "Daily Flashcard Sets",
+        feature: "Monthly Flashcard Sets",
         free: "3",
-        basic: "15",
+        basic: "17",
         pro: "Unlimited",
       },
       {
-        feature: "PDF Uploads per Day",
+        feature: "PDF Uploads per Month",
         free: "3",
         basic: "15",
         pro: "Unlimited",
@@ -93,16 +108,16 @@ const Pricing = () => {
         pro: "45",
       },
       {
-        feature: "Learning Analytics",
-        free: "Basic",
-        basic: "Advanced",
-        pro: "Detailed",
+        feature: "Latest Modal",
+        free: "No",
+        basic: "No",
+        pro: "Yes",
       },
     ],
     faq: [
       {
         q: "Can I change my plan anytime?",
-        a: "Yes, you can upgrade or downgrade your plan at any time. Changes take effect immediately.",
+        a: "Yes, you can upgrade or downgrade your plan at any time. Changes take effect almost immediately.",
       },
       {
         q: "Is there a free trial?",
@@ -142,59 +157,90 @@ const Pricing = () => {
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-surface">
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {pricingData.plans.map((plan) => (
-              <div
-                key={plan.id}
-                className={`relative p-8 rounded-2xl border transition-all hover:scale-102 bg-background dark:bg-background/40 ${
-                  plan.highlighted
-                    ? "border-primary/50 shadow-xl shadow-primary/10 md:scale-105 md:hover:scale-105"
-                    : "border-border hover:border-primary/50 hover:shadow-xl hover:shadow-primary/10"
-                }`}
-              >
-                {plan.highlighted && (
-                  <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                    <span className="bg-primary text-white px-4 py-1 rounded-full text-sm font-bold">
-                      Most Popular
-                    </span>
-                  </div>
-                )}
-
-                <div className="mb-6">
-                  <h3 className="text-2xl font-bold text-textMain mb-3">
-                    {plan.name}
-                  </h3>
-                  <p className="text-textMuted text-sm mb-4.5">
-                    {plan.description}
-                  </p>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-4xl font-bold text-textMain">
-                      {plan.price}
-                    </span>
-                    <span className="text-textMuted">{plan.period}</span>
-                  </div>
-                </div>
-
-                <Link
-                  to={plan.ctaPath}
-                  className={`w-full py-3 rounded-lg font-bold flex items-center justify-center gap-2 transition-all mb-8 ${
-                    plan.highlighted
-                      ? "bg-primary dark:bg-blue-600 text-white hover:bg-blue-700 dark:hover:bg-blue-700/90"
-                      : "border border-border text-textMain hover:border-primary/50 hover:bg-primary/5"
+            {pricingData.plans.map((plan) => {
+              const IconComponent = plan.icon;
+              const borderClasses = {
+                free: "border-border",
+                basic:
+                  "border-blue-300 ring-2 ring-blue-100 dark:border-blue-900 dark:ring-blue-800",
+                pro: "border-amber-400 ring-2 ring-amber-200 dark:border-amber-500 dark:ring-amber-700",
+              };
+              const shadowClasses = {
+                free: "",
+                basic: "shadow-lg shadow-blue-500 dark:shadow-blue-600/40",
+                pro: "shadow-lg shadow-amber-300 dark:shadow-amber-600/40",
+              };
+              return (
+                <div
+                  key={plan.id}
+                  className={`relative p-8 rounded-2xl border transition-all hover:scale-102 bg-background dark:bg-background/40 ${
+                    borderClasses[plan.id]
+                  } ${shadowClasses[plan.id]} ${
+                    plan.highlighted ? "md:scale-105 md:hover:scale-105" : ""
                   }`}
                 >
-                  {plan.cta} <ArrowRight className="w-4 h-4" />
-                </Link>
-
-                <div className="space-y-3 border-t border-border pt-6">
-                  {plan.features.map((feature, idx) => (
-                    <div key={idx} className="flex items-start gap-3">
-                      <Check className="w-5 h-5 mt-0.5 shrink-0 text-primary dark:text-blue-500" />
-                      <span className="text-textMuted">{feature.name}</span>
+                  {plan.highlighted && (
+                    <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                      <span className="bg-amber-100 dark:bg-amber-300 text-amber-700 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide border border-amber-200 shadow-sm">
+                        Best Value
+                      </span>
                     </div>
-                  ))}
+                  )}
+
+                  <div className="mb-6">
+                    <div className={`mb-4 p-3 w-fit rounded-xl ${plan.iconBg}`}>
+                      <IconComponent className={`w-7 h-7 ${plan.iconText}`} />
+                    </div>
+                    <h3 className="text-2xl font-bold text-textMain mb-3">
+                      {plan.name}
+                    </h3>
+                    <p className="text-textMuted text-sm mb-4.5">
+                      {plan.description}
+                    </p>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-4xl font-bold text-textMain">
+                        {plan.price}
+                      </span>
+                      <span className="text-textMuted">{plan.period}</span>
+                    </div>
+                  </div>
+
+                  <Link
+                    to={plan.ctaPath}
+                    className={`w-full py-3 rounded-lg font-bold flex items-center justify-center gap-2 transition-all mb-8 ${
+                      plan.highlighted
+                        ? "bg-primary dark:bg-blue-600 text-white hover:bg-blue-700 dark:hover:bg-blue-700/90"
+                        : "border border-border text-textMain hover:border-primary/50 hover:bg-primary/5"
+                    }`}
+                  >
+                    {plan.cta} <ArrowRight className="w-4 h-4" />
+                  </Link>
+
+                  <div className="space-y-3 border-t border-border pt-6">
+                    {plan.features.map((feature, idx) => (
+                      <div key={idx} className="flex items-start gap-3">
+                        <Check
+                          className={`w-5 h-5 mt-0.5 shrink-0 ${
+                            feature.included
+                              ? plan.checkColor
+                              : "text-gray-500 dark:text-gray-400"
+                          }`}
+                        />
+                        <span
+                          className={`${
+                            feature.included
+                              ? "text-textMuted"
+                              : "text-gray-500 dark:text-gray-400 line-through"
+                          }`}
+                        >
+                          {feature.name}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
@@ -212,7 +258,7 @@ const Pricing = () => {
           <div className="overflow-x-auto rounded-2xl border border-border">
             <table className="w-full">
               <thead>
-                <tr className="bg-surface/50 border-b border-border">
+                <tr className="bg-surface/70 border-b border-border">
                   <th className="px-6 py-4 text-left font-bold text-textMain">
                     Feature
                   </th>
@@ -254,7 +300,7 @@ const Pricing = () => {
       </section>
 
       {/* FAQ Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-surface">
+      <section className="pt-20 pb-10 px-4 sm:px-6 lg:px-8 bg-surface">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-4xl font-bold text-textMain mb-6 text-center">
             Frequently Asked Questions
@@ -312,11 +358,11 @@ const Pricing = () => {
             </Link>
           </div>
         </div>
-      </section>
 
-      <p className="text-textMuted text-sm border-t border-border pt-6 mt-8 text-center pb-8">
-        Last updated: Dec 25, 2025
-      </p>
+        <p className="text-textMuted text-sm border-t max-w-4xl mx-auto border-border pt-6 mt-8 text-center">
+          Last updated: Dec 25, 2025
+        </p>
+      </section>
     </div>
   );
 };

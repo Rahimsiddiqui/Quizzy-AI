@@ -28,6 +28,7 @@ import {
 const QuizGenerator = ({ user, onGenerateSuccess }) => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
   const [mode, setMode] = useState("text");
   const [topic, setTopic] = useState("");
   const [difficulty, setDifficulty] = useState("Medium");
@@ -44,6 +45,37 @@ const QuizGenerator = ({ user, onGenerateSuccess }) => {
 
   const userMaxQuestions = TIER_LIMITS[user?.tier]?.maxQuestions ?? 10;
   const userMaxMarks = TIER_LIMITS[user?.tier]?.maxMarks ?? 10;
+
+  const cleanQuestionText = (text) => {
+    if (!text) return text;
+    // Remove format markers like (True/False), [True/False], (Multiple Choice), [MCQ], [2], etc.
+    return (
+      text
+        .replace(/\s*\(True\/False\)\s*/gi, "")
+        .replace(/\s*\[True\/False\]\s*/gi, "")
+        .replace(/\s*\(Multiple\s*Select\)\s*/gi, "")
+        .replace(/\s*\[Multiple\s*Select\]\s*/gi, "")
+        .replace(/\s*\(MSQ\)\s*/gi, "")
+        .replace(/\s*\[MSQ\]\s*/gi, "")
+        .replace(/\s*\(Multiple\s*Choice\)\s*/gi, "")
+        .replace(/\s*\[Multiple\s*Choice\]\s*/gi, "")
+        .replace(/\s*\(MCQ\)\s*/gi, "")
+        .replace(/\s*\[MCQ\]\s*/gi, "")
+        .replace(/\s*\(Short\s*Answer\)\s*/gi, "")
+        .replace(/\s*\[Short\s*Answer\]\s*/gi, "")
+        .replace(/\s*\(Long\s*Answer\)\s*/gi, "")
+        .replace(/\s*\[Long\s*Answer\]\s*/gi, "")
+        .replace(/\s*\(Essay\)\s*/gi, "")
+        .replace(/\s*\[Essay\]\s*/gi, "")
+        .replace(/\s*\(Fill\s*in\s*the\s*Blank\)\s*/gi, "")
+        .replace(/\s*\[Fill\s*in\s*the\s*Blank\]\s*/gi, "")
+        .replace(/\s*\(FillInTheBlank\)\s*/gi, "")
+        .replace(/\s*\[FillInTheBlank\]\s*/gi, "")
+        // Remove marks in brackets like [2], [3], etc.
+        .replace(/\s*\[\d+\]\s*$/g, "")
+        .trim()
+    );
+  };
 
   const formatSize = (bytes) => {
     if (!bytes) return "0 B";
@@ -195,11 +227,11 @@ const QuizGenerator = ({ user, onGenerateSuccess }) => {
     if (totalMarks > userMaxMarks)
       return toast.error(`Max ${userMaxMarks} marks allowed.`);
     if (!hasQuota("generationsRemaining"))
-      return toast.error(`Daily quiz limit reached.`);
+      return toast.error(`Monthly quiz limit reached.`);
     if (generateFlashcards && !hasQuota("flashcardGenerationsRemaining"))
-      return toast.error(`Daily flashcard limit reached.`);
+      return toast.error(`Monthly flashcard limit reached.`);
     if (mode === "pdf" && !hasQuota("pdfUploadsRemaining"))
-      return toast.error("Daily PDF upload limit reached.");
+      return toast.error("Monthly PDF upload limit reached.");
     if (!selectedTypes?.length)
       return toast.error("Select at least one question type");
     if (mode === "pdf" && !files.length)
@@ -207,6 +239,13 @@ const QuizGenerator = ({ user, onGenerateSuccess }) => {
     if (mode === "text" && !topic.trim()) return toast.error("Enter a topic.");
 
     setLoading(true);
+    setProgress(0);
+
+    // Progress callback from backend
+    const handleProgress = (percentage, stage, questionsGenerated) => {
+      setProgress(percentage);
+    };
+
     try {
       const filesDataPayload =
         mode === "pdf"
@@ -223,13 +262,12 @@ const QuizGenerator = ({ user, onGenerateSuccess }) => {
         selectedTypes,
         totalMarks,
         examStyleId,
-        filesDataPayload
+        filesDataPayload,
+        handleProgress
       );
 
       quiz.userId = user?.id;
       quiz.isFlashcardSet = generateFlashcards;
-
-      const token = localStorage.getItem("token");
 
       // Save quiz using StorageService so caches are properly invalidated
       const payload = {
@@ -255,7 +293,7 @@ const QuizGenerator = ({ user, onGenerateSuccess }) => {
             id: `fc_${q._id || q.id}`,
             userId: user?._id || user?.id,
             quizId: savedQuiz._id || savedQuiz.id,
-            front: q.text,
+            front: cleanQuestionText(q.text),
             back: `${q.correctAnswer}\n\n${q.explanation}`,
             nextReview: Date.now(),
             interval: 0,
@@ -264,9 +302,56 @@ const QuizGenerator = ({ user, onGenerateSuccess }) => {
           }));
           await StorageService.saveFlashcards(cards);
           await StorageService.decrementFlashcardGeneration();
+
+          // Award EXP for flashcard creation
+          try {
+            const expResult = await StorageService.awardFlashcardCreationExp(
+              cards.length
+            );
+
+            if (
+              expResult &&
+              expResult.achievements &&
+              expResult.achievements.length > 0
+            ) {
+              const updatedUser = await StorageService.getCurrentUser();
+              if (updatedUser) {
+                localStorage.setItem("user", JSON.stringify(updatedUser));
+                window.dispatchEvent(
+                  new CustomEvent("userUpdated", { detail: updatedUser })
+                );
+              }
+            }
+          } catch (expErr) {
+            console.error("Error awarding EXP for flashcards:", expErr);
+          }
         }
 
         if (mode === "pdf") await StorageService.decrementPdfUpload();
+
+        // Award EXP for quiz creation
+        try {
+          const expResult = await StorageService.awardQuizCreationExp(
+            quiz.questions.length
+          );
+
+          // If achievements were unlocked, dispatch event to update navbar
+          if (
+            expResult &&
+            expResult.achievements &&
+            expResult.achievements.length > 0
+          ) {
+            const updatedUser = await StorageService.getCurrentUser();
+            if (updatedUser) {
+              localStorage.setItem("user", JSON.stringify(updatedUser));
+              window.dispatchEvent(
+                new CustomEvent("userUpdated", { detail: updatedUser })
+              );
+            }
+          }
+        } catch (expErr) {
+          console.error("Error awarding EXP:", expErr);
+        }
 
         // Notify app that a quiz was generated so lists can refresh
         window.dispatchEvent(new Event("quizGenerated"));
@@ -282,6 +367,7 @@ const QuizGenerator = ({ user, onGenerateSuccess }) => {
       toast.error(error.message || "Failed to generate quiz, try later.");
     } finally {
       setLoading(false);
+      setProgress(0);
     }
   };
 
@@ -298,12 +384,13 @@ const QuizGenerator = ({ user, onGenerateSuccess }) => {
   };
 
   const getGenerationMessage = (user) => {
-    if (user?.tier === "Pro") return "∞ generations left today";
-    if (user?.limits?.generationsRemaining === 0)
-      return "Come back tomorrow for more generations";
+    if (user?.role === "admin" || user?.tier === "Pro")
+      return "∞ generations left this month";
+    if (user?.role !== "admin" && user?.limits?.generationsRemaining === 0)
+      return "Come back next month for more generations";
     return `${user?.limits?.generationsRemaining ?? 0} generation${
       user?.limits?.generationsRemaining > 1 ? "s" : ""
-    } left today`;
+    } left this month`;
   };
 
   return (
@@ -608,57 +695,55 @@ const QuizGenerator = ({ user, onGenerateSuccess }) => {
             </div>
           </div>
 
-          <div className="p-4 bg-surfaceHighlight rounded-xl flex items-center justify-between border border-border">
-            <div className="flex items-center gap-3">
-              <div
-                className={`p-2 rounded-lg ${
-                  generateFlashcards
-                    ? "bg-indigo-100 text-indigo-600 dark:bg-indigo-800 dark:text-indigo-300"
-                    : "bg-gray-200 text-gray-500 dark:bg-surface/40 dark:text-gray-300"
+          <div className="p-4 bg-surfaceHighlight rounded-xl border border-border">
+            <div className="flex xs:flex-row flex-col xs:items-center xs:justify-between gap-4 items-center">
+              <div className="xs:flex xs:items-center xs:gap-3 flex flex-col items-center gap-0">
+                <div
+                  className={`p-3 rounded-lg shrink-0 ${
+                    generateFlashcards
+                      ? "bg-indigo-100 text-indigo-600 dark:bg-indigo-700/80 dark:text-indigo-300"
+                      : "bg-gray-200 text-gray-500 dark:bg-surface/40 dark:text-gray-300"
+                  }`}
+                >
+                  <Layers className="w-6 h-6 xs:w-5 xs:h-5" />
+                </div>
+              </div>
+              <div className="flex-1 text-center xs:text-left">
+                <h3 className="font-semibold text-sm text-textMain">
+                  Generate Flashcards
+                </h3>
+                <h4 className="font-semibold text-sm text-textMain/80 xs:text-textMain/80 xs:text-xs">
+                  Create a study set automatically
+                </h4>
+              </div>
+              <span
+                className={`text-xs font-bold px-3.5 py-1.5 xs:px-2.5 rounded border whitespace-nowrap ${
+                  user?.tier === "Pro" ||
+                  user?.limits?.flashcardGenerationsRemaining > 0
+                    ? "bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-400/20 dark:text-blue-300 dark:border-blue-400"
+                    : "bg-red-50 text-red-600 border-red-200 dark:bg-red-900 dark:text-red-300 dark:border-red-700"
                 }`}
               >
-                <Layers className="w-5 h-5" />
-              </div>
-              <div>
-                <div className="flex items-center gap-4 mb-1">
-                  <h4 className="font-bold text-sm text-textMain">
-                    Generate Flashcards
-                  </h4>
-                  <span
-                    className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${
-                      user?.tier === "Pro" ||
-                      user?.limits?.flashcardGenerationsRemaining > 0
-                        ? "bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-400/20 dark:text-blue-400 dark:border-blue-400"
-                        : "bg-red-50 text-red-600 border-red-200 dark:bg-red-900 dark:text-red-300 dark:border-red-700"
-                    }`}
-                  >
-                    {user?.tier === "Pro"
-                      ? "Unlimited"
-                      : `${
-                          user?.limits?.flashcardGenerationsRemaining ?? 0
-                        } left`}
-                  </span>
-                </div>
-                <p className="text-xs text-textMuted">
-                  Create a study set automatically
-                </p>
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => setGenerateFlashcards(!generateFlashcards)}
-              className={`relative w-12 h-6 rounded-full transition-colors cursor-pointer ${
-                generateFlashcards
-                  ? "bg-primary dark:bg-blue-400"
-                  : "bg-gray-300 dark:bg-surface/40"
-              }`}
-            >
-              <span
-                className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform ${
-                  generateFlashcards ? "translate-x-6" : "translate-x-0"
+                {user?.tier === "Pro"
+                  ? "Unlimited"
+                  : `${user?.limits?.flashcardGenerationsRemaining ?? 0} left`}
+              </span>
+              <button
+                type="button"
+                onClick={() => setGenerateFlashcards(!generateFlashcards)}
+                className={`relative w-12 h-6 rounded-full transition-colors point shrink-0 ${
+                  generateFlashcards
+                    ? "bg-primary dark:bg-blue-600"
+                    : "bg-gray-300 dark:bg-surface/60"
                 }`}
-              ></span>
-            </button>
+              >
+                <span
+                  className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform ${
+                    generateFlashcards ? "translate-x-6" : "translate-x-0"
+                  }`}
+                ></span>
+              </button>
+            </div>
           </div>
 
           <button
@@ -668,7 +753,23 @@ const QuizGenerator = ({ user, onGenerateSuccess }) => {
           >
             {loading ? (
               <>
-                <Loader2 className="w-5 h-5 animate-spin" /> Generating Quiz...
+                <Loader2 className="w-5 h-5 animate-spin" />
+                <div className="flex flex-col items-start">
+                  <span>
+                    {progress < 10
+                      ? "Initiating..."
+                      : progress < 25
+                      ? "Processing input..."
+                      : progress < 75
+                      ? "Generating questions..."
+                      : progress < 90
+                      ? "Formatting & validating..."
+                      : "Finalizing..."}
+                  </span>
+                  <span className="text-xs font-medium opacity-90">
+                    {Math.round(progress)}% completed
+                  </span>
+                </div>
               </>
             ) : (
               <>

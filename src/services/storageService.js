@@ -60,6 +60,40 @@ async function request(endpoint, method = "GET", body) {
         }
         throw new Error(errorData.message || "Unauthorized");
       }
+      // Handle account disabled or banned (403 status)
+      if (res.status === 403) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        REQUEST_CACHE.clear();
+        if (errorData.disabled) {
+          // Dispatch event so App.jsx can handle redirect and show message
+          window.dispatchEvent(
+            new CustomEvent("accountDisabled", {
+              detail: {
+                message:
+                  "Your account has been temporarily disabled. For help restoring access, please reach out to our support team at rahimsiddiqui122@gmail.com",
+              },
+            })
+          );
+          throw new Error(
+            "Your account has been temporarily disabled. For help restoring access, please reach out to our support team at rahimsiddiqui122@gmail.com"
+          );
+        }
+        if (errorData.banned) {
+          // Dispatch event so App.jsx can handle redirect and show message
+          window.dispatchEvent(
+            new CustomEvent("accountBanned", {
+              detail: {
+                message:
+                  "Your account has been banned. If you believe this is a mistake, please contact support at rahimsiddiqui122@gmail.com",
+              },
+            })
+          );
+          throw new Error(
+            "Your account has been banned. If you believe this is a mistake, please contact support at rahimsiddiqui122@gmail.com"
+          );
+        }
+      }
       throw new Error(
         errorData.message || `Request failed with status ${res.status}`
       );
@@ -147,6 +181,13 @@ const StorageService = {
   logout: () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+    // Clear cache on logout
+    REQUEST_CACHE.clear();
+  },
+
+  logoutAdmin: () => {
+    localStorage.removeItem("adminToken");
+    localStorage.removeItem("adminUser");
     // Clear cache on logout
     REQUEST_CACHE.clear();
   },
@@ -266,6 +307,7 @@ const StorageService = {
   decrementFlashcardGeneration: async () => decrementLimit("flashcard"),
   decrementPdfUpload: async () => decrementLimit("pdfupload"),
   decrementPdfExport: async () => decrementLimit("pdfexport"),
+  decrementQuizGeneration: async () => decrementLimit("quiz"),
 
   // --- AI REVIEWS ---
   getLastReview: async () => {
@@ -310,6 +352,76 @@ const StorageService = {
     }
 
     return result;
+  },
+
+  // ==================== GAMIFICATION ENDPOINTS ====================
+
+  /**
+   * Award EXP for quiz creation
+   * @param {number} questionCount - Number of questions in the quiz
+   * @returns {Object} Award result with EXP, level up status, and achievements
+   */
+  awardQuizCreationExp: async (questionCount = 1) => {
+    return request("/api/gamification/award-quiz-creation", "POST", {
+      questionCount,
+    });
+  },
+
+  /**
+   * Award EXP for quiz completion
+   * @param {number} score - User's score
+   * @param {number} totalMarks - Total marks possible
+   * @returns {Object} Award result with EXP, level up status, and achievements
+   */
+  awardQuizCompletionExp: async (score, totalMarks = 100) => {
+    return request("/api/gamification/award-quiz-completion", "POST", {
+      score,
+      totalMarks,
+    });
+  },
+
+  /**
+   * Award EXP for flashcard set creation
+   * @param {number} cardCount - Number of cards in the set
+   * @returns {Object} Award result with EXP and achievements
+   */
+  awardFlashcardCreationExp: async (cardCount = 1) => {
+    return request("/api/gamification/award-flashcard-creation", "POST", {
+      cardCount,
+    });
+  },
+
+  /**
+   * Award EXP for PDF upload
+   * @returns {Object} Award result with EXP and achievements
+   */
+  awardPdfUploadExp: async () => {
+    return request("/api/gamification/award-pdf-upload", "POST", {});
+  },
+
+  /**
+   * Award EXP for PDF export
+   * @returns {Object} Award result with EXP and achievements
+   */
+  awardPdfExportExp: async () => {
+    return request("/api/gamification/award-pdf-export", "POST", {});
+  },
+
+  /**
+   * Get user's achievements and EXP statistics
+   * @returns {Object} User stats including achievements, level, and EXP
+   */
+  getUserAchievements: async () => {
+    return request("/api/gamification/user-stats", "GET");
+  },
+
+  /**
+   * Get global leaderboard
+   * @param {string} period - 'all', 'weekly', or 'monthly'
+   * @returns {Array} Array of users ranked by EXP
+   */
+  getLeaderboard: async (period = "all") => {
+    return request(`/api/gamification/leaderboard?period=${period}`, "GET");
   },
 };
 

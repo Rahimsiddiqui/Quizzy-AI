@@ -21,13 +21,14 @@ const TIER_DATA = {
       buttonText: "text-textMuted",
     },
     features: [
-      "7 Quizzes / Day",
-      "3 Flashcard Sets / Day",
-      "Max 10 Questions",
-      "Max 30 Marks",
-      "3 PDF Uploads / Day",
-      "3 PDF Exports / Day",
-      "Upload 1 PDF per quiz",
+      { name: "7 Quizzes / Month", included: true },
+      { name: "3 Flashcard Sets / Month", included: true },
+      { name: "Max 10 Questions", included: true },
+      { name: "Max 30 Marks", included: true },
+      { name: "3 PDF Uploads / Month", included: true },
+      { name: "3 PDF Exports / Month", included: true },
+      { name: "Upload 1 PDF per quiz", included: true },
+      { name: "Gemini 2.5 Lite", included: true },
     ],
   },
   [SubscriptionTier.Basic]: {
@@ -46,18 +47,19 @@ const TIER_DATA = {
       buttonText: "text-white",
     },
     features: [
-      "30 Quizzes / Day",
-      "15 Flashcard Sets / Day",
-      "Max 25 Questions",
-      "Max 60 Marks",
-      "15 PDF Uploads / Day",
-      "15 PDF Exports / Day",
-      "Upload 1 PDF per quiz",
+      { name: "35 Quizzes / Month", included: true },
+      { name: "17 Flashcard Sets / Month", included: true },
+      { name: "Max 25 Questions", included: true },
+      { name: "Max 60 Marks", included: true },
+      { name: "15 PDF Uploads / Month", included: true },
+      { name: "15 PDF Exports / Month", included: true },
+      { name: "Upload 1 PDF per quiz", included: true },
+      { name: "Gemini 2.5 Flash", included: true },
     ],
   },
   [SubscriptionTier.Pro]: {
     title: "Mastermind Pro",
-    price: "$9.99",
+    price: "$11.99",
     icon: Crown,
     diffClass: true,
     colorClasses: {
@@ -70,13 +72,14 @@ const TIER_DATA = {
       buttonText: "text-white",
     },
     features: [
-      "Unlimited Quizzes",
-      "Unlimited Flashcards",
-      "Max 45 Questions",
-      "Max 100 Marks",
-      "Unlimited PDF Uploads",
-      "Unlimited PDF Exports",
-      "Upload multiple PDF's per quiz",
+      { name: "Unlimited Quizzes", included: true },
+      { name: "Unlimited Flashcards", included: true },
+      { name: "Max 45 Questions", included: true },
+      { name: "Max 100 Marks", included: true },
+      { name: "Unlimited PDF Uploads", included: true },
+      { name: "Unlimited PDF Exports", included: true },
+      { name: "Upload multiple PDF's per quiz", included: true },
+      { name: "Gemini 3 Pro", included: true },
     ],
   },
 };
@@ -143,16 +146,25 @@ const TierCard = ({ tier, currentTier, handleUpgrade }) => {
 
       <ul className="space-y-4 mb-8 flex-1 border-t border-border pt-6">
         {data.features.map((feature) => (
-          <li
-            key={feature}
-            className={`flex items-center gap-3 text-sm ${
-              tier === SubscriptionTier.Free
-                ? "text-textMuted"
-                : "text-textMain font-medium"
-            }`}
-          >
-            <Check className={`w-5 h-5 ${data.colorClasses.check} shrink-0`} />{" "}
-            {feature}
+          <li key={feature.name} className="flex items-center gap-3 text-sm">
+            <Check
+              className={`w-5 h-5 shrink-0 ${
+                feature.included
+                  ? data.colorClasses.check
+                  : "text-gray-500 dark:text-gray-400"
+              }`}
+            />
+            <span
+              className={`${
+                feature.included
+                  ? tier === SubscriptionTier.Free
+                    ? "text-textMuted"
+                    : "text-textMain font-medium"
+                  : "text-gray-500 dark:text-gray-400 line-through"
+              }`}
+            >
+              {feature.name}
+            </span>
           </li>
         ))}
       </ul>

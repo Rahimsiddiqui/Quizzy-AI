@@ -47,7 +47,7 @@ router.post("/feedback", async (req, res) => {
 
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
-      to: "aneesabegum223@gmail.com",
+      to: "rahimsiddiqui122@gmail.com",
       replyTo: email,
       subject: `New Feedback from ${email}`,
       html: htmlContent,

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import toast, { Toaster } from "react-hot-toast";
+import { toast } from "react-toastify";
 import { CheckCircle, Clock, RotateCcw } from "lucide-react";
 
 import StorageService from "../services/storageService.js";

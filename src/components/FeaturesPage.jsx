@@ -99,7 +99,7 @@ const FeaturesPage = () => {
               >
                 {/* Image */}
                 {isOdd ? (
-                  <div className="order-1 p-8 bg-background rounded-2xl border border-border hover:border-primary/30 transition-all overflow-hidden">
+                  <div className="order-2 p-5 sm:p-7 md:py-8 bg-background rounded-2xl border border-border hover:border-primary/30 transition-all overflow-hidden">
                     <img
                       src={feature.image}
                       alt={feature.title}
@@ -109,12 +109,12 @@ const FeaturesPage = () => {
                 ) : null}
 
                 {/* Content */}
-                <div className={isOdd ? "order-2" : "order-1"}>
-                  <div className="flex items-start gap-4">
-                    <div className="w-16 h-16 bg-primary/10 dark:bg-primary/20 rounded-2xl flex items-center justify-center flex-shrink-0">
+                <div className={isOdd ? "md:order-2" : "md:order-1"}>
+                  <div className="flex flex-col md:flex-row md:items-start gap-4">
+                    <div className="w-16 h-16 bg-primary/10 dark:bg-primary/20 rounded-2xl flex items-center justify-center shrink-0">
                       <IconComponent className="w-8 h-8 text-primary dark:text-blue-400" />
                     </div>
-                    <div>
+                    <div className="w-full">
                       <h2 className="text-3xl font-bold mb-4">
                         {feature.title}
                       </h2>
@@ -131,7 +131,7 @@ const FeaturesPage = () => {
                               key={i}
                               className="flex items-center gap-3 text-textMuted"
                             >
-                              <span className="w-2 h-2 bg-primary rounded-full flex-shrink-0" />
+                              <span className="w-2 h-2 bg-primary rounded-full shrink-0" />
                               {benefit}
                             </li>
                           ))}
@@ -143,7 +143,7 @@ const FeaturesPage = () => {
 
                 {/* Image */}
                 {!isOdd ? (
-                  <div className="order-2 p-8 bg-background rounded-2xl border border-border hover:border-primary/30 transition-all overflow-hidden">
+                  <div className="order-2 p-5 sm:p-7 md:py-8 bg-background rounded-2xl border border-border hover:border-primary/30 transition-all overflow-hidden">
                     <img
                       src={feature.image}
                       alt={feature.title}
@@ -158,7 +158,7 @@ const FeaturesPage = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-primary/10 to-blue-600/10 border-t border-b border-border">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-linear-to-br from-primary/10 to-blue-600/10 border-t border-b border-border">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl sm:text-4xl font-bold mb-4">
             Ready to Experience the Power of AI Learning?
@@ -168,7 +168,7 @@ const FeaturesPage = () => {
           </p>
           <button
             onClick={() => navigate("/auth")}
-            className="px-8 py-4 rounded-xl bg-primary text-white font-bold text-lg hover:bg-blue-700 transition-all hover:shadow-xl hover:shadow-primary/30 active:scale-95 hover:scale-102 point"
+            className="px-8 py-4 rounded-xl bg-primary dark:bg-blue-700 text-white font-bold text-lg hover:bg-blue-700 dark:hover:bg-blue-700/80 transition-all hover:shadow-xl hover:shadow-primary/30 active:scale-95 hover:scale-102 point"
           >
             Get Started Free
           </button>

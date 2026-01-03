@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "server:dev": "nodemon server/index.js",
     "server:start": "node server/index.js",
-    "dev:all": "concurrently \"npm run dev\" \"npm run server:dev\""
+    "dev:all": "concurrently \"npm run dev\" \"npm run server:dev\"",
+    "seed:admin": "node server/scripts/seedAdmin.js"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -27,6 +28,7 @@
     "axios": "^1.6.0",
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.3",
+    "canvas-confetti": "^1.9.4",
     "class-variance-authority": "^0.7.1",
     "concurrently": "^9.2.1",
     "cors": "^2.8.5",
@@ -34,6 +36,7 @@
     "express": "^5.1.0",
     "express-async-handler": "^1.2.0",
     "framer-motion": "^12.23.25",
+    "html2pdf.js": "^0.10.1",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.555.0",
     "mongodb": "^7.0.0",
@@ -45,6 +48,8 @@
     "react-router-dom": "^7.9.6",
     "react-toastify": "^11.0.5",
     "recharts": "^3.5.1",
+    "socket.io": "^4.7.2",
+    "socket.io-client": "^4.7.2",
     "speakeasy": "^2.0.0",
     "tailwindcss": "^4.1.18",
     "uuid": "^13.0.0",

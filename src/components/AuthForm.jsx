@@ -137,7 +137,7 @@ const AuthForm = ({ onLogin }) => {
       }
 
       // Build OAuth URL
-      const redirectUri = `${window.location.origin}/auth/callback`;
+      const redirectUri = `${window.location.origin}/oauth/callback`;
       const params = new URLSearchParams({
         client_id: config.clientId,
         redirect_uri: redirectUri,
@@ -178,7 +178,7 @@ const AuthForm = ({ onLogin }) => {
       <div className="absolute top-[-10%] left-[-10%] w-125 h-125 bg-blue-100 dark:bg-blue-900 rounded-full blur-[100px] pointer-events-none opacity-60"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-125 h-125 bg-indigo-100 dark:bg-indigo-950 rounded-full blur-[100px] pointer-events-none opacity-60"></div>
 
-      <div className="max-w-md w-full bg-surface p-8 rounded-2xl border border-border shadow-2xl z-10 border-main transition-all duration-300">
+      <div className="max-w-md w-full bg-surface py-8 px-5 sm:px-8 rounded-2xl border border-border shadow-2xl z-10 border-main transition-all duration-300">
         <div className="text-center mb-6">
           <div className="inline-flex p-3 rounded-2xl mb-4 shadow-lg shadow-primary/20">
             <Brain className="w-8 h-8 text-primary dark:text-blue-500" />

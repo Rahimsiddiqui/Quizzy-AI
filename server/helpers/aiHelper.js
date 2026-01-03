@@ -7,17 +7,35 @@ import { SubscriptionTier, QuestionType } from "../config/types.js";
 
 // --- Gemini Configuration ---
 const BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models";
-const API_KEY = process.env.GEMINI_API_KEY;
 
-const PRO_MODEL = "gemini-2.5-flash";
+const PRO_MODEL = "gemini-3-pro-preview";
 const BASIC_MODEL = "gemini-2.5-flash";
+const FREE_MODEL = "gemini-2.5-flash-lite";
+
+// Select API key based on user tier
+const selectApiKey = (user) => {
+  if (!user || user.tier === SubscriptionTier.Free) {
+    return process.env.GEMINI_API_KEY_FREE;
+  }
+  if (user.tier === SubscriptionTier.Basic) {
+    return process.env.GEMINI_API_KEY_BASIC;
+  }
+  if (user.tier === SubscriptionTier.Pro) {
+    return process.env.GEMINI_API_KEY_PRO;
+  }
+  return process.env.GEMINI_API_KEY_FREE;
+};
 
 async function retryGeminiRequest(fn, retries = 5, baseDelay = 1000) {
+  let lastError = null;
+
   for (let i = 0; i < retries; i++) {
     try {
       return await fn();
     } catch (err) {
+      lastError = err;
       const status = err.response?.status || err.status;
+      const errorText = err.response?.text || err.message;
 
       // Retry only on overload or rate-limit
       if (status === 503 || status === 429) {
@@ -25,6 +43,9 @@ async function retryGeminiRequest(fn, retries = 5, baseDelay = 1000) {
         const exponentialDelay = baseDelay * Math.pow(2, i);
         const jitter = Math.random() * 1000;
         const waitTime = exponentialDelay + jitter;
+        console.log(
+          `Retrying in ${Math.round(waitTime)}ms (rate limit/overload)`
+        );
         await new Promise((res) => setTimeout(res, waitTime));
       } else if (i === retries - 1) {
         // Last attempt failed
@@ -32,26 +53,28 @@ async function retryGeminiRequest(fn, retries = 5, baseDelay = 1000) {
       } else {
         // Non-retryable error on first attempt, retry anyway
         const delay = baseDelay * Math.pow(2, i);
+        console.log(
+          `Retrying in ${delay}ms (non-retryable error, will retry anyway)`
+        );
         await new Promise((res) => setTimeout(res, delay));
       }
     }
   }
 
-  throw new Error(`AI service failed after ${retries} retry attempts.`);
+  const errorInfo = lastError ? `${lastError.message}` : "Unknown error";
+  throw new Error(
+    `AI service failed after ${retries} retry attempts: ${errorInfo}`
+  );
 }
 
 // Helper function to build the final API URL
-const getApiUrl = (model) =>
-  `${BASE_URL}/${model}:generateContent?key=${API_KEY}`;
+const getApiUrl = (model, apiKey) =>
+  `${BASE_URL}/${model}:generateContent?key=${apiKey}`;
 
 // Select appropriate model based on user's tier
 const selectModel = (user) => {
-  if (
-    !user ||
-    user.tier === SubscriptionTier.Free ||
-    user.tier === SubscriptionTier.Basic
-  )
-    return BASIC_MODEL;
+  if (!user || user.tier === SubscriptionTier.Free) return FREE_MODEL;
+  if (user.tier === SubscriptionTier.Basic) return BASIC_MODEL;
   if (user.tier === SubscriptionTier.Pro) return PRO_MODEL;
   return BASIC_MODEL;
 };
@@ -118,7 +141,7 @@ const detectQuestionType = (q) => {
 };
 
 // --- Generate Quiz Helper ---
-export const generateQuizHelper = async (clientData, user) => {
+export const generateQuizHelper = async (clientData, user, sendProgress) => {
   const {
     topic,
     difficulty,
@@ -129,7 +152,11 @@ export const generateQuizHelper = async (clientData, user) => {
     fileData,
   } = clientData;
 
+  // Send initial progress
+  if (sendProgress) sendProgress("Initializing", 5);
+
   const model = selectModel(user);
+  const apiKey = selectApiKey(user);
 
   const styleConfig = EXAM_STYLES.find((s) => s.id === examStyleId);
   const styleLabel = styleConfig ? styleConfig.label : "Standard";
@@ -215,74 +242,278 @@ ${
   };
 
   try {
-    const response = await retryGeminiRequest(() =>
-      fetch(getApiUrl(model), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      }).then(async (res) => {
-        if (!res.ok) {
-          const text = await res.text();
-          const error = new Error("Gemini API Error");
-          error.response = { status: res.status, text };
+    if (sendProgress) sendProgress("Processing input", 15);
+
+    // Check if model is lite variant (lite doesn't support streaming with JSON schema)
+    const isLiteModel = model.includes("lite");
+
+    let data = null;
+
+    if (isLiteModel) {
+      // Use non-streaming endpoint for lite models
+      if (sendProgress) sendProgress("Generating", 25);
+
+      const response = await retryGeminiRequest(() =>
+        fetch(getApiUrl(model, apiKey), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }).then(async (res) => {
+          if (!res.ok) {
+            const text = await res.text();
+            const error = new Error("Gemini API Error (Lite)");
+            error.response = { status: res.status, text };
+            throw error;
+          }
+          return res;
+        })
+      );
+
+      if (sendProgress) sendProgress("Parsing response", 50);
+
+      const resultText = await response.text();
+      let result;
+      try {
+        result = resultText ? JSON.parse(resultText) : null;
+      } catch (err) {
+        result = null;
+      }
+
+      if (!result || !result.candidates) {
+        throw new Error("Invalid response from lite model");
+      }
+
+      const candidate = result.candidates.find((c) => {
+        const text = c.content?.parts?.[0]?.text;
+        if (!text) return false;
+        try {
+          const parsed = JSON.parse(text);
+          return Array.isArray(parsed.questions) && parsed.questions.length;
+        } catch {
+          return false;
+        }
+      });
+
+      if (!candidate) throw new Error("No valid candidate from lite model");
+
+      try {
+        data = JSON.parse(candidate.content.parts[0].text);
+      } catch (err) {
+        throw new Error("Failed to parse questions from lite model");
+      }
+    } else {
+      // Use streaming endpoint for BASIC and PRO models
+      if (sendProgress) sendProgress("Streaming from AI", 30);
+
+      const streamUrl = `${BASE_URL}/${model}:streamGenerateContent?key=${apiKey}`;
+
+      // For streaming - use the full payload with schema
+      const streamPayload = payload;
+
+      let fullResponse = "";
+      let charCount = 0;
+      const estimatedTotalChars = 2000;
+
+      try {
+        console.log(
+          "Starting streaming request to:",
+          streamUrl.substring(0, 80)
+        );
+
+        const response = await fetch(streamUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(streamPayload),
+        });
+
+        console.log("Stream response status:", response.status);
+
+        if (!response.ok) {
+          const text = await response.text();
+          const error = new Error(
+            `Gemini API Streaming Error: ${response.status}`
+          );
+          error.response = { status: response.status, text };
+          console.error("Stream error response:", text.substring(0, 200));
           throw error;
         }
-        return res;
-      })
-    );
 
-    const resultText = await response.text();
+        if (!response.body) {
+          console.log("Response body is null, response:", response);
+          throw new Error("Response body is null - streaming not available");
+        }
 
-    if (!response.ok) {
-      throw new Error(
-        `API call failed with status ${
-          response.status
-        }. Details: ${resultText.substring(0, 100)}...`
-      );
-    }
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let rawStreamData = "";
 
-    let result;
-    try {
-      result = resultText ? JSON.parse(resultText) : null;
-    } catch (err) {
-      result = null;
-    }
+        console.log("Starting to read stream...");
 
-    const candidate = result.candidates.find((c) => {
-      const text = c.content?.parts?.[0]?.text;
-      if (!text) return false;
-      try {
-        const data = JSON.parse(text);
-        return Array.isArray(data.questions) && data.questions.length;
-      } catch {
-        return false;
+        while (true) {
+          const { done, value } = await reader.read();
+
+          if (done) {
+            console.log("Stream reading complete");
+            break;
+          }
+
+          if (!value || value.length === 0) {
+            continue;
+          }
+
+          const decoded = decoder.decode(value, { stream: true });
+          rawStreamData += decoded;
+          charCount += decoded.length;
+
+          const progressPercent = 30 + (charCount / estimatedTotalChars) * 40;
+          if (sendProgress && progressPercent < 70) {
+            sendProgress(
+              "Streaming from AI",
+              Math.min(Math.floor(progressPercent), 69)
+            );
+          }
+        }
+
+        console.log("Total raw stream data length:", rawStreamData.length);
+        console.log("First 200 chars:", rawStreamData.substring(0, 200));
+        console.log(
+          "Last 100 chars:",
+          rawStreamData.substring(rawStreamData.length - 100)
+        );
+
+        if (sendProgress) sendProgress("Parsing response", 70);
+
+        // The Gemini API sends responses as a JSON array: [{ chunk1 }, { chunk2 }, ... ]
+        try {
+          const responseArray = JSON.parse(rawStreamData);
+          console.log("Parsed as array with", responseArray.length, "chunks");
+
+          if (Array.isArray(responseArray)) {
+            // Extract text from each chunk
+            for (const chunk of responseArray) {
+              if (
+                chunk.candidates &&
+                chunk.candidates[0]?.content?.parts?.[0]?.text
+              ) {
+                fullResponse += chunk.candidates[0].content.parts[0].text;
+              }
+            }
+          }
+        } catch (arrayErr) {
+          console.log(
+            "Failed to parse as array, trying alternative parsing..."
+          );
+          throw arrayErr;
+        }
+
+        console.log("Extracted text length:", fullResponse.length);
+        if (fullResponse) {
+          console.log("Response preview:", fullResponse.substring(0, 200));
+        }
+
+        if (!fullResponse) {
+          throw new Error("No text extracted from streaming response");
+        }
+
+        if (sendProgress) sendProgress("Parsing JSON", 75);
+
+        try {
+          data = JSON.parse(fullResponse);
+        } catch (err) {
+          console.error("Failed to parse extracted text as JSON:", err.message);
+          throw new Error("Failed to parse quiz JSON from stream");
+        }
+      } catch (error) {
+        // Fallback to non-streaming if streaming fails
+        console.log(
+          "Streaming failed, falling back to non-streaming:",
+          error.message
+        );
+
+        if (sendProgress)
+          sendProgress("Generating from AI (non-streaming fallback)", 30);
+
+        const response = await retryGeminiRequest(() =>
+          fetch(getApiUrl(model, apiKey), {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          }).then(async (res) => {
+            if (!res.ok) {
+              const text = await res.text();
+              const err = new Error("Gemini API Error");
+              err.response = { status: res.status, text };
+              throw err;
+            }
+            return res;
+          })
+        );
+
+        if (sendProgress) sendProgress("Parsing response", 70);
+
+        const resultText = await response.text();
+        let result;
+        try {
+          result = resultText ? JSON.parse(resultText) : null;
+        } catch (err) {
+          result = null;
+        }
+
+        if (!result || !result.candidates) {
+          throw new Error("Invalid response from AI");
+        }
+
+        const candidate = result.candidates.find((c) => {
+          const text = c.content?.parts?.[0]?.text;
+          if (!text) return false;
+          try {
+            const parsed = JSON.parse(text);
+            return Array.isArray(parsed.questions) && parsed.questions.length;
+          } catch {
+            return false;
+          }
+        });
+
+        if (!candidate) throw new Error("No valid candidate from AI");
+
+        try {
+          data = JSON.parse(candidate.content.parts[0].text);
+        } catch (err) {
+          throw new Error("Failed to parse questions from AI");
+        }
       }
+    }
+
+    if (!data || !data.questions) {
+      throw new Error("AI returned invalid or empty quiz data");
+    }
+
+    if (sendProgress) sendProgress("Formatting & validating", 70);
+
+    const questions = data.questions.map((q, idx) => {
+      // Send progress for each question processed
+      const progressPercent = 70 + ((idx + 1) / data.questions.length) * 15;
+      if (sendProgress)
+        sendProgress(
+          "Formatting & validating",
+          Math.floor(progressPercent),
+          idx + 1
+        );
+
+      return {
+        id: uuidv4(),
+        type: detectQuestionType(q),
+        text: q.text,
+        options: q.options || [],
+        correctAnswer: q.correctAnswer,
+        explanation: q.explanation,
+        marks: q.marks || 1,
+      };
     });
 
-    if (!candidate) throw new Error("No valid AI candidate found");
+    if (sendProgress) sendProgress("Finalizing", 95);
 
-    let data;
-    try {
-      data = candidate.content.parts[0].text
-        ? JSON.parse(candidate.content.parts[0].text)
-        : null;
-    } catch (err) {
-      data = null;
-    }
-
-    if (!data) throw new Error("AI returned invalid or empty quiz data");
-
-    const questions = data.questions.map((q) => ({
-      id: uuidv4(),
-      type: detectQuestionType(q),
-      text: q.text,
-      options: q.options || [],
-      correctAnswer: q.correctAnswer,
-      explanation: q.explanation,
-      marks: q.marks || 1,
-    }));
-
-    return {
+    const quizData = {
       title: data.title || `${topic} Quiz`,
       topic,
       difficulty,
@@ -292,8 +523,10 @@ ${
       totalMarks,
       examStyle: styleLabel,
     };
+
+    return quizData;
   } catch (error) {
-    throw new Error("Failed to generate quiz. Please try again!");
+    throw new Error(`Failed to generate quiz: ${error.message}`);
   }
 };
 
@@ -325,14 +558,18 @@ Output: A sharp, direct, high-impact review.
 - Do NOT start with ${user.name}.
 - Do NOT start the review with 'Review:'.
 - For the words that need bolding use **WORD**, not *WORD*.
-- Do NOT mention difficulty levels or quiz structure in the topic name, just the core topic itself.`;
+- Do NOT mention difficulty levels or quiz structure in the topic name, just the core topic itself.
+- Do NOT list additional bullet points like "Physics: 60% on 12/29/2025." - Only output the three items above (Key Strength, Critical Weakness, Next Step).`;
 
   const contents = [{ role: "user", parts: [{ text: prompt }] }];
   const payload = { contents };
 
   try {
+    const model = selectModel(user);
+    const apiKey = selectApiKey(user);
+
     const response = await retryGeminiRequest(() =>
-      fetch(getApiUrl(model), {
+      fetch(getApiUrl(model, apiKey), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

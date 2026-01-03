@@ -59,10 +59,10 @@ const Contact = () => {
         <div className="max-w-4xl mx-auto">
           <form
             onSubmit={submit}
-            className="space-y-6 border border-border p-10 pt-12 rounded-lg shadow-md"
+            className="space-y-6 border border-border pb-10 pt-12 px-4 sm:px-6 md:px-8 rounded-lg shadow-md"
           >
             <div>
-              <h2 className="text-4xl text-textMain text-center font-semibold mb-5">
+              <h2 className="text-4xl text-textMain text-center font-semibold mb-8">
                 Contact Us
               </h2>
               <label htmlFor="email" className="text-lg font-medium mb-2 flex">

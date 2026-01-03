@@ -23,6 +23,17 @@ import OAuthCallback from "./components/OAuthCallback.jsx";
 import LandingPage from "./components/LandingPage.jsx";
 import FeaturesPage from "./components/FeaturesPage.jsx";
 import TestimonialsPage from "./components/TestimonialsPage.jsx";
+import Achievements from "./components/Achievements.jsx";
+import Leaderboard from "./components/Leaderboard.jsx";
+// Admin components
+import AdminLogin from "./components/AdminLogin.jsx";
+import AdminLayout from "./components/AdminLayout.jsx";
+import AdminDashboard from "./components/AdminDashboard.jsx";
+import AdminUsers from "./components/AdminUsers.jsx";
+import AdminUserDetail from "./components/AdminUserDetail.jsx";
+import AdminQuizzes from "./components/AdminQuizzes.jsx";
+import AdminQuizDetail from "./components/AdminQuizDetail.jsx";
+import AdminResults from "./components/AdminResults.jsx";
 // Static pages
 import Pricing from "./components/Pricing.jsx";
 import About from "./components/About.jsx";
@@ -35,6 +46,14 @@ import { useTheme } from "./hooks/useTheme.js";
 // Protected Route Wrapper
 const ProtectedRoute = ({ children, auth }) => {
   const location = useLocation();
+  const token = localStorage.getItem("token");
+  const storedUser = localStorage.getItem("user");
+
+  // If token is missing from localStorage but auth says we're authenticated,
+  // the user was logged out in another window/tab, so redirect
+  if (!token && auth.isAuthenticated) {
+    return <Navigate to="/auth" state={{ from: location }} replace />;
+  }
 
   if (!auth.isAuthenticated) {
     return <Navigate to="/auth" state={{ from: location }} replace />;
@@ -51,6 +70,18 @@ const ProtectedRoute = ({ children, auth }) => {
 const PublicOnlyRoute = ({ children, auth }) => {
   if (auth.isAuthenticated) {
     return <Navigate to="/dashboard" replace />;
+  }
+
+  return <>{children}</>;
+};
+
+// Protected Admin Route Wrapper
+const ProtectedAdminRoute = ({ children }) => {
+  const location = useLocation();
+  const adminToken = localStorage.getItem("adminToken");
+
+  if (!adminToken) {
+    return <Navigate to="/admin/login" state={{ from: location }} replace />;
   }
 
   return <>{children}</>;
@@ -81,11 +112,37 @@ const App = () => {
       setAuth({ isAuthenticated: false, user: null });
     };
 
+    // Listen for account disabled event - redirect to landing with error message
+    const handleAccountDisabled = (event) => {
+      setAuth({ isAuthenticated: false, user: null });
+      // Show error toast and redirect
+      window.location.href =
+        "/?message=" +
+        encodeURIComponent(
+          event.detail?.message || "Your account has been disabled"
+        );
+    };
+
+    // Listen for account banned event - redirect to landing with error message
+    const handleAccountBanned = (event) => {
+      setAuth({ isAuthenticated: false, user: null });
+      // Show error toast and redirect
+      window.location.href =
+        "/?message=" +
+        encodeURIComponent(
+          event.detail?.message || "Your account has been banned"
+        );
+    };
+
     window.addEventListener("userUpdated", handleUserUpdated);
     window.addEventListener("sessionLogout", handleSessionLogout);
+    window.addEventListener("accountDisabled", handleAccountDisabled);
+    window.addEventListener("accountBanned", handleAccountBanned);
     return () => {
       window.removeEventListener("userUpdated", handleUserUpdated);
       window.removeEventListener("sessionLogout", handleSessionLogout);
+      window.removeEventListener("accountDisabled", handleAccountDisabled);
+      window.removeEventListener("accountBanned", handleAccountBanned);
     };
   }, []);
 
@@ -146,7 +203,29 @@ const App = () => {
       <Analytics />
       <Router>
         <Routes>
-          <Route path="/auth/callback" element={<OAuthCallback />} />
+          <Route path="/oauth/callback" element={<OAuthCallback />} />
+
+          {/* Admin Routes */}
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route
+            path="/admin"
+            element={<Navigate to="/admin/dashboard" replace />}
+          />
+          <Route
+            path="/admin/*"
+            element={
+              <ProtectedAdminRoute>
+                <AdminLayout />
+              </ProtectedAdminRoute>
+            }
+          >
+            <Route path="dashboard" element={<AdminDashboard />} />
+            <Route path="users" element={<AdminUsers />} />
+            <Route path="users/:userId" element={<AdminUserDetail />} />
+            <Route path="quizzes" element={<AdminQuizzes />} />
+            <Route path="quizzes/:quizId" element={<AdminQuizDetail />} />
+            <Route path="results" element={<AdminResults />} />
+          </Route>
 
           <Route
             path="/auth"
@@ -312,6 +391,36 @@ const App = () => {
                   refreshUser={refreshUser}
                 >
                   <Subscription user={auth.user} onUpgrade={refreshUser} />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/achievements"
+            element={
+              <ProtectedRoute auth={auth}>
+                <Layout
+                  user={auth.user}
+                  onLogout={handleLogout}
+                  refreshUser={refreshUser}
+                >
+                  <Achievements user={auth.user} />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/leaderboard"
+            element={
+              <ProtectedRoute auth={auth}>
+                <Layout
+                  user={auth.user}
+                  onLogout={handleLogout}
+                  refreshUser={refreshUser}
+                >
+                  <Leaderboard user={auth.user} />
                 </Layout>
               </ProtectedRoute>
             }

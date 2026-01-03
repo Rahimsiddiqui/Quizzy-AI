@@ -75,8 +75,3 @@ export function decryptSecret(encryptedSecret, key) {
   decrypted += decipher.final("utf8");
   return decrypted;
 }
-
-// Generate mock SMS OTP (for demo purposes)
-export function generateSMSOTP() {
-  return Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit code
-}

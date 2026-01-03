@@ -40,17 +40,11 @@ router.get("/initiate", protect, async (req, res) => {
 
 router.post("/enable", protect, async (req, res) => {
   try {
-    const { method, token, secret, phone } = req.body;
+    const { token, secret } = req.body;
 
-    if (!method || !token || !secret) {
+    if (!token || !secret) {
       return res.status(400).json({
-        message: "Method, token, and secret are required",
-      });
-    }
-
-    if (method === "sms" && !phone) {
-      return res.status(400).json({
-        message: "Phone number required for SMS 2FA",
+        message: "Token and secret are required",
       });
     }
 
@@ -65,7 +59,7 @@ router.post("/enable", protect, async (req, res) => {
         .json({ message: "2FA is already enabled for this account" });
     }
 
-    // Verify the token
+    // Verify the TOTP token
     const isValid = verify2FAToken(secret, token);
     if (!isValid) {
       return res.status(400).json({
@@ -76,11 +70,8 @@ router.post("/enable", protect, async (req, res) => {
     const backupCodes = generateBackupCodes(10);
 
     user.twoFAEnabled = true;
-    user.twoFAMethod = method;
+    user.twoFAMethod = "totp";
     user.twoFASecret = secret;
-    if (method === "sms") {
-      user.twoFAPhone = phone;
-    }
     user.twoFABackupCodes = backupCodes;
 
     await user.save();
@@ -89,7 +80,7 @@ router.post("/enable", protect, async (req, res) => {
       message: "2FA enabled successfully",
       backupCodes: backupCodes,
       warningMessage:
-        "Save these backup codes in a safe place. You can use them if you lose access to your 2FA device.",
+        "Save these backup codes in a safe place. You can use them if you lose access to your authenticator app.",
     });
   } catch (err) {
     // Server error
@@ -119,8 +110,8 @@ router.post("/verify", protect, async (req, res) => {
     // Try regular TOTP token
     let isValid = verify2FAToken(user.twoFASecret, token);
 
-    // If not valid and not TOTP, try backup code
-    if (!isValid && user.twoFAMethod === "totp") {
+    // If not valid, try backup code
+    if (!isValid) {
       isValid = useBackupCode(user.twoFABackupCodes, token);
       if (isValid) {
         await user.save();
@@ -199,7 +190,6 @@ router.get("/status", protect, async (req, res) => {
     res.status(200).json({
       twoFAEnabled: user.twoFAEnabled,
       twoFAMethod: user.twoFAMethod,
-      twoFAPhone: user.twoFAPhone ? user.twoFAPhone.slice(-4) : null, // Only show last 4 digits
       backupCodesCount: user.twoFABackupCodes.length,
     });
   } catch (err) {

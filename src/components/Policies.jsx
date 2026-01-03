@@ -18,7 +18,7 @@ const Policies = () => {
           content: null,
           list: [
             "Log in to your account and navigate to the subscription page",
-            'Click "Request Refund" or contact support at aneesabegum223@gmail.com',
+            'Click "Request Refund" or contact support at rahimsiddiqui122@gmail.com',
             "Provide your reason for the refund request",
             "We will process your request within 5 business days",
             "Refunds are issued to the original payment method",
@@ -45,7 +45,7 @@ const Policies = () => {
         {
           heading: "Subscription Billing",
           content:
-            "Paid subscriptions are billed monthly or annually based on your chosen plan. Billing occurs on the same date each month/year. You will receive a receipt via email after each charge.",
+            "Paid subscriptions are billed monthly based on your chosen plan. Billing occurs on the same date each month. You will receive a receipt via email after each charge.",
         },
         {
           heading: "Payment Methods",
@@ -202,7 +202,7 @@ const Policies = () => {
         <div className="max-w-4xl mx-auto space-y-12">
           {policiesData.map((policy) => (
             <div key={policy.id}>
-              <h2 className="text-4xl font-bold text-textMain mb-8 text-center">
+              <h2 className="text-4xl font-bold text-textMain pb-6 md:pb-8 mb-10 md:mb-12 text-center border-border border-b">
                 {policy.title}
               </h2>
 
@@ -220,7 +220,10 @@ const Policies = () => {
                       {section.link && (
                         <>
                           {" "}
-                          <Link to={section.link.to} className="text-primary">
+                          <Link
+                            to={section.link.to}
+                            className="text-primary dark:text-blue-400 underline"
+                          >
                             {section.link.text}
                           </Link>
                           .

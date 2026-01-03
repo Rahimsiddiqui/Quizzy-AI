@@ -34,7 +34,7 @@ const OAuthCallback = () => {
             body: JSON.stringify({
               provider,
               code,
-              redirectUri: window.location.origin + "/auth/callback",
+              redirectUri: window.location.origin + "/oauth/callback",
             }),
           }
         );

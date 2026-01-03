@@ -1,5 +1,6 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { toast } from "react-toastify";
 import {
   ArrowRight,
   Brain,
@@ -17,6 +18,15 @@ import Navbar from "./Navbar.jsx";
 
 const LandingPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  // Show error message if redirected due to disabled account
+  React.useEffect(() => {
+    const message = searchParams.get("message");
+    if (message) {
+      toast.error(message, { autoClose: 5000 });
+    }
+  }, [searchParams]);
 
   return (
     <div className="min-h-screen bg-background text-textMain">
@@ -336,10 +346,10 @@ const LandingPage = () => {
       {/* Footer */}
       <footer className="bg-surface border-t border-border py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 mb-8 text-center md:text-left">
             {/* Brand */}
             <div>
-              <div className="flex items-center gap-2 font-bold text-lg text-primary dark:text-blue-400 mb-4">
+              <div className="flex items-center gap-2 font-bold text-lg text-primary dark:text-blue-400 mb-4 justify-center md:justify-start">
                 <Brain className="w-6 h-6" />
                 <span>Quizzy AI</span>
               </div>

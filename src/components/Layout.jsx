@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo, useCallback } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   PlusCircle,
@@ -9,6 +9,8 @@ import {
   Brain,
   Loader2,
   Settings,
+  Trophy,
+  Zap,
 } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import PropTypes from "prop-types";
@@ -24,24 +26,31 @@ const getProgressWidth = (remaining, max) => {
 
 const Layout = ({ children, user, onLogout, refreshUser }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
   const [quizzesLeft, setQuizzesLeft] = useState(
-    user?.limits?.generationsRemaining || 0
+    user?.role === "admin" ? Infinity : user?.limits?.generationsRemaining || 0
   );
   const [pdfLeft, setPdfLeft] = useState(
-    user?.limits?.pdfUploadsRemaining || 0
+    user?.role === "admin" ? Infinity : user?.limits?.pdfUploadsRemaining || 0
   );
 
   // Sync state whenever user prop changes
   useEffect(() => {
-    setQuizzesLeft(user?.limits?.generationsRemaining ?? 0);
+    setQuizzesLeft(
+      user?.role === "admin"
+        ? Infinity
+        : user?.limits?.generationsRemaining ?? 0
+    );
   }, [user]);
 
   useEffect(() => {
-    setPdfLeft(user?.limits?.pdfUploadsRemaining ?? 0);
+    setPdfLeft(
+      user?.role === "admin" ? Infinity : user?.limits?.pdfUploadsRemaining ?? 0
+    );
   }, [user]);
 
   // Listen for custom events from Storage Service
@@ -68,6 +77,8 @@ const Layout = ({ children, user, onLogout, refreshUser }) => {
       { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
       { icon: PlusCircle, label: "New Quiz", path: "/generate" },
       { icon: BarChart, label: "Overview", path: "/overview" },
+      { icon: Zap, label: "Achievements", path: "/achievements" },
+      { icon: Trophy, label: "Leaderboard", path: "/leaderboard" },
     ],
     []
   );
@@ -91,7 +102,7 @@ const Layout = ({ children, user, onLogout, refreshUser }) => {
   // Define tier limits
   const tierLimits = {
     Free: { generationsRemaining: 7, pdfUploadsRemaining: 3 },
-    Basic: { generationsRemaining: 30, pdfUploadsRemaining: 10 },
+    Basic: { generationsRemaining: 35, pdfUploadsRemaining: 20 },
     Pro: { generationsRemaining: Infinity, pdfUploadsRemaining: Infinity },
   };
 
@@ -102,7 +113,7 @@ const Layout = ({ children, user, onLogout, refreshUser }) => {
     <div className="min-h-screen bg-background text-textMain flex font-sans no-print selection:bg-primary/20 selection:text-primary">
       {/* Desktop Sidebar */}
       <aside
-        className={`hidden md:flex flex-col fixed h-full z-5 transition-all duration-300 bg-surface border-r border-border shadow-sm overflow-auto ${
+        className={`hidden md:flex flex-col fixed h-full z-5 transition-all duration-300 bg-surface border-r border-border shadow-sm overflow-y-auto overflow-x-none max-w-64 ${
           sidebarCollapsed ? "w-20" : "w-64"
         }`}
       >
@@ -116,14 +127,22 @@ const Layout = ({ children, user, onLogout, refreshUser }) => {
               {!sidebarCollapsed && (
                 <Link
                   to="/dashboard"
-                  className={`flex items-center gap-2 text-primary dark:text-blue-400 font-bold tracking-tight transition-opacity hover:opacity-90 ${
+                  className={`flex items-center gap-2 text-primary dark:text-blue-400 font-bold tracking-tight transition-opacity hover:opacity-90 min-w-fit ${
                     sidebarCollapsed ? "justify-center" : "text-xl"
                   }`}
                   aria-label="Go to Quizzy AI Dashboard"
                   title="Quizzy AI"
                 >
                   <Brain className="w-7 h-7" />
-                  {!sidebarCollapsed && <span>Quizzy AI</span>}
+                  {!sidebarCollapsed && (
+                    <span
+                      className={`transition-opacity duration-300 ease-in-out ${
+                        sidebarCollapsed ? "opacity-0" : "opacity-100"
+                      }`}
+                    >
+                      Quizzy AI
+                    </span>
+                  )}
                 </Link>
               )}
               <button
@@ -151,7 +170,7 @@ const Layout = ({ children, user, onLogout, refreshUser }) => {
           </div>
         </div>
 
-        <nav className="flex-1 px-2 py-4 pb-5">
+        <nav className="flex-1 px-2 py-4 pb-5 min-w-fit">
           {navItems.map((item) => {
             const isActive = location.pathname === item.path;
             return (
@@ -159,11 +178,13 @@ const Layout = ({ children, user, onLogout, refreshUser }) => {
                 key={item.path}
                 to={item.path}
                 title={item.label}
-                className={`flex items-center py-3 px-4 hover:pl-5 ${
-                  sidebarCollapsed ? "justify-center" : "gap-3"
+                className={`flex items-center py-3 px-4 ${
+                  sidebarCollapsed ? "justify-center" : "hover:pl-5 gap-3"
                 } rounded-xl transition-all duration-200 mt-2 group ${
                   isActive
-                    ? "bg-primary/10 text-primary dark:text-blue-400 font-semibold shadow-inner pl-5"
+                    ? `bg-primary/10 text-primary dark:text-blue-400 font-semibold shadow-inner ${
+                        !sidebarCollapsed ? "pl-5" : ""
+                      }`
                     : "text-textMuted hover:bg-surfaceHighlight hover:text-textMain"
                 }`}
                 aria-current={isActive ? "page" : undefined}
@@ -173,7 +194,17 @@ const Layout = ({ children, user, onLogout, refreshUser }) => {
                     isActive ? "scale-110" : ""
                   }`}
                 />
-                {!sidebarCollapsed && <span>{item.label}</span>}
+                {!sidebarCollapsed && (
+                  <span
+                    className={`whitespace-nowrap transition-opacity duration-300 ease-in-out ${
+                      sidebarCollapsed
+                        ? "opacity-0 pointer-events-none"
+                        : "opacity-100"
+                    }`}
+                  >
+                    {item.label}
+                  </span>
+                )}
               </Link>
             );
           })}
@@ -190,12 +221,24 @@ const Layout = ({ children, user, onLogout, refreshUser }) => {
             >
               {!sidebarCollapsed ? (
                 <>
-                  <div className="flex items-center justify-between mb-4">
+                  <div
+                    className={`flex items-center justify-between mb-4 transition-opacity duration-300 ease-in-out ${
+                      sidebarCollapsed
+                        ? "opacity-0 pointer-events-none"
+                        : "opacity-100"
+                    }`}
+                  >
                     <div className="flex items-center gap-3 mb-1 overflow-hidden">
                       <div className="w-9 h-9 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm shrink-0">
                         {user.name.charAt(0)}
                       </div>
-                      <div className="overflow-hidden min-w-0">
+                      <div
+                        className={`overflow-hidden min-w-0 transition-opacity duration-300 ease-in-out whitespace-nowrap ${
+                          sidebarCollapsed
+                            ? "opacity-0 pointer-events-none"
+                            : "opacity-100"
+                        }`}
+                      >
                         <p className="text-sm font-bold truncate">
                           {user.name}
                         </p>
@@ -206,7 +249,11 @@ const Layout = ({ children, user, onLogout, refreshUser }) => {
                     </div>
 
                     <span
-                      className={`text-[10px] font-extrabold px-2 py-1 rounded-full uppercase tracking-wider shrink-0 ml-3 shadow-sm ${
+                      className={`text-[10px] font-extrabold px-2 py-1 rounded-full uppercase tracking-wider shrink-0 ml-3 shadow-sm transition-opacity duration-300 ease-in-out whitespace-nowrap ${
+                        sidebarCollapsed
+                          ? "opacity-0 pointer-events-none"
+                          : "opacity-100"
+                      } ${
                         user.tier === "Pro"
                           ? "bg-orange-100 text-orange-700 dark:bg-orange-900/60 dark:text-orange-300"
                           : user.tier === "Basic"
@@ -218,10 +265,14 @@ const Layout = ({ children, user, onLogout, refreshUser }) => {
                       {user.tier}
                     </span>
                   </div>
-                  <div className="space-y-3 mb-1">
+                  <div
+                    className={`space-y-3 mb-1 transition-opacity duration-300 ease-in-out ${
+                      sidebarCollapsed ? "opacity-0" : "opacity-100"
+                    }`}
+                  >
                     <div className="text-xs">
                       <div className="flex justify-between items-center mb-1">
-                        <span className="text-textMuted">
+                        <span className="text-textMuted whitespace-nowrap pointer-events-none">
                           Quiz Generations Left
                         </span>
                         <span
@@ -248,7 +299,9 @@ const Layout = ({ children, user, onLogout, refreshUser }) => {
 
                     <div className="text-xs">
                       <div className="flex justify-between items-center mb-1">
-                        <span className="text-textMuted">PDF Uploads Left</span>
+                        <span className="text-textMuted whitespace-nowrap pointer-events-none">
+                          PDF Uploads Left
+                        </span>
                         <span className="font-bold text-textMain">
                           {isPro ? "∞" : pdfLeft}
                         </span>
@@ -268,7 +321,11 @@ const Layout = ({ children, user, onLogout, refreshUser }) => {
 
                   <Link
                     to="/subscription"
-                    className={`w-full flex items-center justify-center gap-2 text-white hover:text-white/90 text-xs font-extrabold py-2.5 rounded-xl transition-all active:scale-[0.98] mt-5 ${
+                    className={`w-full flex items-center justify-center gap-2 text-white hover:text-white/90 text-xs font-extrabold py-2.5 rounded-xl transition-all duration-300 ease-in-out active:scale-[0.98] mt-5 ${
+                      sidebarCollapsed
+                        ? "opacity-0 pointer-events-none"
+                        : "opacity-100"
+                    } ${
                       user.tier === "Free"
                         ? "bg-blue-600 dark:bg-blue-700 shadow-lg shadow-blue-500/40 dark:shadow-blue-500/30 hover:bg-blue-700 dark:hover:bg-blue-700/80"
                         : user.tier === "Basic"
@@ -279,10 +336,22 @@ const Layout = ({ children, user, onLogout, refreshUser }) => {
                     {user.tier !== "Pro" ? (
                       <>
                         <Crown className="w-3.75 h-3.75 fill-white -mt-0.5" />
-                        Upgrade Plan
+                        <span
+                          className={`whitespace-nowrap opacity-${
+                            !sidebarCollapsed ? "100" : "0"
+                          } transition-all duration-300 ease-in-out`}
+                        >
+                          Upgrade Plan
+                        </span>
                       </>
                     ) : (
-                      "Downgrade Plan"
+                      <span
+                        className={`whitespace-nowrap opacity-${
+                          !sidebarCollapsed ? "100" : "0"
+                        } transition-all duration-300 ease-in-out`}
+                      >
+                        Downgrade Plan
+                      </span>
                     )}
                   </Link>
                 </>
@@ -306,10 +375,10 @@ const Layout = ({ children, user, onLogout, refreshUser }) => {
           <button
             onClick={() => setShowSettings(true)}
             className={`flex items-center gap-3 ${
-              sidebarCollapsed ? "px-3.25" : "px-4"
+              sidebarCollapsed ? "px-3.25 justify-center" : "px-4"
             } py-2 text-textMuted hover:text-primary dark:hover:text-blue-400 transition-colors w-full rounded-xl hover:bg-primary/5 dark:hover:bg-primary/20 focus:outline-none focus:ring-2 focus:ring-primary dark:focus:ring-blue-400 focus:ring-offset-2 mt-5 cursor-pointer`}
           >
-            <Settings className="w-5 h-5" />
+            <Settings className="w-5 h-5 shrink-0" />
             {!sidebarCollapsed && <span>Settings</span>}
           </button>
 
@@ -317,16 +386,16 @@ const Layout = ({ children, user, onLogout, refreshUser }) => {
             onClick={handleLogoutClick}
             disabled={isLoggingOut}
             className={`flex items-center gap-3 ${
-              sidebarCollapsed ? "px-3.25" : "px-4"
+              sidebarCollapsed ? "px-3.25 justify-center" : "px-4"
             } py-2 text-textMuted hover:text-red-600 transition-colors w-full rounded-xl 
            hover:bg-red-50 dark:hover:bg-red-900/30 dark:hover:text-red-300 
            disabled:opacity-70 disabled:cursor-not-allowed 
            focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 mt-3 point`}
           >
             {isLoggingOut ? (
-              <Loader2 className="w-5 h-5 animate-spin text-red-500" />
+              <Loader2 className="w-5 h-5 animate-spin text-red-500 dark:text-red-400 shrink-0" />
             ) : (
-              <LogOut className="w-5 h-5" />
+              <LogOut className="w-5 h-5 shrink-0" />
             )}
 
             {!sidebarCollapsed && (isLoggingOut ? "Logging out..." : "Logout")}
@@ -398,10 +467,14 @@ const Layout = ({ children, user, onLogout, refreshUser }) => {
       >
         <div className="max-w-6xl mx-auto">
           <div className="md:hidden flex justify-between items-center mb-6 sticky top-0 bg-background/95 backdrop-blur z-30 py-4 border-b border-border/50">
-            <div className="flex items-center gap-2 text-primary font-bold text-xl">
+            <button
+              onClick={() => navigate("/dashboard")}
+              className="flex items-center gap-2 text-primary font-bold text-xl hover:opacity-80 transition-opacity cursor-pointer bg-none border-none p-0"
+              aria-label="Go to Quizzy AI Dashboard"
+            >
               <Brain className="w-7 h-7" />
               <span>Quizzy AI</span>
-            </div>
+            </button>
 
             <button
               onClick={handleLogoutClick}

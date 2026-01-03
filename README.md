@@ -110,6 +110,47 @@ npm run dev:all
 npm run build
 ```
 
+---
+
+## 🛡️ Admin Dashboard
+
+Quizzy AI includes a complete admin dashboard for managing users, quizzes, and results.
+
+### Quick Start
+
+```bash
+# 1. Install dependencies
+npm install
+
+# 2. Seed admin user
+npm run seed:admin
+
+# 3. Start development
+npm run dev:all
+
+# 4. Login at http://localhost:5173/admin/login
+# Email: admin@quizzy.com
+# Password: admin123
+```
+
+### Features
+
+- 📊 Dashboard with real-time statistics
+- 👥 User management (enable/disable/ban)
+- 📋 Quiz results tracking
+- 🔍 Search and pagination
+- 📈 Performance charts (7-day activity, average scores)
+- 🔄 Real-time updates via Socket.io
+
+### Documentation
+
+- **[ADMIN_COMPLETE.md](ADMIN_COMPLETE.md)** — Full overview
+- **[QUICK_START.md](QUICK_START.md)** — Fast setup (5 min)
+- **[API_DOCUMENTATION.md](API_DOCUMENTATION.md)** — API reference
+- **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** — Common issues
+
+---
+
 <!-- ## ⌨ Quick Keyboard Shortcuts
 
 | Shortcut                       | Action               |

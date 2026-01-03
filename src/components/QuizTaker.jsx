@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import CircularProgress from "@mui/material/CircularProgress";
 import AssignmentIcon from "@mui/icons-material/Assignment";
+import html2pdf from "html2pdf.js";
 
 import {
   Check,
@@ -18,6 +19,9 @@ import {
   ChevronLeft,
   Lock,
   Loader2,
+  ChevronDown,
+  FileText,
+  File,
 } from "lucide-react";
 import { toast } from "react-toastify";
 
@@ -25,6 +29,7 @@ import StorageService from "../services/storageService.js";
 import { generateAndSaveReview } from "../services/geminiService.js";
 import { QuestionType } from "../../server/config/types.js";
 import PrintView from "./PrintView.jsx";
+import AchievementCelebration from "./AchievementCelebration.jsx";
 
 const parseBoldText = (text) => {
   if (!text) return null;
@@ -42,6 +47,37 @@ const truncateText = (text, maxLength) => {
   return text.length > maxLength ? text.slice(0, maxLength) + "..." : text;
 };
 
+const cleanQuestionText = (text) => {
+  if (!text) return text;
+  // Remove format markers like (True/False), [True/False], (Multiple Choice), [MCQ], [2], etc.
+  return (
+    text
+      .replace(/\s*\(True\/False\)\s*/gi, "")
+      .replace(/\s*\[True\/False\]\s*/gi, "")
+      .replace(/\s*\(Multiple\s*Select\)\s*/gi, "")
+      .replace(/\s*\[Multiple\s*Select\]\s*/gi, "")
+      .replace(/\s*\(MSQ\)\s*/gi, "")
+      .replace(/\s*\[MSQ\]\s*/gi, "")
+      .replace(/\s*\(Multiple\s*Choice\)\s*/gi, "")
+      .replace(/\s*\[Multiple\s*Choice\]\s*/gi, "")
+      .replace(/\s*\(MCQ\)\s*/gi, "")
+      .replace(/\s*\[MCQ\]\s*/gi, "")
+      .replace(/\s*\(Short\s*Answer\)\s*/gi, "")
+      .replace(/\s*\[Short\s*Answer\]\s*/gi, "")
+      .replace(/\s*\(Long\s*Answer\)\s*/gi, "")
+      .replace(/\s*\[Long\s*Answer\]\s*/gi, "")
+      .replace(/\s*\(Essay\)\s*/gi, "")
+      .replace(/\s*\[Essay\]\s*/gi, "")
+      .replace(/\s*\(Fill\s*in\s*the\s*Blank\)\s*/gi, "")
+      .replace(/\s*\[Fill\s*in\s*the\s*Blank\]\s*/gi, "")
+      .replace(/\s*\(FillInTheBlank\)\s*/gi, "")
+      .replace(/\s*\[FillInTheBlank\]\s*/gi, "")
+      // Remove marks in brackets like [2], [3], etc.
+      .replace(/\s*\[\d+\]\s*$/g, "")
+      .trim()
+  );
+};
+
 const TrueFalseOptions = ["True", "False"];
 
 const QuizIntroView = ({ quiz, startQuiz }) => (
@@ -56,7 +92,7 @@ const QuizIntroView = ({ quiz, startQuiz }) => (
       limit, but try to answer as accurately as possible.
     </p>
 
-    <div className="grid grid-cols-3 gap-4 mb-8 max-w-lg mx-auto">
+    <div className="grid grid-cols-2 xs:grid-cols-3 gap-4 mb-8 max-w-lg mx-auto">
       <div className="p-4 bg-surfaceHighlight rounded-xl">
         <HelpCircle className="w-6 h-6 text-primary dark:text-blue-400 mx-auto mb-2" />
         <div className="font-bold text-textMain">{quiz.questions.length}</div>
@@ -167,7 +203,9 @@ const QuizResultsView = ({
               >
                 {idx + 1}
               </span>
-              <h3 className="font-medium text-textMain pt-0.75">{q.text}</h3>
+              <h3 className="font-medium text-textMain pt-0.75">
+                {cleanQuestionText(q.text)}
+              </h3>
             </div>
             {q.marks && (
               <span
@@ -436,6 +474,16 @@ const QuizTaker = ({ user, onComplete, onLimitUpdate }) => {
   // Increment this key to force remounting the StudyFlashcards component when new cards are created
   const [flashcardsResetKey, setFlashcardsResetKey] = useState(0);
 
+  // Export modal state
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportModalFormat, setExportModalFormat] = useState(null);
+  const [showExportDropdown, setShowExportDropdown] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [includeAnswerSheet, setIncludeAnswerSheet] = useState(true);
+
+  // Achievement celebration state
+  const [celebratingAchievement, setCelebratingAchievement] = useState(null);
+
   const isLast = quiz && currentIdx === quiz.questions.length - 1;
 
   useEffect(() => {
@@ -449,6 +497,15 @@ const QuizTaker = ({ user, onComplete, onLimitUpdate }) => {
       const q = location.state.quiz;
       (async () => {
         try {
+          // Check if quiz is disabled
+          if (q.isActive === false) {
+            toast.error(
+              "The quiz you selected is disabled. Please Contact support at rahimsiddiqui122@gmail.com to enable your quiz"
+            );
+            navigate("/dashboard");
+            return;
+          }
+
           const allCards = (await StorageService.getFlashcards(user._id)) || [];
           const qId = q._id || q.id;
           const relevantCards = allCards.filter(
@@ -512,6 +569,17 @@ const QuizTaker = ({ user, onComplete, onLimitUpdate }) => {
           return;
         }
 
+        // Check if quiz is disabled
+        if (q.isActive === false) {
+          if (isMounted) {
+            toast.error(
+              "The quiz you selected is disabled. Please Contact support at rahimsiddiqui122@gmail.com to enable your quiz"
+            );
+            navigate("/dashboard");
+          }
+          return;
+        }
+
         // Fetch flashcards for this quiz
         const allCards = (await StorageService.getFlashcards(user._id)) || [];
         const qId = q._id || q.id;
@@ -571,6 +639,12 @@ const QuizTaker = ({ user, onComplete, onLimitUpdate }) => {
 
   const startQuiz = () => setStatus("active");
 
+  const formattedDate = new Date().toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
   const handleAnswer = (val) => {
     if (status === "completed" || !quiz) return;
     const qid = quiz.questions[currentIdx].id || quiz.questions[currentIdx]._id;
@@ -623,6 +697,41 @@ const QuizTaker = ({ user, onComplete, onLimitUpdate }) => {
         saved && (saved._id || saved.id)
           ? { ...updatedQuiz, ...saved }
           : updatedQuiz;
+
+      // Award EXP for quiz completion
+      try {
+        const expResult = await StorageService.awardQuizCompletionExp(
+          score,
+          finalQuiz.totalMarks || 100
+        );
+        if (
+          expResult &&
+          expResult.achievements &&
+          expResult.achievements.length > 0
+        ) {
+          // Show celebration for the first achievement
+          setCelebratingAchievement(expResult.achievements[0]);
+
+          // Refresh user data to update EXP and level in real-time
+          const updatedUser = await StorageService.getCurrentUser();
+          if (updatedUser) {
+            localStorage.setItem("user", JSON.stringify(updatedUser));
+            window.dispatchEvent(
+              new CustomEvent("userUpdated", { detail: updatedUser })
+            );
+          }
+
+          // Show toasts for additional achievements (if any)
+          if (expResult.achievements.length > 1) {
+            expResult.achievements.slice(1).forEach((ach) => {
+              toast.success(`🎉 Achievement Unlocked: ${ach.name}!`);
+            });
+          }
+        }
+      } catch (expErr) {
+        console.error("Error awarding EXP:", expErr);
+      }
+
       // Replace the current history state so hydration uses the saved quiz and we avoid refetch races
       navigate(`/quiz/${id}`, { replace: true, state: { quiz: finalQuiz } });
       setQuiz(finalQuiz);
@@ -655,21 +764,1091 @@ const QuizTaker = ({ user, onComplete, onLimitUpdate }) => {
     setCurrentIdx((prev) => Math.min(quiz.questions.length - 1, prev + 1));
   };
 
-  const handlePrint = () => {
+  const handleExport = async (format) => {
+    // Check PDF export limits for non-Pro users
     if (user.tier !== "Pro" && (user.limits?.pdfExportsRemaining ?? 0) <= 0) {
-      alert(
-        "You have reached your daily PDF export limit. Upgrade to Pro for more exports."
+      toast.error(
+        "You have reached your monthly export limit. Upgrade to Pro for unlimited exports."
       );
       return;
     }
 
-    if (user.tier !== "Pro") {
-      const success = StorageService.decrementPdfExport();
-      if (!success) return;
-      onLimitUpdate();
+    // DOCX export only for Basic and Pro tiers
+    if (format === "docx" && user.tier === "Free") {
+      toast.error(
+        "DOCX export is only available for Basic and Pro tiers. Upgrade to unlock this feature."
+      );
+      return;
     }
 
-    setTimeout(() => window.print(), 100);
+    setShowExportDropdown(false);
+
+    // Show modal for PDF and DOCX to ask about answer sheet
+    if ((format === "pdf" || format === "docx") && user.tier !== "Free") {
+      setExportModalFormat(format);
+      setShowExportModal(true);
+      return;
+    }
+
+    // For Free and Basic tier PDF export, proceed directly
+    if (format === "pdf" && (user.tier === "Free" || user.tier === "Basic")) {
+      setIsExporting(true);
+      try {
+        const success = await StorageService.decrementPdfExport();
+        if (!success) {
+          toast.error(
+            "Failed to decrement PDF export limit. Please try again."
+          );
+          setIsExporting(false);
+          return;
+        }
+        onLimitUpdate();
+        await exportToPdf();
+        toast.success("Quiz exported as PDF successfully!");
+      } catch (error) {
+        toast.error("Failed to export quiz as PDF");
+      } finally {
+        setIsExporting(false);
+      }
+    }
+  };
+
+  const handleExportConfirm = async () => {
+    setShowExportModal(false);
+    setIsExporting(true);
+
+    try {
+      if (exportModalFormat === "pdf") {
+        // Decrement PDF export for non-Pro users
+        if (user.tier !== "Pro") {
+          const success = await StorageService.decrementPdfExport();
+          if (!success) {
+            toast.error(
+              "Failed to decrement PDF export limit. Please try again."
+            );
+            setIsExporting(false);
+            return;
+          }
+          onLimitUpdate();
+        }
+        await exportToPdf();
+
+        if (includeAnswerSheet) {
+          await exportAnswerSheetToPdf();
+          toast.success("Quiz & Answer sheet exported as PDF successfully!");
+        } else {
+          toast.success("Quiz exported as PDF successfully!");
+        }
+      } else if (exportModalFormat === "docx") {
+        // DOCX export is only available for Basic and Pro tiers (not Free)
+        // Pro users have unlimited exports, Basic users have monthly limits
+        if (user.tier === "Basic") {
+          const success = await StorageService.decrementPdfExport();
+          if (!success) {
+            toast.error(
+              "You have reached your monthly export limit. Upgrade to Pro for unlimited."
+            );
+            setIsExporting(false);
+            return;
+          }
+          onLimitUpdate();
+        }
+
+        await exportToDocx();
+
+        if (includeAnswerSheet) {
+          await exportAnswerSheetToDocx();
+          toast.success("Quiz & Answer sheet exported as DOCX successfully!");
+        } else {
+          toast.success("Quiz exported as DOCX successfully!");
+        }
+      }
+    } catch (error) {
+      toast.error("Failed to export quiz");
+    } finally {
+      setIsExporting(false);
+      setExportModalFormat(null);
+    }
+  };
+
+  const exportToPdf = async () => {
+    if (!quiz) return;
+
+    const formattedDate = new Date().toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+
+    // Create a container element for PDF content
+    const container = document.createElement("div");
+    container.style.padding = "40px";
+    container.style.fontFamily = "Arial, sans-serif";
+    container.style.lineHeight = "1.6";
+    container.style.color = "#1f2937";
+    container.style.backgroundColor = "white";
+    container.style.width = "210mm";
+
+    // Header
+    const header = document.createElement("div");
+    header.style.background =
+      "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)";
+    header.style.color = "white";
+    header.style.padding = "30px";
+    header.style.borderRadius = "8px";
+    header.style.marginBottom = "30px";
+    header.style.textAlign = "center";
+
+    const title = document.createElement("h1");
+    title.style.fontSize = "32px";
+    title.style.fontWeight = "800";
+    title.style.marginBottom = "10px";
+    title.textContent = quiz.topic;
+    header.appendChild(title);
+
+    const subtitle = document.createElement("p");
+    subtitle.style.fontSize = "14px";
+    subtitle.style.margin = "0";
+    subtitle.style.color = "rgba(255, 255, 255, 0.9)";
+    subtitle.textContent = "Assessment Quiz";
+    header.appendChild(subtitle);
+    container.appendChild(header);
+
+    // Metadata
+    const metaContainer = document.createElement("div");
+    metaContainer.style.display = "grid";
+    metaContainer.style.gridTemplateColumns = "1fr 1fr";
+    metaContainer.style.gap = "20px";
+    metaContainer.style.background = "#f8fafc";
+    metaContainer.style.padding = "24px";
+    metaContainer.style.borderRadius = "8px";
+    metaContainer.style.marginBottom = "30px";
+    metaContainer.style.borderLeft = "5px solid #2563eb";
+
+    const metaData = [
+      { label: "Difficulty", value: quiz.difficulty },
+      { label: "Questions", value: quiz.questions.length },
+      { label: "Total Marks", value: quiz.totalMarks || "N/A" },
+      { label: "Date", value: formattedDate },
+    ];
+
+    metaData.forEach((item) => {
+      const metaItem = document.createElement("div");
+      const label = document.createElement("div");
+      label.style.fontSize = "11px";
+      label.style.fontWeight = "700";
+      label.style.color = "#2563eb";
+      label.style.textTransform = "uppercase";
+      label.style.letterSpacing = "0.7px";
+      label.style.marginBottom = "4px";
+      label.textContent = item.label;
+
+      const value = document.createElement("div");
+      value.style.fontSize = "18px";
+      value.style.fontWeight = "600";
+      value.style.color = "#1f2937";
+      value.textContent = item.value;
+
+      metaItem.appendChild(label);
+      metaItem.appendChild(value);
+      metaContainer.appendChild(metaItem);
+    });
+    container.appendChild(metaContainer);
+
+    // Questions Section
+    const questionsTitle = document.createElement("h2");
+    questionsTitle.style.fontSize = "20px";
+    questionsTitle.style.fontWeight = "700";
+    questionsTitle.style.color = "#1f2937";
+    questionsTitle.style.margin = "30px 0 20px 0";
+    questionsTitle.style.paddingBottom = "10px";
+    questionsTitle.style.borderBottom = "2px solid #2563eb";
+    questionsTitle.textContent = "Questions";
+    container.appendChild(questionsTitle);
+
+    // Questions
+    quiz.questions.forEach((q, idx) => {
+      const questionBlock = document.createElement("div");
+      questionBlock.style.marginBottom = "25px";
+      questionBlock.style.padding = "18px";
+      questionBlock.style.border = "1px solid #e5e7eb";
+      questionBlock.style.borderRadius = "8px";
+      questionBlock.style.backgroundColor = "white";
+      questionBlock.style.borderLeft = "4px solid #2563eb";
+      questionBlock.style.pageBreakInside = "avoid";
+
+      // Question header with number
+      const qHeader = document.createElement("div");
+      qHeader.style.display = "flex";
+      qHeader.style.alignItems = "flex-start";
+      qHeader.style.gap = "12px";
+      qHeader.style.marginBottom = "14px";
+
+      const qNumber = document.createElement("div");
+      qNumber.style.background =
+        "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)";
+      qNumber.style.color = "white";
+      qNumber.style.width = "36px";
+      qNumber.style.height = "36px";
+      qNumber.style.borderRadius = "50%";
+      qNumber.style.display = "flex";
+      qNumber.style.alignItems = "center";
+      qNumber.style.justifyContent = "center";
+      qNumber.style.fontWeight = "700";
+      qNumber.style.fontSize = "15px";
+      qNumber.style.flexShrink = "0";
+      qNumber.textContent = idx + 1;
+
+      const qText = document.createElement("div");
+      qText.style.flex = "1";
+
+      const qTextMain = document.createElement("div");
+      qTextMain.style.fontWeight = "600";
+      qTextMain.style.color = "#1f2937";
+      qTextMain.style.fontSize = "15px";
+      qTextMain.style.lineHeight = "1.5";
+      qTextMain.textContent = cleanQuestionText(q.text);
+
+      const qMarks = document.createElement("div");
+      qMarks.style.background = "#fbbf24";
+      qMarks.style.color = "#92400e";
+      qMarks.style.padding = "4px 10px";
+      qMarks.style.borderRadius = "5px";
+      qMarks.style.fontSize = "12px";
+      qMarks.style.fontWeight = "700";
+      qMarks.style.marginTop = "8px";
+      qMarks.style.display = "inline-block";
+      qMarks.textContent = `${q.marks || 1} marks`;
+
+      qText.appendChild(qTextMain);
+      qText.appendChild(qMarks);
+      qHeader.appendChild(qNumber);
+      qHeader.appendChild(qText);
+      questionBlock.appendChild(qHeader);
+
+      // Options
+      const optionsContainer = document.createElement("div");
+      optionsContainer.style.marginLeft = "48px";
+      optionsContainer.style.marginTop = "12px";
+
+      if (
+        q.type === "MCQ" ||
+        q.type === "MSQ" ||
+        q.type === QuestionType.MCQ ||
+        q.type === QuestionType.MSQ
+      ) {
+        (q.options || []).forEach((option) => {
+          const optDiv = document.createElement("div");
+          optDiv.style.marginBottom = "10px";
+          optDiv.style.padding = "10px 14px";
+          optDiv.style.background = "#f9fafb";
+          optDiv.style.borderRadius = "6px";
+          optDiv.style.borderLeft = "3px solid #3b82f6";
+          optDiv.style.color = "#374151";
+          optDiv.style.fontSize = "14px";
+          optDiv.style.lineHeight = "1.5";
+          optDiv.textContent = "◆ " + option;
+          optionsContainer.appendChild(optDiv);
+        });
+      } else if (q.type === "TrueFalse" || q.type === QuestionType.TRUE_FALSE) {
+        ["True", "False"].forEach((opt) => {
+          const optDiv = document.createElement("div");
+          optDiv.style.marginBottom = "10px";
+          optDiv.style.padding = "10px 14px";
+          optDiv.style.background = "#f9fafb";
+          optDiv.style.borderRadius = "6px";
+          optDiv.style.borderLeft = "3px solid #3b82f6";
+          optDiv.style.color = "#374151";
+          optDiv.style.fontSize = "14px";
+          optDiv.textContent = "◆ " + opt;
+          optionsContainer.appendChild(optDiv);
+        });
+      } else if (
+        q.type === "ShortAnswer" ||
+        q.type === QuestionType.SHORT_ANSWER
+      ) {
+        const lineDiv = document.createElement("div");
+        lineDiv.style.borderBottom = "2px dotted #cbd5e1";
+        lineDiv.style.height = "28px";
+        lineDiv.style.marginTop = "12px";
+        optionsContainer.appendChild(lineDiv);
+      }
+
+      questionBlock.appendChild(optionsContainer);
+      container.appendChild(questionBlock);
+    });
+
+    // Footer
+    const footer = document.createElement("div");
+    footer.style.marginTop = "50px";
+    footer.style.paddingTop = "20px";
+    footer.style.borderTop = "1px solid #e5e7eb";
+    footer.style.textAlign = "center";
+    footer.style.color = "#6b7280";
+    footer.style.fontSize = "12px";
+    const footerText = document.createElement("p");
+    footerText.style.margin = "0";
+    footerText.textContent = `Generated by Quizzy AI • ${formattedDate}`;
+    footer.appendChild(footerText);
+    container.appendChild(footer);
+
+    // Position container off-screen but visible to DOM
+    container.style.position = "fixed";
+    container.style.left = "-9999px";
+    container.style.top = "-9999px";
+    container.style.zIndex = "-9999";
+    container.style.visibility = "hidden";
+    document.body.appendChild(container);
+
+    try {
+      // Wait for DOM to render the elements
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      // Generate PDF from the created DOM
+      const opt = {
+        margin: 10,
+        filename: `${quiz.topic.replace(/\s+/g, "_")}_Quiz.pdf`,
+        image: { type: "jpeg", quality: 0.98 },
+        html2canvas: { scale: 2, allowTaint: true, useCORS: true },
+        jsPDF: { orientation: "portrait", unit: "mm", format: "a4" },
+        pagebreak: { mode: ["avoid-all", "css", "legacy"] },
+      };
+
+      await html2pdf().set(opt).from(container).save();
+    } finally {
+      document.body.removeChild(container);
+    }
+  };
+
+  const exportAnswerSheetToPdf = async () => {
+    if (!quiz) return;
+
+    const formattedDate = new Date().toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+
+    // Create a container element for PDF content
+    const container = document.createElement("div");
+    container.style.padding = "40px";
+    container.style.fontFamily = "Arial, sans-serif";
+    container.style.lineHeight = "1.6";
+    container.style.color = "#1f2937";
+    container.style.backgroundColor = "white";
+    container.style.width = "210mm";
+
+    // Header
+    const header = document.createElement("div");
+    header.style.background =
+      "linear-gradient(135deg, #10b981 0%, #059669 100%)";
+    header.style.color = "white";
+    header.style.padding = "30px";
+    header.style.borderRadius = "8px";
+    header.style.marginBottom = "30px";
+    header.style.textAlign = "center";
+
+    const title = document.createElement("h1");
+    title.style.fontSize = "32px";
+    title.style.fontWeight = "800";
+    title.style.marginBottom = "10px";
+    title.textContent = quiz.topic;
+    header.appendChild(title);
+
+    const subtitle = document.createElement("div");
+    subtitle.style.fontSize = "18px";
+    subtitle.style.fontWeight = "600";
+    subtitle.style.marginBottom = "8px";
+    subtitle.textContent = "Answer Sheet";
+    header.appendChild(subtitle);
+
+    const date = document.createElement("p");
+    date.style.color = "rgba(255, 255, 255, 0.9)";
+    date.style.fontSize = "13px";
+    date.style.margin = "0";
+    date.textContent = formattedDate;
+    header.appendChild(date);
+    container.appendChild(header);
+
+    // Metadata
+    const metaContainer = document.createElement("div");
+    metaContainer.style.display = "grid";
+    metaContainer.style.gridTemplateColumns = "1fr 1fr";
+    metaContainer.style.gap = "20px";
+    metaContainer.style.background = "#f0fdf4";
+    metaContainer.style.padding = "24px";
+    metaContainer.style.borderRadius = "8px";
+    metaContainer.style.marginBottom = "30px";
+    metaContainer.style.borderLeft = "5px solid #10b981";
+
+    const metaData = [
+      { label: "Total Questions", value: quiz.questions.length },
+      { label: "Difficulty Level", value: quiz.difficulty || "Standard" },
+    ];
+
+    metaData.forEach((item) => {
+      const metaItem = document.createElement("div");
+      const label = document.createElement("div");
+      label.style.fontSize = "11px";
+      label.style.fontWeight = "700";
+      label.style.color = "#10b981";
+      label.style.textTransform = "uppercase";
+      label.style.letterSpacing = "0.7px";
+      label.style.marginBottom = "4px";
+      label.textContent = item.label;
+
+      const value = document.createElement("div");
+      value.style.fontSize = "18px";
+      value.style.fontWeight = "600";
+      value.style.color = "#1f2937";
+      value.textContent = item.value;
+
+      metaItem.appendChild(label);
+      metaItem.appendChild(value);
+      metaContainer.appendChild(metaItem);
+    });
+    container.appendChild(metaContainer);
+
+    // Answers Section
+    const answersTitle = document.createElement("h2");
+    answersTitle.style.fontSize = "20px";
+    answersTitle.style.fontWeight = "700";
+    answersTitle.style.color = "#1f2937";
+    answersTitle.style.margin = "30px 0 20px 0";
+    answersTitle.style.paddingBottom = "10px";
+    answersTitle.style.borderBottom = "2px solid #10b981";
+    answersTitle.textContent = "Answer Key";
+    container.appendChild(answersTitle);
+
+    // Answers
+    quiz.questions.forEach((q, idx) => {
+      const answerBlock = document.createElement("div");
+      answerBlock.style.marginBottom = "25px";
+      answerBlock.style.padding = "15px";
+      answerBlock.style.border = "1px solid #d1fae5";
+      answerBlock.style.borderRadius = "8px";
+      answerBlock.style.background = "#f0fdf4";
+      answerBlock.style.pageBreakInside = "avoid";
+
+      // Question header
+      const qHeader = document.createElement("div");
+      qHeader.style.display = "flex";
+      qHeader.style.alignItems = "flex-start";
+      qHeader.style.gap = "10px";
+      qHeader.style.marginBottom = "12px";
+
+      const qNumber = document.createElement("span");
+      qNumber.style.background = "#10b981";
+      qNumber.style.color = "white";
+      qNumber.style.width = "30px";
+      qNumber.style.height = "30px";
+      qNumber.style.borderRadius = "50%";
+      qNumber.style.display = "flex";
+      qNumber.style.alignItems = "center";
+      qNumber.style.justifyContent = "center";
+      qNumber.style.fontWeight = "700";
+      qNumber.style.fontSize = "14px";
+      qNumber.style.flexShrink = "0";
+      qNumber.textContent = idx + 1;
+
+      const qText = document.createElement("span");
+      qText.style.fontWeight = "600";
+      qText.style.color = "#1f2937";
+      qText.style.fontSize = "15px";
+      qText.textContent = cleanQuestionText(q.text);
+
+      qHeader.appendChild(qNumber);
+      qHeader.appendChild(qText);
+      answerBlock.appendChild(qHeader);
+
+      // Answer section
+      const answerSection = document.createElement("div");
+      answerSection.style.marginTop = "10px";
+      answerSection.style.padding = "12px";
+      answerSection.style.background = "white";
+      answerSection.style.borderLeft = "3px solid #10b981";
+      answerSection.style.borderRadius = "4px";
+
+      const answerLabel = document.createElement("span");
+      answerLabel.style.fontWeight = "700";
+      answerLabel.style.color = "#047857";
+      answerLabel.style.fontSize = "12px";
+      answerLabel.style.textTransform = "uppercase";
+      answerLabel.style.letterSpacing = "0.5px";
+      answerLabel.style.marginBottom = "6px";
+      answerLabel.style.display = "block";
+      answerLabel.textContent = "✓ Correct Answer";
+      answerSection.appendChild(answerLabel);
+
+      const answerText = document.createElement("div");
+      answerText.style.color = "#374151";
+      answerText.style.fontSize = "14px";
+      answerText.style.lineHeight = "1.6";
+      answerText.style.marginBottom = "8px";
+      answerText.textContent = q.correctAnswer;
+      answerSection.appendChild(answerText);
+
+      if (q.explanation) {
+        const explanationDiv = document.createElement("div");
+        explanationDiv.style.paddingTop = "8px";
+        explanationDiv.style.borderTop = "1px solid #d1fae5";
+        explanationDiv.style.marginTop = "8px";
+        explanationDiv.style.fontStyle = "italic";
+        explanationDiv.style.color = "#4b5563";
+        explanationDiv.style.fontSize = "13px";
+        explanationDiv.style.lineHeight = "1.6";
+
+        const strongExp = document.createElement("strong");
+        strongExp.textContent = "Explanation: ";
+        explanationDiv.appendChild(strongExp);
+        explanationDiv.appendChild(document.createTextNode(q.explanation));
+        answerSection.appendChild(explanationDiv);
+      }
+
+      answerBlock.appendChild(answerSection);
+      container.appendChild(answerBlock);
+    });
+
+    // Footer
+    const footer = document.createElement("div");
+    footer.style.marginTop = "40px";
+    footer.style.paddingTop = "20px";
+    footer.style.borderTop = "2px solid #e5e7eb";
+    footer.style.textAlign = "center";
+    footer.style.color = "#6b7280";
+    footer.style.fontSize = "12px";
+    const footerText = document.createElement("p");
+    footerText.style.margin = "0";
+    footerText.textContent = `Answer Sheet Generated by Quizzy AI • ${formattedDate}`;
+    footer.appendChild(footerText);
+    container.appendChild(footer);
+
+    // Position container off-screen but visible to DOM
+    container.style.position = "fixed";
+    container.style.left = "-9999px";
+    container.style.top = "-9999px";
+    container.style.zIndex = "-9999";
+    container.style.visibility = "hidden";
+    document.body.appendChild(container);
+
+    try {
+      // Wait for DOM to render the elements
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      // Generate PDF from the created DOM
+      const opt = {
+        margin: 10,
+        filename: `${quiz.topic.replace(/\s+/g, "_")}_AnswerSheet.pdf`,
+        image: { type: "jpeg", quality: 0.98 },
+        html2canvas: { scale: 2, allowTaint: true, useCORS: true },
+        jsPDF: { orientation: "portrait", unit: "mm", format: "a4" },
+        pagebreak: { mode: ["avoid-all", "css", "legacy"] },
+      };
+
+      await html2pdf().set(opt).from(container).save();
+    } finally {
+      document.body.removeChild(container);
+    }
+  };
+
+  const exportToDocx = async () => {
+    if (!quiz) return;
+
+    // Create simple HTML content optimized for DOCX compatibility
+    let htmlContent = `
+      <html>
+        <head>
+          <meta charset="UTF-8">
+          <style>
+            body { 
+              font-family: Calibri, Arial, sans-serif; 
+              line-height: 1.5; 
+              color: #000; 
+              background: white;
+            }
+            
+            .header {
+              background-color: #3b82f6;
+              color: white;
+              margin: 0 0 30px 0;
+              text-align: center;
+            }
+            
+            .header h1 {
+              font-size: 48px;
+              font-weight: bold;
+              margin: 15px 0 10px 0;
+            }
+            
+            .header p {
+              font-size: 18px;
+              font-weight: 600;
+              margin: 5px 0;
+            }
+            
+            .quiz-info {
+              margin-bottom: 20px;
+              width: 100%;
+              border-collapse: collapse;
+            }
+            
+            .quiz-info td {
+              width: 25%;
+              padding: 10px;
+              vertical-align: top;
+            }
+            
+            .info-card {
+              background-color: #f3f4f6;
+              text-align: center;
+              border-left: 6px solid #3b82f6;
+            }
+            
+            .info-card strong {
+              display: block;
+              color: #000;
+              font-size: 19px;
+              font-weight: bold;
+              margin-bottom: 5px;
+            }
+            
+            .info-card p {
+              color: #000;
+              font-size: 17px;
+              font-weight: bold;
+              margin: 0;
+            }
+            
+            .section-title {
+              font-size: 45px;
+              font-weight: bold;
+              color: #000;
+              margin: 40px 0 30px 0;
+              border-bottom: 3px solid #3b82f6;
+              text-align: center;
+              padding-bottom: 15px;
+            }
+
+            .question {
+              margin-bottom: 30px;
+              page-break-inside: avoid;
+              display: flex;
+            }
+            
+            .question-number {
+              font-weight: bold;
+              font-size: 22px;
+              white-space: nowrap;
+            }
+            
+            .question-text {
+              font-size: 21px;
+              font-weight: bold;
+              color: #000;
+              margin-bottom: 17px;
+              line-height: 1.5;
+              display: block;
+            }
+            
+            .question-meta {
+              display: inline;
+              margin-left: 12px;
+            }
+            
+            .options {
+              margin-left: 20px;
+              margin-top: 5px;
+            }
+            
+            .option {
+              margin: 4px 0 7px 0;
+              background-color: #f9fafb;
+              font-size: 17px;
+              color: #000;
+              padding-left: 12px;
+              border-left: 4px solid #3b82f6;
+            }
+            
+            .true-false-options {
+              margin-left: 20px;
+              margin-top: 5px;
+            }
+            
+            .true-false-option {
+              margin: 4px 0 7px 0;
+              background-color: #f9fafb;
+              font-size: 16px;
+              color: #000;
+              padding-left: 12px;
+              border-left: 4px solid #3b82f6;
+            }
+            
+            .short-answer-space {
+              margin-left: 20px;
+              margin-top: 5px;
+              color: #666;
+              font-size: 13px;
+            }
+            
+            footer {
+              margin-top: 50px;
+              padding-top: 10px;
+              border-top: 3px solid #ccc;
+              text-align: center;
+            }
+
+            footer p {
+              color: #666;
+              font-weight: bold;
+              font-size: 15px;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <br>
+            <br>
+            <br>
+            <h1>${quiz.topic}</h1>
+            <br>
+            <p>Quiz Document</p>
+            <p>Generated on ${formattedDate}</p>
+            <br>
+            <br>
+            <br>
+            <br>
+          </div>
+          
+          <table class="quiz-info">
+            <tr>
+              <td><div class="info-card"><i><br><strong>Difficulty Level</strong><p>${
+                quiz.difficulty || "Standard"
+              }</p><br><i></div></td>
+              <td><div class="info-card"><i><br><strong>Total Questions</strong><p>${
+                quiz.questions.length
+              } Qs</p><br><i></div></td>
+              <td><div class="info-card"><i><br><strong>Total Marks</strong><p>${
+                quiz.totalMarks || "N/A"
+              } Marks</p><br><i></div></td>
+              <td><div class="info-card"><i><br><strong>Exam Style</strong><p>${
+                quiz.examStyle || "Standard"
+              }</p><br><i></div></td>
+            </tr>
+          </table>
+
+          <div class="questions-container">
+            <div class="section-title">Questions</div>
+    `;
+
+    quiz.questions.forEach((q, idx) => {
+      htmlContent += `
+        <div class="question">
+          <div class="question-text">
+            <span class="question-number">Q${
+              idx + 1
+            }.</span> ${cleanQuestionText(q.text)}`;
+
+      if (q.marks) {
+        htmlContent += ` <span style="margin-right: 16px;">[${q.marks}]</span>`;
+      }
+
+      const typeLabel =
+        {
+          MCQ: "Multiple Choice",
+          "Multiple Choice": "Multiple Choice",
+          MSQ: "Multiple Select",
+          "Multiple Select": "Multiple Select",
+          TrueFalse: "True/False",
+          "True/False": "True/False",
+          ShortAnswer: "Short Answer",
+          "Short Answer": "Short Answer",
+          Essay: "Essay",
+          FillInTheBlank: "Fill in the Blank",
+          "Fill in the Blank": "Fill in the Blank",
+          LongAnswer: "Long Answer",
+          "Long Answer": "Long Answer",
+        }[q.type] || q.type;
+
+      htmlContent += ` <span style="margin-right: 16px;">[${typeLabel}]</span>
+          </div>`;
+
+      if (
+        q.type === QuestionType.MCQ ||
+        q.type === QuestionType.MSQ ||
+        q.type === "MCQ" ||
+        q.type === "MSQ"
+      ) {
+        htmlContent += `<div class="options">`;
+        (q.options || []).forEach((option, optIdx) => {
+          htmlContent += `<div class="option">
+            <i><span style="font-weight: 600; margin-right: 8px;">
+              ${String.fromCharCode(65 + optIdx)}.
+            </span>
+            ${option}
+          </div></i>`;
+        });
+        htmlContent += `</div>`;
+      } else if (q.type === QuestionType.TRUE_FALSE || q.type === "TrueFalse") {
+        htmlContent += `<div class="true-false-options">
+          <div class="true-false-option">☐ True</div>
+          <div class="true-false-option">☐ False</div>
+        </div>`;
+      } else if (
+        q.type === QuestionType.SHORT_ANSWER ||
+        q.type === "ShortAnswer"
+      ) {
+        htmlContent += `<div class="short-answer-space">____________________________</div>`;
+      }
+
+      htmlContent += `</div>`;
+    });
+
+    htmlContent += `
+          </div>
+          
+          <footer>
+            <p>© Quizzy AI | All rights reserved</p>
+            <p>This document is confidential</p>
+          </footer>
+        </body>
+      </html>
+    `;
+
+    // Create blob and download
+    const blob = new Blob([htmlContent], { type: "application/msword" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${quiz.topic.replace(
+      /\s+/g,
+      "_"
+    )}_Quiz_${formattedDate.replace(/\s+/g, "_")}.doc`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const exportAnswerSheetToDocx = async () => {
+    if (!quiz) return;
+
+    let htmlContent = `
+      <html>
+        <head>
+          <meta charset="UTF-8">
+          <style>
+            body { 
+              font-family: Calibri, Arial, sans-serif; 
+              line-height: 1.5; 
+              color: #000; 
+              background: white;
+            }
+            
+            .header {
+              background-color: #10b981;
+              color: white;
+              margin: 0 0 30px 0;
+              text-align: center;
+            }
+            
+            .header h1 {
+              font-size: 48px;
+              font-weight: bold;
+              margin: 25px 0 15px 0;
+            }
+            
+            .header .subtitle {
+              font-size: 18px;
+              font-weight: bold;
+              margin: 12px 0;
+            }
+            
+            .header p {
+              font-size: 18px;
+              font-weight: 600;
+              margin: 10px 0;
+            }
+            
+            .quiz-info {
+              margin-bottom: 20px;
+              width: 100%;
+              border-collapse: collapse;
+            }
+            
+            .quiz-info td {
+              width: 50%;
+              padding: 10px;
+              vertical-align: top;
+            }
+            
+            .info-card {
+              background-color: #f0fdf4;
+              margin: 8px 0;
+              flex: 1;
+            }
+            
+            .info-card strong {
+              display: block;
+              color: #000;
+              font-size: 13px;
+              font-weight: bold;
+              margin-bottom: 5px;
+            }
+            
+            .info-card p {
+              color: #000;
+              font-size: 15px;
+              font-weight: bold;
+              margin: 0;
+            }
+            
+            .section-title {
+              font-size: 16px;
+              font-weight: bold;
+              color: #000;
+              margin: 20px 0 10px 0;
+              border-bottom: 3px solid #10b981;
+            }
+            
+            .answer-item {
+              margin-bottom: 15px;
+              page-break-inside: avoid;
+            }
+            
+            .answer-number {
+              color: #10b981;
+              font-weight: bold;
+              display: inline;
+            }
+            
+            .question-text {
+              font-size: 14px;
+              font-weight: bold;
+              color: #000;
+              margin-bottom: 8px;
+              line-height: 1.5;
+            }
+            
+            .answer-section {
+              margin-bottom: 10px;
+              margin-left: 20px;
+            }
+            
+            .answer-label {
+              font-size: 12px;
+              font-weight: bold;
+              color: #10b981;
+              margin-bottom: 4px;
+            }
+            
+            .answer-text {
+              font-size: 13px;
+              color: #000;
+              background-color: #f9fafb;
+              margin-bottom: 8px;
+              line-height: 1.5;
+            }
+            
+            .explanation {
+              margin-left: 20px;
+              font-size: 12px;
+              color: #4b5563;
+              font-style: italic;
+              line-height: 1.5;
+              padding-top: 6px;
+              border-top: 1px solid #ddd;
+            }
+            
+            footer {
+              margin-top: 30px;
+              padding-top: 10px;
+              border-top: 1px solid #ccc;
+              text-align: center;
+              font-size: 11px;
+              color: #666;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <br>
+            <h1>${quiz.topic}</h1>
+            <br>
+            <div class="subtitle">Answer Sheet</div>
+            <p>Generated on ${formattedDate}</p>
+            <br>
+            <br>
+          </div>
+          
+          <table class="quiz-info">
+            <tr>
+              <td><div class="info-card"><br><strong>Total Questions</strong><p>${
+                quiz.questions.length
+              }</p><br></div></td>
+              <td><div class="info-card"><br><strong>Difficulty Level</strong><p>${
+                quiz.difficulty || "Standard"
+              }</p><br></div></td>
+            </tr>
+          </table>
+          
+          <div class="answers-container">
+            <div class="section-title">Answers & Explanations</div>
+    `;
+
+    quiz.questions.forEach((q, idx) => {
+      htmlContent += `
+        <div class="answer-item">
+          <div class="answer-header">
+            <div class="answer-number">${idx + 1}</div>
+            <div style="flex: 1;">
+              <div class="question-text">${cleanQuestionText(q.text)}</div>
+            </div>
+          </div>
+          <div class="answer-content">
+            <div class="answer-section">
+              <div class="answer-label">✓ Correct Answer</div>
+              <div class="answer-text">${q.correctAnswer}</div>
+            </div>
+      `;
+
+      if (q.explanation) {
+        htmlContent += `
+            <div class="explanation">
+              <strong>Explanation:</strong> ${q.explanation}
+            </div>
+        `;
+      }
+
+      htmlContent += `
+          </div>
+        </div>
+      `;
+    });
+
+    htmlContent += `
+          </div>
+          
+          <footer>
+            <p>© Quizzy AI - Answer Sheet</p>
+            <p>All rights reserved. This document is confidential.</p>
+          </footer>
+        </body>
+      </html>
+    `;
+
+    // Create blob and download
+    const blob = new Blob([htmlContent], { type: "application/msword" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${quiz.topic.replace(
+      /\s+/g,
+      "_"
+    )}_AnswerSheet_${formattedDate.replace(/\s+/g, "_")}.doc`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   const manualCreateFlashcards = async () => {
@@ -679,12 +1858,14 @@ const QuizTaker = ({ user, onComplete, onLimitUpdate }) => {
       return;
     }
 
-    // Check quota for non-Pro users
+    // Check quota for users with limited flashcard generations (Free/Basic)
     if (
       user.tier !== "Pro" &&
       (user.limits?.flashcardGenerationsRemaining ?? 0) <= 0
     ) {
-      toast.error("You have reached your daily flashcard generation limit.");
+      toast.error(
+        "You have reached your monthly flashcard generation limit. Upgrade to Pro for unlimited generations."
+      );
       return;
     }
 
@@ -697,7 +1878,7 @@ const QuizTaker = ({ user, onComplete, onLimitUpdate }) => {
           id: `fc_${qid}`,
           userId: user._id,
           quizId: quizIdKey,
-          front: q.text,
+          front: cleanQuestionText(q.text),
           back: `${q.correctAnswer}\n\n${
             q.explanation || "No explanation provided."
           }`,
@@ -723,6 +1904,40 @@ const QuizTaker = ({ user, onComplete, onLimitUpdate }) => {
         toast.error(
           "Failed to decrement flashcard quota. Please try again later."
         );
+      }
+
+      // Award EXP for flashcard creation
+      try {
+        const expResult = await StorageService.awardFlashcardCreationExp(
+          cards.length
+        );
+
+        // If achievements were unlocked, dispatch event to update navbar
+        if (
+          expResult &&
+          expResult.achievements &&
+          expResult.achievements.length > 0
+        ) {
+          // Show celebration for the first achievement
+          setCelebratingAchievement(expResult.achievements[0]);
+
+          // Show toasts for additional achievements (if any)
+          if (expResult.achievements.length > 1) {
+            expResult.achievements.slice(1).forEach((ach) => {
+              toast.success(`🎉 Achievement Unlocked: ${ach.name}!`);
+            });
+          }
+
+          const updatedUser = await StorageService.getCurrentUser();
+          if (updatedUser) {
+            localStorage.setItem("user", JSON.stringify(updatedUser));
+            window.dispatchEvent(
+              new CustomEvent("userUpdated", { detail: updatedUser })
+            );
+          }
+        }
+      } catch (expErr) {
+        console.error("Error awarding EXP for flashcards:", expErr);
       }
 
       setQuiz(finalQuiz);
@@ -751,6 +1966,12 @@ const QuizTaker = ({ user, onComplete, onLimitUpdate }) => {
   return (
     <>
       <PrintView quiz={quiz} />
+      {celebratingAchievement && (
+        <AchievementCelebration
+          achievement={celebratingAchievement}
+          onClose={() => setCelebratingAchievement(null)}
+        />
+      )}
       <div className="max-w-2xl mx-auto no-print animate-in fade-in slide-in-from-bottom-2 duration-500 pb-12">
         {/* Common Header */}
         <div className="flex justify-between items-center mb-6">
@@ -792,24 +2013,77 @@ const QuizTaker = ({ user, onComplete, onLimitUpdate }) => {
               )}
             </div>
           </div>
-          <button
-            onClick={handlePrint}
-            disabled={
-              status !== "completed" ||
-              (user.tier !== "Pro" &&
-                (user.limits?.pdfExportsRemaining ?? 0) <= 0)
-            }
-            className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 dark:bg-blue-900 dark:text-blue-300 dark:hover:bg-blue-800 transition-colors font-bold shadow-sm shrink-0 disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wider text-[10px] point"
-            title={
-              status !== "completed"
-                ? "Finish quiz to export"
-                : `Export PDF (${user.limits?.pdfExportsRemaining} left)`
-            }
-          >
-            <Printer className="w-4 h-4" />
-            <span className="hidden sm:inline">Export Quiz</span>
-            <span className="sm:hidden">Export</span>
-          </button>
+          <div className="relative">
+            <button
+              onClick={() => setShowExportDropdown(!showExportDropdown)}
+              disabled={
+                status !== "completed" ||
+                (user.tier !== "Pro" &&
+                  (user.limits?.pdfExportsRemaining ?? 0) <= 0) ||
+                isExporting
+              }
+              className="flex items-center gap-2 px-4 py-2 bg-linear-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 dark:from-blue-600 dark:to-blue-700 dark:hover:from-blue-700 dark:hover:to-blue-800 transition-all font-bold shadow-md shrink-0 disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wider text-xs point hover:shadow-lg"
+              title={
+                status !== "completed"
+                  ? "Finish quiz to export"
+                  : `Export (${user.limits?.pdfExportsRemaining} left)`
+              }
+            >
+              <Printer className="w-4 h-4" />
+              <span className="hidden sm:inline">Export Quiz</span>
+              <span className="sm:hidden">Export</span>
+              <ChevronDown
+                className={`w-3 h-3 transition-transform ${
+                  showExportDropdown ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+
+            {showExportDropdown && (
+              <div
+                className="absolute top-full right-0 mt-3 bg-surface border border-border rounded-xl shadow-xl z-50 overflow-hidden backdrop-blur-sm bg-opacity-95"
+                style={{ minWidth: "220px" }}
+              >
+                <div className="px-3 py-2 bg-linear-to-r from-blue-500/10 to-blue-600/10 border-b border-border">
+                  <p className="text-xs font-bold text-textMuted uppercase tracking-widest">
+                    Download As
+                  </p>
+                </div>
+                <button
+                  onClick={() => handleExport("pdf")}
+                  disabled={isExporting}
+                  className="w-full px-4 py-3 text-left hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors text-sm font-semibold text-textMain disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-3 point group"
+                >
+                  <div className="p-1.5 bg-red-100 dark:bg-red-900/40 rounded-lg group-hover:bg-red-200 dark:group-hover:bg-red-900/60 transition-colors">
+                    <FileText className="w-4 h-4 text-red-600 dark:text-red-400" />
+                  </div>
+                  <div className="flex-1">
+                    <div>PDF Document</div>
+                    <div className="text-xs text-textMuted font-normal">
+                      All tiers
+                    </div>
+                  </div>
+                </button>
+                {user.tier !== "Free" && (
+                  <button
+                    onClick={() => handleExport("docx")}
+                    disabled={isExporting}
+                    className="w-full px-4 py-3 text-left hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors text-sm font-semibold text-textMain disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-3 border-t border-border point group"
+                  >
+                    <div className="p-1.5 bg-blue-100 dark:bg-blue-900/40 rounded-lg group-hover:bg-blue-200 dark:group-hover:bg-blue-900/60 transition-colors">
+                      <File className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <div className="flex-1">
+                      <div>Word Document</div>
+                      <div className="text-xs text-textMuted font-normal">
+                        Basic & Pro
+                      </div>
+                    </div>
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* --- TABS --- */}
@@ -909,7 +2183,7 @@ const QuizTaker = ({ user, onComplete, onLimitUpdate }) => {
                   </div>
 
                   <h2 className="text-xl md:text-2xl font-medium text-textMain mb-8 leading-relaxed">
-                    {currentQ.text}
+                    {cleanQuestionText(currentQ.text)}
                   </h2>
 
                   <div className="flex-1 space-y-3">
@@ -950,13 +2224,13 @@ const QuizTaker = ({ user, onComplete, onLimitUpdate }) => {
                   </div>
                 </div>
 
-                <div className="flex justify-between mt-8 pt-6 border-t border-border">
+                <div className="flex flex-col xs:flex-row justify-between mt-8 pt-6 gap-4 border-t border-border">
                   <button
                     onClick={() =>
                       setCurrentIdx((prev) => Math.max(0, prev - 1))
                     }
                     disabled={currentIdx === 0}
-                    className="px-6 py-2 text-textMuted hover:text-textMain disabled:opacity-30 disabled:hover:text-textMuted point"
+                    className="px-6 py-2 text-textMuted hover:text-textMain disabled:opacity-30 disabled:hover:text-textMuted cursor-pointer disabled:cursor-not-allowed"
                   >
                     Previous
                   </button>
@@ -965,7 +2239,7 @@ const QuizTaker = ({ user, onComplete, onLimitUpdate }) => {
                     <button
                       onClick={handleSubmit}
                       disabled={!hasAnsweredCurrent || isSubmitting}
-                      className="px-8 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold flex items-center gap-2 transition-colors shadow-lg shadow-green-600/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none cursor-pointer"
+                      className="px-8 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-colors shadow-lg shadow-green-600/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none cursor-pointer"
                     >
                       {isSubmitting ? (
                         <>
@@ -982,7 +2256,7 @@ const QuizTaker = ({ user, onComplete, onLimitUpdate }) => {
                     <button
                       onClick={handleNext}
                       disabled={!hasAnsweredCurrent}
-                      className="px-8 py-3 bg-primary hover:bg-blue-700 text-white rounded-xl font-bold flex items-center gap-2 transition-colors shadow-lg shadow-blue-600/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none cursor-pointer"
+                      className="px-8 py-3 bg-primary hover:bg-blue-700 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-colors shadow-lg shadow-blue-600/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none cursor-pointer"
                     >
                       Next Question <ArrowRight className="w-5 h-5" />
                     </button>
@@ -991,6 +2265,98 @@ const QuizTaker = ({ user, onComplete, onLimitUpdate }) => {
               </div>
             )}
           </>
+        )}
+
+        {/* Export Answer Sheet Modal */}
+        {showExportModal && (
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-surface rounded-xl shadow-2xl max-w-md w-full overflow-hidden border border-border/50 animate-in fade-in zoom-in-95 duration-200">
+              {/* Header */}
+              <div className="bg-linear-to-r from-blue-500/20 to-blue-600/20 px-6 py-6 border-b border-border">
+                <h3 className="text-lg font-bold text-textMain">
+                  Include Answer Sheet?
+                </h3>
+                <p className="text-sm text-textMuted mt-1">
+                  Choose how you want to export your quiz
+                </p>
+              </div>
+
+              {/* Content */}
+              <div className="px-6 py-6 space-y-4">
+                {/* Radio Option 1: With Answers */}
+                <label
+                  className={`flex items-center gap-4 p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                    includeAnswerSheet
+                      ? "border-blue-500 bg-blue-800/40"
+                      : "border-gray-600"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="answerSheet"
+                    checked={includeAnswerSheet}
+                    onChange={() => setIncludeAnswerSheet(true)}
+                    className="w-5 h-5 cursor-pointer accent-blue-500"
+                  />
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-textMain">
+                      Include Answer Sheet
+                    </p>
+                    <p className="text-xs text-textMuted mt-0.5">
+                      With correct answers and explanations
+                    </p>
+                  </div>
+                </label>
+
+                {/* Radio Option 2: Without Answers */}
+                <label
+                  className={`flex items-center gap-4 p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                    !includeAnswerSheet
+                      ? "border-blue-500 bg-blue-800/40"
+                      : "border-gray-600"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="answerSheet"
+                    checked={!includeAnswerSheet}
+                    onChange={() => setIncludeAnswerSheet(false)}
+                    className="w-5 h-5 cursor-pointer accent-blue-500"
+                  />
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-textMain">
+                      Questions Only
+                    </p>
+                    <p className="text-xs text-textMuted mt-0.5">
+                      Perfect for practice and self-testing
+                    </p>
+                  </div>
+                </label>
+              </div>
+
+              {/* Actions */}
+              <div className="px-6 py-4 bg-surfaceHighlight border-t border-border/50 flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowExportModal(false);
+                    setExportModalFormat(null);
+                  }}
+                  disabled={isExporting}
+                  className="flex-1 px-4 py-3 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-textMain rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed point"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => handleExportConfirm()}
+                  disabled={isExporting}
+                  className="flex-1 px-4 py-3 bg-linear-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 point shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30"
+                >
+                  {isExporting && <Loader2 className="w-4 h-4 animate-spin" />}
+                  Export
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </>

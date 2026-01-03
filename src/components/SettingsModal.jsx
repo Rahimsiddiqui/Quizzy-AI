@@ -18,6 +18,7 @@ import {
   Lock,
   Trash2,
   Loader2,
+  Edit3,
 } from "lucide-react";
 import { toast } from "react-toastify";
 import { FormControl, InputLabel, Select, MenuItem } from "@mui/material";
@@ -43,6 +44,76 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+  const [newUsername, setNewUsername] = useState("");
+  const [isUpdatingUsername, setIsUpdatingUsername] = useState(false);
+  const [usernameError, setUsernameError] = useState("");
+  const [showUsernameEdit, setShowUsernameEdit] = useState(false);
+  const [newFullName, setNewFullName] = useState("");
+  const [showFullNameEdit, setShowFullNameEdit] = useState(false);
+  const [isUpdatingFullName, setIsUpdatingFullName] = useState(false);
+  const [fullNameError, setFullNameError] = useState("");
+  // Generate multiple sanitized username suggestions (dots, underscores, numeric suffixes)
+  const suggestedVariants = React.useMemo(() => {
+    const baseRaw = (user?.username || user?.name || "").toString();
+    let base = baseRaw.toLowerCase().replace(/\s+/g, "");
+    base = base.replace(/[^a-z0-9]/g, "");
+    if (!base) base = "user";
+
+    const padTo6 = (s) =>
+      s.length >= 6 ? s : s + "123456".slice(0, 6 - s.length);
+
+    const variants = new Set();
+    variants.add(padTo6(base));
+    variants.add(padTo6(`${base}.me`));
+    variants.add(padTo6(`${base}_`));
+    variants.add(padTo6(`${base}01`));
+    variants.add(padTo6(`${base}123`));
+    variants.add(padTo6(`${base}.official`));
+
+    return Array.from(variants).slice(0, 6);
+  }, [user]);
+
+  const [variantAvailability, setVariantAvailability] = useState({});
+  const [checkingVariants, setCheckingVariants] = useState(false);
+  // Check availability for suggestion variants when editor opens or variants change
+  useEffect(() => {
+    let mounted = true;
+    const check = async () => {
+      if (!showUsernameEdit) return;
+      if (!suggestedVariants || suggestedVariants.length === 0) return;
+      setCheckingVariants(true);
+      try {
+        const checks = await Promise.all(
+          suggestedVariants.map((v) =>
+            fetch(
+              `${
+                import.meta.env.VITE_API_URL
+              }/api/auth/check-username?username=${encodeURIComponent(v)}`
+            )
+              .then((r) => r.json())
+              .then((d) => ({ v, available: !!d.available }))
+              .catch(() => ({ v, available: false }))
+          )
+        );
+        if (!mounted) return;
+        const map = {};
+        checks.forEach((c) => {
+          map[c.v] = c.available;
+        });
+        setVariantAvailability(map);
+      } catch (err) {
+        if (!mounted) return;
+        setVariantAvailability({});
+      } finally {
+        if (mounted) setCheckingVariants(false);
+      }
+    };
+    const t = setTimeout(check, 150);
+    return () => {
+      mounted = false;
+      clearTimeout(t);
+    };
+  }, [showUsernameEdit, suggestedVariants]);
   const [limitAlerts, setLimitAlerts] = useState(() =>
     JSON.parse(
       localStorage.getItem("limitAlerts") || '{"enabled": true, "threshold": 1}'
@@ -79,9 +150,8 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
     useState(false);
 
   // 2FA State
-  const [twoFAMethod, setTwoFAMethod] = useState("totp");
   const [showTwoFASetup, setShowTwoFASetup] = useState(false);
-  const [twoFASetupStep, setTwoFASetupStep] = useState(1); // Step 1: Choose method, Step 2: Scan QR, Step 3: Verify, Step 4: Backup codes
+  const [twoFASetupStep, setTwoFASetupStep] = useState(1); // Step 1: Scan QR, Step 2: Verify, Step 3: Backup codes
   const [twoFAQRCode, setTwoFAQRCode] = useState(null);
   const [twoFASecret, setTwoFASecret] = useState(null);
   const [twoFAToken, setTwoFAToken] = useState("");
@@ -197,6 +267,128 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
       // Error reported to user via toast; no debug log kept here
     } finally {
       setIsUpdatingPassword(false);
+    }
+  };
+
+  const handleUsernameChange = async (e) => {
+    e.preventDefault();
+    setUsernameError("");
+
+    if (!newUsername.trim()) {
+      setUsernameError("Username cannot be empty");
+      return;
+    }
+
+    // Validate username using same rules as registration
+    if (newUsername.length < 6) {
+      setUsernameError("Username must be at least 6 characters");
+      return;
+    }
+
+    // Check for spaces
+    if (/\s/.test(newUsername)) {
+      setUsernameError("Username cannot contain spaces");
+      return;
+    }
+
+    // Check for uppercase letters
+    if (/[A-Z]/.test(newUsername)) {
+      setUsernameError("Username cannot contain uppercase letters");
+      return;
+    }
+
+    if (newUsername === user?.username) {
+      toast.error("New username must be different from current username");
+      return;
+    }
+
+    setIsUpdatingUsername(true);
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/auth/change-username`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${StorageService.getToken()}`,
+          },
+          body: JSON.stringify({
+            newUsername: newUsername.trim(),
+          }),
+        }
+      );
+
+      if (response.ok) {
+        toast.success("Username changed successfully");
+        // Close the username editor and clear local form state
+        setShowUsernameEdit(false);
+        setNewUsername("");
+        setUsernameError("");
+        // Refresh user data
+        if (refreshUser) {
+          refreshUser();
+        }
+      } else {
+        const data = await response.json().catch(() => ({}));
+        setUsernameError(data.message || "Failed to change username");
+      }
+    } catch (error) {
+      setUsernameError("Error changing username");
+    } finally {
+      setIsUpdatingUsername(false);
+    }
+  };
+
+  const handleFullNameChange = async (e) => {
+    e.preventDefault();
+    setFullNameError("");
+
+    if (!newFullName || !newFullName.trim()) {
+      setFullNameError("Full name cannot be empty");
+      return;
+    }
+    if (newFullName.length < 6) {
+      setFullNameError("Full name must be at least 6 characters");
+      return;
+    }
+    // Prevent full name being identical to previous full name
+    if (newFullName === user?.name) {
+      toast.error("New full name must be different from current full name");
+      return;
+    }
+    // Prevent full name being identical to username
+    if (user?.username && newFullName === user.username) {
+      setFullNameError("Full name cannot be the same as username");
+      return;
+    }
+
+    setIsUpdatingFullName(true);
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/auth/change-fullname`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${StorageService.getToken()}`,
+          },
+          body: JSON.stringify({ newFullName: newFullName.trim() }),
+        }
+      );
+
+      if (response.ok) {
+        toast.success("Full name updated successfully");
+        setShowFullNameEdit(false);
+        setNewFullName("");
+        if (refreshUser) refreshUser();
+      } else {
+        const data = await response.json().catch(() => ({}));
+        setFullNameError(data.message || "Failed to update full name");
+      }
+    } catch (error) {
+      setFullNameError("Error updating full name");
+    } finally {
+      setIsUpdatingFullName(false);
     }
   };
 
@@ -384,7 +576,7 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
           },
           body: JSON.stringify({
             feedback,
-            userEmail: user?.email,
+            email: user?.email,
           }),
         }
       );
@@ -448,10 +640,8 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
             Authorization: `Bearer ${StorageService.getToken()}`,
           },
           body: JSON.stringify({
-            method: twoFAMethod,
             token: twoFAToken,
             secret: twoFASecret,
-            phone: twoFAMethod === "sms" ? "" : undefined,
           }),
         }
       );
@@ -459,7 +649,7 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
       if (response.ok) {
         const data = await response.json();
         setTwoFABackupCodes(data.backupCodes);
-        setTwoFASetupStep(4);
+        setTwoFASetupStep(3);
         toast.success("2FA enabled successfully!");
       } else {
         const data = await response.json();
@@ -733,15 +923,27 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
   // Get tier limits
   const tierLimits = {
     Free: { generationsRemaining: 7, pdfUploadsRemaining: 3 },
-    Basic: { generationsRemaining: 30, pdfUploadsRemaining: 15 },
+    Basic: { generationsRemaining: 35, pdfUploadsRemaining: 20 },
     Pro: { generationsRemaining: Infinity, pdfUploadsRemaining: Infinity },
   };
 
+  // If user is an admin, treat quotas as unlimited
   const maxQuizzes =
-    tierLimits[user?.tier || "Free"]?.generationsRemaining || 7;
-  const maxPdfs = tierLimits[user?.tier || "Free"]?.pdfUploadsRemaining || 3;
-  const usedQuizzes = maxQuizzes - (user?.limits?.generationsRemaining || 0);
-  const usedPdfs = maxPdfs - (user?.limits?.pdfUploadsRemaining || 0);
+    user?.role === "admin"
+      ? Infinity
+      : tierLimits[user?.tier || "Free"]?.generationsRemaining || 7;
+  const maxPdfs =
+    user?.role === "admin"
+      ? Infinity
+      : tierLimits[user?.tier || "Free"]?.pdfUploadsRemaining || 3;
+  const usedQuizzes =
+    maxQuizzes === Infinity
+      ? 0
+      : maxQuizzes - (user?.limits?.generationsRemaining || 0);
+  const usedPdfs =
+    maxPdfs === Infinity
+      ? 0
+      : maxPdfs - (user?.limits?.pdfUploadsRemaining || 0);
 
   // Tab rendering logic
   const renderTabContent = () => {
@@ -758,23 +960,298 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
                   <label className="block text-sm font-medium text-textMuted mb-2">
                     Full Name
                   </label>
-                  <input
-                    type="text"
-                    value={user?.name || ""}
-                    readOnly
-                    className="w-full px-4 py-2 rounded-lg bg-surfaceHighlight border border-border text-textMain focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={user?.name || ""}
+                      readOnly
+                      className="flex-1 px-4 py-2 rounded-lg bg-surfaceHighlight border border-border text-textMain focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowFullNameEdit(!showFullNameEdit);
+                        setNewFullName(user?.name || "");
+                        setFullNameError("");
+                      }}
+                      className="p-2 text-textMuted hover:text-primary dark:hover:text-blue-400 hover:bg-surfaceHighlight rounded-lg transition-all cursor-pointer flex-shrink-0"
+                      title={showFullNameEdit ? "Close form" : "Edit full name"}
+                    >
+                      {showFullNameEdit ? (
+                        <X className="w-5 h-5" />
+                      ) : (
+                        <Edit3 className="w-5 h-5" />
+                      )}
+                    </button>
+                  </div>
+                  <AnimatePresence>
+                    {showFullNameEdit && (
+                      <motion.form
+                        onSubmit={handleFullNameChange}
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.25 }}
+                        className="space-y-2 mt-4 overflow-hidden p-1"
+                      >
+                        <div className="relative group">
+                          <User className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
+                          <input
+                            type="text"
+                            value={newFullName}
+                            onChange={(e) => {
+                              setNewFullName(e.target.value);
+                              setFullNameError("");
+                            }}
+                            placeholder="Enter full name"
+                            autoFocus
+                            className={`w-full pl-12 pr-4 py-3 bg-surfaceHighlight border rounded-xl text-textMain focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all placeholder-gray-400 ${
+                              fullNameError
+                                ? "border-red-300 dark:border-red-400 bg-red-50/10"
+                                : newFullName && newFullName.length >= 6
+                                ? "border-green-300 dark:border-green-600 bg-green-50/10"
+                                : "border-border"
+                            }`}
+                          />
+                        </div>
+                        {newFullName && (
+                          <div className="text-xs font-medium space-y-1">
+                            <div
+                              className={`${
+                                newFullName.length >= 6
+                                  ? "text-green-500 dark:text-green-400"
+                                  : "text-red-500 dark:text-red-400"
+                              }`}
+                            >
+                              ✓ Min 6 characters
+                            </div>
+                          </div>
+                        )}
+                        {fullNameError && (
+                          <div className="text-xs text-red-500">
+                            {fullNameError}
+                          </div>
+                        )}
+                        <div className="flex gap-2 pt-2">
+                          <button
+                            type="submit"
+                            disabled={
+                              !newFullName ||
+                              newFullName.length < 6 ||
+                              isUpdatingFullName
+                            }
+                            className={`flex-1 font-semibold py-2 rounded-lg transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                              !newFullName || newFullName.length < 6
+                                ? "bg-primary dark:bg-blue-700 text-white hover:text-white/90 hover:bg-blue-700 dark:hover:bg-blue-700/80 disabled:opacity-50 disabled:cursor-not-allowed"
+                                : "bg-primary dark:bg-blue-700 text-white hover:text-white/90 hover:bg-blue-700 dark:hover:bg-blue-700/80"
+                            }`}
+                          >
+                            {isUpdatingFullName ? (
+                              <>
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                Updating...
+                              </>
+                            ) : (
+                              "Change Full Name"
+                            )}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowFullNameEdit(false);
+                              setNewFullName("");
+                              setFullNameError("");
+                            }}
+                            className="flex-1 font-semibold py-2 rounded-lg transition-all bg-gray-200 dark:bg-gray-600 text-textMain hover:bg-gray-300 dark:hover:bg-gray-600/80 point"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </motion.form>
+                    )}
+                  </AnimatePresence>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-textMuted mb-2">
-                    Email
+                    Username
                   </label>
-                  <input
-                    type="email"
-                    value={user?.email || ""}
-                    readOnly
-                    className="w-full px-4 py-2 rounded-lg bg-surfaceHighlight border border-border text-textMain focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={user?.username || user?.name || ""}
+                      readOnly
+                      className="flex-1 px-4 py-2 rounded-lg bg-surfaceHighlight border border-border text-textMain focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowUsernameEdit(!showUsernameEdit);
+                        const pref = (user?.username || user?.name || "")
+                          .replace(/\s+/g, "")
+                          .toLowerCase();
+                        setNewUsername(pref);
+                        setUsernameError("");
+                      }}
+                      className="p-2 text-textMuted hover:text-primary dark:hover:text-blue-400 hover:bg-surfaceHighlight rounded-lg transition-all cursor-pointer flex-shrink-0"
+                      title={showUsernameEdit ? "Close form" : "Edit username"}
+                    >
+                      {showUsernameEdit ? (
+                        <X className="w-5 h-5" />
+                      ) : (
+                        <Edit3 className="w-5 h-5" />
+                      )}
+                    </button>
+                  </div>
+                  <AnimatePresence>
+                    {showUsernameEdit && (
+                      <motion.form
+                        onSubmit={handleUsernameChange}
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="space-y-2 mt-4 overflow-hidden p-1"
+                      >
+                        <div className="relative group">
+                          <User className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
+                          <input
+                            type="text"
+                            value={newUsername}
+                            onChange={(e) => {
+                              // Remove spaces and force lowercase to prevent invalid characters
+                              const clean = e.target.value
+                                .replace(/\s+/g, "")
+                                .toLowerCase();
+                              setNewUsername(clean);
+                              setUsernameError("");
+                            }}
+                            placeholder="Enter new username"
+                            autoFocus
+                            className={`w-full pl-12 pr-4 py-3 bg-surfaceHighlight border rounded-xl text-textMain focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all placeholder-gray-400 ${
+                              usernameError
+                                ? "border-red-300 dark:border-red-400 bg-red-50/10"
+                                : newUsername && newUsername.length >= 6
+                                ? "border-green-300 dark:border-green-600 bg-green-50/10"
+                                : "border-border"
+                            }`}
+                          />
+                          {/* Suggested sanitized username variants (3 per row) */}
+                          {showUsernameEdit && (
+                            <div className="mt-3">
+                              {checkingVariants ? (
+                                <div className="text-sm text-textMuted">
+                                  Checking suggestions...
+                                </div>
+                              ) : (
+                                <div className="grid grid-cols-3 gap-2">
+                                  {suggestedVariants.slice(0, 3).map((v) => (
+                                    <button
+                                      key={v}
+                                      type="button"
+                                      onClick={() => setNewUsername(v)}
+                                      className={`point px-2 py-1 text-sm rounded border overflow-hidden whitespace-nowrap truncate ${
+                                        newUsername === v
+                                          ? "border-primary bg-primary/10"
+                                          : "border-border bg-surface"
+                                      }`}
+                                    >
+                                      {v}
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                          {newUsername &&
+                          newUsername.length >= 6 &&
+                          !/\s/.test(newUsername) &&
+                          !/[A-Z]/.test(newUsername) &&
+                          !usernameError ? (
+                            <Check className="absolute right-3 top-3.5 w-5 h-5 text-green-500 dark:text-green-400" />
+                          ) : newUsername &&
+                            (/\s/.test(newUsername) ||
+                              /[A-Z]/.test(newUsername) ||
+                              newUsername.length < 6 ||
+                              usernameError) ? (
+                            <X className="absolute right-3 top-3.5 w-5 h-5 text-red-500 dark:text-red-400" />
+                          ) : null}
+                        </div>
+                        {newUsername && (
+                          <div className="text-xs font-medium space-y-1">
+                            <div
+                              className={`${
+                                newUsername.length >= 6
+                                  ? "text-green-500 dark:text-green-400"
+                                  : "text-red-500 dark:text-red-400"
+                              }`}
+                            >
+                              ✓ Min 6 characters
+                            </div>
+                            <div
+                              className={`${
+                                !/\s/.test(newUsername)
+                                  ? "text-green-500 dark:text-green-400"
+                                  : "text-red-500 dark:text-red-400"
+                              }`}
+                            >
+                              ✓ No spaces allowed
+                            </div>
+                            <div
+                              className={`mb-1 ${
+                                !/[A-Z]/.test(newUsername)
+                                  ? "text-green-500 dark:text-green-400"
+                                  : "text-red-500 dark:text-red-400"
+                              }`}
+                            >
+                              ✓ No uppercase letters
+                            </div>
+                          </div>
+                        )}
+                        <div className="flex gap-2 pt-2">
+                          <button
+                            type="submit"
+                            disabled={
+                              !newUsername ||
+                              newUsername.length < 6 ||
+                              /\s/.test(newUsername) ||
+                              /[A-Z]/.test(newUsername) ||
+                              usernameError ||
+                              isUpdatingUsername
+                            }
+                            className={`flex-1 font-semibold py-2 rounded-lg transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                              !newUsername ||
+                              newUsername.length < 6 ||
+                              /\s/.test(newUsername) ||
+                              /[A-Z]/.test(newUsername) ||
+                              usernameError
+                                ? "bg-primary dark:bg-blue-700 text-white hover:text-white/90 hover:bg-blue-700 dark:hover:bg-blue-700/80 disabled:opacity-50 disabled:cursor-not-allowed"
+                                : "bg-primary dark:bg-blue-700 text-white hover:text-white/90 hover:bg-blue-700 dark:hover:bg-blue-700/80"
+                            }`}
+                          >
+                            {isUpdatingUsername ? (
+                              <>
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                Updating...
+                              </>
+                            ) : (
+                              "Change Username"
+                            )}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowUsernameEdit(false);
+                              setNewUsername("");
+                              setUsernameError("");
+                            }}
+                            className="flex-1 font-semibold py-2 rounded-lg transition-all bg-gray-200 dark:bg-gray-600 text-textMain hover:bg-gray-300 dark:hover:bg-gray-600/80 point"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </motion.form>
+                    )}
+                  </AnimatePresence>
                 </div>
               </div>
             </div>
@@ -964,26 +1441,32 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
               <h4 className="font-semibold text-textMain">Plan Benefits</h4>
               {user?.tier === "Free" && (
                 <ul className="space-y-2 text-sm text-textMuted">
-                  <li>• 7 Quizzes per day</li>
-                  <li>• 3 Flashcard sets per day</li>
+                  <li>• 7 Quizzes / Month</li>
+                  <li>• 3 Flashcard sets / Month</li>
                   <li>• Max 10 questions per quiz</li>
-                  <li>• 3 PDF uploads per day</li>
+                  <li>• 3 PDF uploads / Month</li>
+                  <li>• Max 10 questions per quiz</li>
+                  <li>• Max 30 marks per quiz</li>
                 </ul>
               )}
               {user?.tier === "Basic" && (
                 <ul className="space-y-2 text-sm text-textMuted">
-                  <li>• 30 Quizzes per day</li>
-                  <li>• 15 Flashcard sets per day</li>
+                  <li>• 35 Quizzes / Month</li>
+                  <li>• 17 Flashcard sets / Month</li>
+                  <li>• 15 PDF uploads / Month</li>
+                  <li>• 15 PDF exports / Month</li>
                   <li>• Max 25 questions per quiz</li>
-                  <li>• 15 PDF uploads per day</li>
+                  <li>• Max 60 marks per quiz</li>
                 </ul>
               )}
               {user?.tier === "Pro" && (
                 <ul className="space-y-2 text-sm text-textMuted">
                   <li>• Unlimited quizzes</li>
                   <li>• Unlimited flashcard sets</li>
-                  <li>• Max 45 questions per quiz</li>
                   <li>• Unlimited PDF uploads</li>
+                  <li>• Unlimited PDF exports</li>
+                  <li>• Max 45 questions per quiz</li>
+                  <li>• Max 100 marks per quiz</li>
                 </ul>
               )}
             </div>
@@ -1009,7 +1492,7 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
             ) : (
               <div>
                 <h3 className="text-lg font-bold text-textMain mb-4">
-                  Daily Quotas
+                  Monthly Quotas
                 </h3>
                 <div className="space-y-6">
                   <div>
@@ -1018,8 +1501,10 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
                         Quiz Generations Left
                       </label>
                       <span className="text-sm font-bold text-primary">
-                        {user?.limits?.generationsRemaining || 0} /{" "}
-                        {maxQuizzes === Infinity ? "∞" : maxQuizzes}
+                        {user?.role === "admin"
+                          ? "∞"
+                          : user?.limits?.generationsRemaining || 0}{" "}
+                        / {maxQuizzes === Infinity ? "∞" : maxQuizzes}
                       </span>
                     </div>
                     {maxQuizzes !== Infinity && (
@@ -1040,8 +1525,10 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
                         PDF Imports Left
                       </label>
                       <span className="text-sm font-bold text-primary">
-                        {user?.limits?.pdfUploadsRemaining || 0} /{" "}
-                        {maxPdfs === Infinity ? "∞" : maxPdfs}
+                        {user?.role === "admin"
+                          ? "∞"
+                          : user?.limits?.pdfUploadsRemaining || 0}{" "}
+                        / {maxPdfs === Infinity ? "∞" : maxPdfs}
                       </span>
                     </div>
                     {maxPdfs !== Infinity && (
@@ -1255,10 +1742,10 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
               <h3 className="text-lg font-bold text-textMain mb-4">
                 Two-Factor Authentication
               </h3>
-              <div className="bg-surface border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-4">
-                <p className="text-sm text-textMuted">
+              <div className="bg-blue-100 dark:bg-blue-800/40 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-4">
+                <p className="text-sm text-blue-600 dark:text-blue-300">
                   Add an extra layer of security to your account with time-based
-                  OTP (TOTP) or SMS.
+                  authenticator codes (TOTP).
                 </p>
               </div>
 
@@ -1271,10 +1758,7 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
                     </p>
                   </div>
                   <p className="text-xs text-green-600">
-                    Method:{" "}
-                    {twoFAStatus.twoFAMethod === "totp"
-                      ? "Authenticator App"
-                      : "SMS"}
+                    Method: Authenticator App
                   </p>
                   {twoFAStatus.backupCodesCount > 0 && (
                     <p className="text-xs text-green-600">
@@ -1302,50 +1786,19 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
                 <div className="space-y-4 p-4 rounded-lg bg-surfaceHighlight border border-border">
                   {twoFASetupStep === 1 && (
                     <>
-                      <p className="text-sm font-medium text-textMain">
-                        Choose your 2FA method:
+                      <p className="text-sm font-medium text-textMain mb-4">
+                        Scan this QR code with your authenticator app to set up
+                        2FA:
                       </p>
-                      <label className="flex items-center gap-3 p-3 border border-border rounded-lg cursor-pointer hover:bg-surface/30">
-                        <input
-                          type="radio"
-                          name="twoFAMethod"
-                          value="totp"
-                          checked={twoFAMethod === "totp"}
-                          onChange={(e) => setTwoFAMethod(e.target.value)}
-                          className="w-4 h-4 accent-primary"
-                        />
-                        <div>
-                          <p className="text-sm font-medium text-textMain">
-                            TOTP (Authenticator App)
-                          </p>
-                          <p className="text-xs text-textMuted">
-                            Use Google Authenticator, Authy, or similar apps
-                          </p>
-                        </div>
-                      </label>
-                      <label className="flex items-center gap-3 p-3 border border-border rounded-lg cursor-pointer hover:bg-surface/30">
-                        <input
-                          type="radio"
-                          name="twoFAMethod"
-                          value="sms"
-                          checked={twoFAMethod === "sms"}
-                          onChange={(e) => setTwoFAMethod(e.target.value)}
-                          className="w-4 h-4 accent-primary"
-                        />
-                        <div>
-                          <p className="text-sm font-medium text-textMain">
-                            SMS
-                          </p>
-                          <p className="text-xs text-textMuted">
-                            Receive 2FA codes via text message
-                          </p>
-                        </div>
-                      </label>
+                      <p className="text-xs text-textMuted mb-4">
+                        We recommend Google Authenticator, Authy, Microsoft
+                        Authenticator, or similar apps.
+                      </p>
                       <button
                         onClick={handleInitiate2FA}
                         className="w-full bg-primary text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition-colors point"
                       >
-                        Next
+                        Generate QR Code
                       </button>
                     </>
                   )}
@@ -1364,11 +1817,11 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
                           />
                         </div>
                       )}
-                      <div className="p-3 bg-yellow-50 dark:bg-[rgba(113, 63, 18, 0.3)] border border-yellow-200 dark:border-[#78350f] rounded-lg">
-                        <p className="text-xs text-yellow-700 dark:text-[#fa5615de]">
+                      <div className="p-3 bg-yellow-50 dark:bg-yellow-800/40 border border-yellow-200 dark:border-[#78350f] rounded-lg">
+                        <p className="text-xs text-yellow-700 dark:text-amber-500">
                           <strong>Can't scan?</strong> Enter this code manually:
                         </p>
-                        <p className="text-sm font-mono font-bold text-yellow-900 dark:text-[#fa5615de] mt-1 break-all">
+                        <p className="text-sm font-bold text-yellow-600 dark:text-amber-500/80 mt-1 break-all tracking-wider">
                           {twoFASecret}
                         </p>
                       </div>
@@ -1384,7 +1837,7 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
                             setTwoFAToken(e.target.value.replace(/\D/g, ""))
                           }
                           placeholder="000000"
-                          className="w-full px-4 py-2 rounded-lg bg-surfaceHighlight border border-border text-textMain focus:outline-none focus:ring-2 focus:ring-primary text-center text-2xl tracking-widest"
+                          className="w-full px-4 py-2 rounded-lg bg-surfaceHighlight border border-border text-textMain focus:outline-none focus:ring-2 focus:ring-primary text-center text-2xl tracking-widest font-semibold"
                         />
                       </div>
                       <div className="flex gap-3">
@@ -1393,14 +1846,14 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
                             setTwoFASetupStep(1);
                             setTwoFAToken("");
                           }}
-                          className="flex-1 px-4 py-2 rounded-lg border border-border text-textMain font-semibold hover:bg-surface transition-colors point"
+                          className="flex-1 px-4 py-2 rounded-lg border border-border text-textMain font-semibold hover:bg-surface/30 transition-colors point"
                         >
                           Back
                         </button>
                         <button
                           onClick={handleEnable2FA}
                           disabled={isEnabling2FA}
-                          className="flex-1 bg-primary text-white font-semibold py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors point"
+                          className="flex-1 bg-primary dark:bg-blue-700 text-white font-semibold py-2 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-700/80 disabled:opacity-50 transition-colors point"
                         >
                           {isEnabling2FA ? "Verifying..." : "Verify & Enable"}
                         </button>
@@ -1408,7 +1861,7 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
                     </>
                   )}
 
-                  {twoFASetupStep === 4 && (
+                  {twoFASetupStep === 3 && (
                     <>
                       <div className="p-4 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-lg">
                         <p className="text-sm font-bold text-green-700 dark:text-green-400 mb-3">
@@ -1555,7 +2008,7 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
                   href="https://github.com"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full flex items-center justify-between p-4 rounded-lg bg-surfaceHighlight border border-border hover:bg-surface transition-colors"
+                  className="w-full flex items-center justify-between p-4 rounded-lg bg-surfaceHighlight border border-border hover:bg-surfaceHighlight/20 transition-colors"
                 >
                   <span className="text-textMain font-medium">
                     Help Center & FAQs
@@ -1566,7 +2019,7 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
                   href="https://twitter.com"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full flex items-center justify-between p-4 rounded-lg bg-surfaceHighlight border border-border hover:bg-surface transition-colors"
+                  className="w-full flex items-center justify-between p-4 rounded-lg bg-surfaceHighlight border border-border hover:bg-surfaceHighlight/20 transition-colors"
                 >
                   <span className="text-textMain font-medium">
                     Contact Support
@@ -1577,7 +2030,7 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
                   href="https://github.com/issues"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full flex items-center justify-between p-4 rounded-lg bg-surfaceHighlight border border-border hover:bg-surface transition-colors"
+                  className="w-full flex items-center justify-between p-4 rounded-lg bg-surfaceHighlight border border-border hover:bg-surfaceHighlight/20 transition-colors"
                 >
                   <span className="text-textMain font-medium">
                     Report a Bug
@@ -1604,7 +2057,7 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
                 <button
                   type="submit"
                   disabled={isSendingFeedback || !feedback.trim()}
-                  className="w-full bg-primary text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed point"
+                  className="w-full bg-primary dark:bg-blue-700 text-white font-semibold py-2 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-700/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed point"
                 >
                   {isSendingFeedback ? "Sending..." : "Send Feedback"}
                 </button>

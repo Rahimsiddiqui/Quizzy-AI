@@ -185,7 +185,7 @@ const TestimonialsPage = () => {
           </p>
           <button
             onClick={() => navigate("/auth")}
-            className="px-8 py-4 rounded-xl bg-primary text-white font-bold text-lg hover:bg-blue-700 transition-all hover:shadow-xl hover:shadow-primary/30 active:scale-95 hover:scale-102 point"
+            className="px-8 py-4 rounded-xl bg-primary dark:bg-blue-700 text-white hover:text-white/95 font-bold text-lg hover:bg-blue-700 dark:hover:bg-blue-700/80 transition-all hover:shadow-xl hover:shadow-primary/30 active:scale-95 hover:scale-102 point"
           >
             Get Started Free
           </button>

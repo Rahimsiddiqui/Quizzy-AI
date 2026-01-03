@@ -9,16 +9,28 @@ import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
 import nodemailer from "nodemailer";
+import { createServer } from "http";
+import { Server as SocketIOServer } from "socket.io";
 
 // 2. Models
 import User from "./models/User.js";
 
 // 3. Middleware & Helpers
-import checkDailyReset from "./middleware/limitReset.js";
+import checkMonthlyReset from "./middleware/limitReset.js";
 import protect from "./middleware/auth.js";
+import { generateReceiptHTML, getTierPrice } from "./helpers/receiptHelper.js";
+import {
+  awardQuizCreationExp,
+  awardQuizCompletionExp,
+  awardFlashcardCreationExp,
+  awardPdfUploadExp,
+  awardPdfExportExp,
+  checkExpReset,
+} from "./helpers/achievementHelper.js";
 
 // 4. Constants
 import { TIER_LIMITS } from "./config/constants.js";
+import { calculateLevel } from "./config/achievements.js";
 
 // 5. App setup
 const app = express();
@@ -54,13 +66,14 @@ import reviewRoutes from "./routes/reviewRoutes.js";
 import flashcardRoutes from "./routes/flashcardRoutes.js";
 import supportRoutes from "./routes/supportRoutes.js";
 import twoFARoutes from "./routes/twoFARoutes.js";
+import adminRoutes from "./routes/adminRoutes.js";
 
 app.get("/api/users/me", protect, async (req, res) => {
   try {
     const user = await User.findById(req.userId).select("-password");
     if (!user) return res.status(404).json({ message: "User not found." });
 
-    const updatedUser = await checkDailyReset(user, TIER_LIMITS);
+    const updatedUser = await checkMonthlyReset(user, TIER_LIMITS);
     res.status(200).json({ user: updatedUser });
   } catch (error) {
     res.status(500).json({ message: "Internal Server Error, Try Again!" });
@@ -98,6 +111,15 @@ app.post("/api/limits/decrement/:type", protect, async (req, res) => {
         .status(404)
         .json({ success: false, message: "User not found." });
 
+    // Admins have unlimited access to all features
+    if (user.role === "admin") {
+      return res.status(200).json({
+        success: true,
+        message: "Admin user - no limits applied.",
+        remaining: "Unlimited",
+      });
+    }
+
     const remaining = user.get(limitField);
     if (typeof remaining === "string" || remaining > 0) {
       if (typeof remaining === "number") user.set(limitField, remaining - 1);
@@ -105,7 +127,7 @@ app.post("/api/limits/decrement/:type", protect, async (req, res) => {
       success = true;
       message = "Limit successfully decremented.";
     } else {
-      message = "Daily limit reached for this feature.";
+      message = "Monthly limit reached for this feature.";
     }
 
     res.status(200).json({ success, message, remaining: user.get(limitField) });
@@ -130,16 +152,64 @@ app.post("/api/subscription/upgrade", protect, async (req, res) => {
     if (!user) return res.status(404).json({ message: "User not found." });
 
     user.tier = tier;
-    user.limits.generationsRemaining = newLimits.dailyGenerations;
+    user.limits.generationsRemaining = newLimits.monthlyGenerations;
     user.limits.flashcardGenerationsRemaining =
-      newLimits.dailyFlashcardGenerations;
-    user.limits.pdfUploadsRemaining = newLimits.dailyPdfUploads;
-    user.limits.pdfExportsRemaining = newLimits.dailyPdfExports;
+      newLimits.monthlyFlashcardGenerations;
+    user.limits.pdfUploadsRemaining = newLimits.monthlyPdfUploads;
+    user.limits.pdfExportsRemaining = newLimits.monthlyPdfExports;
     user.limits.maxQuestions = newLimits.maxQuestions;
     user.limits.maxMarks = newLimits.maxMarks;
     user.limits.lastReset = Date.now();
 
     await user.save();
+
+    // Send receipt email to user
+    try {
+      const transporter = nodemailer.createTransport({
+        host: "smtp.gmail.com",
+        port: 587,
+        secure: false,
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASSWORD,
+        },
+      });
+
+      const billingDate = new Date().toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+
+      const nextBillingDate = new Date(
+        new Date().setMonth(new Date().getMonth() + 1)
+      ).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+
+      const receiptHTML = generateReceiptHTML({
+        userName: user.name || "Valued User",
+        email: user.email,
+        tier: tier === "pro" ? "Pro" : "Basic",
+        amount: getTierPrice(tier === "pro" ? "Pro" : "Basic"),
+        billingDate,
+        nextBillingDate,
+      });
+
+      await transporter.sendMail({
+        from: process.env.EMAIL_USER,
+        to: user.email,
+        subject: `Payment Receipt - Quizzy AI ${
+          tier === "pro" ? "Pro" : "Basic"
+        } Subscription`,
+        html: receiptHTML,
+      });
+    } catch (emailError) {
+      console.error("Receipt email sending error:", emailError);
+      // Don't fail the upgrade if email fails
+    }
 
     res.status(200).json({
       message: `Successfully upgraded to ${tier} tier.`,
@@ -163,7 +233,7 @@ app.post("/api/subscription/refund", protect, async (req, res) => {
     }
 
     const previousTier = user.tier;
-    const refundAmount = previousTier === "Pro" ? "$9.99" : "$4.99";
+    const refundAmount = previousTier === "Pro" ? "$11.99" : "$4.99";
 
     // Reset user to Free tier
     const freeLimits = TIER_LIMITS["Free"];
@@ -243,6 +313,205 @@ app.post("/api/subscription/refund", protect, async (req, res) => {
   }
 });
 
+// ==================== GAMIFICATION ENDPOINTS ====================
+
+// Award EXP for quiz creation
+app.post("/api/gamification/award-quiz-creation", protect, async (req, res) => {
+  try {
+    const { questionCount = 1 } = req.body;
+    const user = await User.findById(req.userId);
+    if (!user) return res.status(404).json({ message: "User not found." });
+
+    checkExpReset(user); // Check if weekly/monthly resets needed
+    const result = await awardQuizCreationExp(user, { questionCount });
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      exp: result.expAwarded,
+      levelUp: result.levelUp,
+      newLevel: result.newLevel,
+      achievements: result.newAchievements,
+      totalExp: user.totalExpEarned,
+      level: calculateLevel(user.totalExpEarned),
+    });
+  } catch (error) {
+    console.error("Error awarding quiz creation exp:", error);
+    res.status(500).json({ message: "Error awarding EXP." });
+  }
+});
+
+// Award EXP for quiz completion
+app.post(
+  "/api/gamification/award-quiz-completion",
+  protect,
+  async (req, res) => {
+    try {
+      const { score = 0, totalMarks = 100 } = req.body;
+      const user = await User.findById(req.userId);
+      if (!user) return res.status(404).json({ message: "User not found." });
+
+      checkExpReset(user);
+      const result = await awardQuizCompletionExp(user, { score, totalMarks });
+
+      // Update stats
+      user.stats.quizzesTaken = (user.stats?.quizzesTaken || 0) + 1;
+      if (score === totalMarks) {
+        user.perfectScores = (user.perfectScores || 0) + 1;
+      }
+
+      await user.save();
+
+      res.status(200).json({
+        success: true,
+        exp: result.expAwarded,
+        levelUp: result.levelUp,
+        newLevel: result.newLevel,
+        achievements: result.newAchievements,
+        totalExp: user.totalExpEarned,
+        level: calculateLevel(user.totalExpEarned),
+      });
+    } catch (error) {
+      console.error("Error awarding quiz completion exp:", error);
+      res.status(500).json({ message: "Error awarding EXP." });
+    }
+  }
+);
+
+// Award EXP for flashcard creation
+app.post(
+  "/api/gamification/award-flashcard-creation",
+  protect,
+  async (req, res) => {
+    try {
+      const { cardCount = 1 } = req.body;
+      const user = await User.findById(req.userId);
+      if (!user) return res.status(404).json({ message: "User not found." });
+
+      checkExpReset(user);
+      const result = await awardFlashcardCreationExp(user, { cardCount });
+      user.flashcardsCreated = (user.flashcardsCreated || 0) + 1;
+      await user.save();
+
+      res.status(200).json({
+        success: true,
+        exp: result.expAwarded,
+        levelUp: result.levelUp,
+        newLevel: result.newLevel,
+        achievements: result.newAchievements,
+        totalExp: user.totalExpEarned,
+        level: calculateLevel(user.totalExpEarned),
+      });
+    } catch (error) {
+      console.error("Error awarding flashcard creation exp:", error);
+      res.status(500).json({ message: "Error awarding EXP." });
+    }
+  }
+);
+
+// Award EXP for PDF upload
+app.post("/api/gamification/award-pdf-upload", protect, async (req, res) => {
+  try {
+    const user = await User.findById(req.userId);
+    if (!user) return res.status(404).json({ message: "User not found." });
+
+    checkExpReset(user);
+    const result = await awardPdfUploadExp(user);
+    user.pdfsUploaded = (user.pdfsUploaded || 0) + 1;
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      exp: result.expAwarded,
+      achievements: result.newAchievements,
+    });
+  } catch (error) {
+    console.error("Error awarding PDF upload exp:", error);
+    res.status(500).json({ message: "Error awarding EXP." });
+  }
+});
+
+// Award EXP for PDF export
+app.post("/api/gamification/award-pdf-export", protect, async (req, res) => {
+  try {
+    const user = await User.findById(req.userId);
+    if (!user) return res.status(404).json({ message: "User not found." });
+
+    checkExpReset(user);
+    const result = await awardPdfExportExp(user);
+    user.pdfsExported = (user.pdfsExported || 0) + 1;
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      exp: result.expAwarded,
+      achievements: result.newAchievements,
+    });
+  } catch (error) {
+    console.error("Error awarding PDF export exp:", error);
+    res.status(500).json({ message: "Error awarding EXP." });
+  }
+});
+
+// Get user achievements and EXP stats
+app.get("/api/gamification/user-stats", protect, async (req, res) => {
+  try {
+    const user = await User.findById(req.userId);
+    if (!user) return res.status(404).json({ message: "User not found." });
+
+    const { calculateLevelProgress } = await import("./config/achievements.js");
+    const levelProgress = calculateLevelProgress(user.totalExpEarned);
+
+    res.status(200).json({
+      totalExp: user.totalExpEarned,
+      level: calculateLevel(user.totalExpEarned),
+      levelProgress,
+      achievements: user.achievements || [],
+      weeklyExp: user.weeklyExp || 0,
+      monthlyExp: user.monthlyExp || 0,
+    });
+  } catch (error) {
+    console.error("Error fetching user stats:", error);
+    res.status(500).json({ message: "Error fetching stats." });
+  }
+});
+
+// Get leaderboard (with weekly/monthly filtering)
+app.get("/api/gamification/leaderboard", async (req, res) => {
+  try {
+    const { period = "all" } = req.query; // all, weekly, monthly
+    let sortField = "totalExpEarned";
+
+    if (period === "weekly") sortField = "weeklyExp";
+    else if (period === "monthly") sortField = "monthlyExp";
+
+    const leaderboard = await User.find({})
+      .select(
+        "name picture level totalExpEarned weeklyExp monthlyExp achievements tier"
+      )
+      .sort({ [sortField]: -1 })
+      .limit(100);
+
+    // Add rank to each user
+    const rankedLeaderboard = leaderboard.map((user, index) => ({
+      rank: index + 1,
+      name: user.name,
+      picture: user.picture,
+      level: calculateLevel(user.totalExpEarned),
+      totalExp: user.totalExpEarned,
+      weeklyExp: user.weeklyExp || 0,
+      monthlyExp: user.monthlyExp || 0,
+      achievements: user.achievements?.length || 0,
+      tier: user.tier,
+    }));
+
+    res.status(200).json(rankedLeaderboard);
+  } catch (error) {
+    console.error("Error fetching leaderboard:", error);
+    res.status(500).json({ message: "Error fetching leaderboard." });
+  }
+});
+
 // Mount route handlers
 app.use("/api/ai", aiRoutes);
 app.use("/api/auth", authRoutes);
@@ -251,6 +520,7 @@ app.use("/api/quizzes", quizRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/flashcards", flashcardRoutes);
 app.use("/api/support", supportRoutes);
+app.use("/api/admin", adminRoutes);
 
 async function startServer() {
   try {
@@ -271,8 +541,28 @@ async function startServer() {
       console.log = () => {};
     }
 
+    // Create HTTP server with socket.io
+    const httpServer = createServer(app);
+    const io = new SocketIOServer(httpServer, {
+      cors: {
+        origin: allowedOrigins,
+        credentials: true,
+      },
+    });
+
+    // Socket.io event handlers
+    io.on("connection", (socket) => {
+      // User connected
+      socket.on("disconnect", () => {
+        // User disconnected
+      });
+    });
+
+    // Make io available globally for routes
+    app.locals.io = io;
+
     // Start server
-    app.listen(PORT, () =>
+    httpServer.listen(PORT, () =>
       console.log(`Server running in ${process.env.NODE_ENV} mode on ${PORT}`)
     );
   } catch (err) {

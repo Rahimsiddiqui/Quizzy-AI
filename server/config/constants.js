@@ -61,10 +61,10 @@ export const EXAM_STYLES = [
 
 /**
  * @typedef {Object} TierLimits
- * @property {number} dailyGenerations - Daily limit for new quiz generations.
- * @property {number} dailyFlashcardGenerations - Daily limit for generating flashcards.
- * @property {number} dailyPdfUploads - Daily limit for uploading context PDFs.
- * @property {number} dailyPdfExports - Daily limit for exporting quizzes to PDF.
+ * @property {number} monthlyGenerations - Monthly limit for new quiz generations.
+ * @property {number} monthlyFlashcardGenerations - Monthly limit for generating flashcards.
+ * @property {number} monthlyPdfUploads - Monthly limit for uploading context PDFs.
+ * @property {number} monthlyPdfExports - Monthly limit for exporting quizzes to PDF.
  * @property {number} maxQuestions - Maximum questions allowed in one generation.
  * @property {number} maxMarks - Maximum total marks allowed in one generation.
  * @property {number} flashcardLimit - Total storage limit for flashcards.
@@ -74,33 +74,33 @@ export const EXAM_STYLES = [
 /** @type {Object.<SubscriptionTier, TierLimits>} */
 export const TIER_LIMITS = {
   [SubscriptionTier.Free]: {
-    dailyGenerations: 7,
-    dailyFlashcardGenerations: 3,
-    dailyPdfUploads: 3,
-    dailyPdfExports: 3,
+    monthlyGenerations: 7,
+    monthlyFlashcardGenerations: 3,
+    monthlyPdfUploads: 3,
+    monthlyPdfExports: 3,
     maxQuestions: 10,
     maxMarks: 30,
     flashcardLimit: 50,
     price: 0,
   },
   [SubscriptionTier.Basic]: {
-    dailyGenerations: 30,
-    dailyFlashcardGenerations: 15,
-    dailyPdfUploads: 15,
-    dailyPdfExports: 15,
+    monthlyGenerations: 35,
+    monthlyFlashcardGenerations: 17,
+    monthlyPdfUploads: 20,
+    monthlyPdfExports: 20,
     maxQuestions: 25,
     maxMarks: 60,
     flashcardLimit: 200,
     price: 4.99,
   },
   [SubscriptionTier.Pro]: {
-    dailyGenerations: Infinity,
-    dailyFlashcardGenerations: Infinity,
-    dailyPdfUploads: Infinity,
-    dailyPdfExports: Infinity,
+    monthlyGenerations: Infinity,
+    monthlyFlashcardGenerations: Infinity,
+    monthlyPdfUploads: Infinity,
+    monthlyPdfExports: Infinity,
     maxQuestions: 45,
     maxMarks: 100,
     flashcardLimit: Infinity,
-    price: 9.99,
+    price: 12.99,
   },
 };

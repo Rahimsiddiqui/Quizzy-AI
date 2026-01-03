@@ -41,8 +41,34 @@ const protect = asyncHandler(async (req, res, next) => {
       // Verify that session is still active for the user
       const User = (await import("../models/User.js")).default;
       const user = await User.findById(req.userId);
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
+      }
+
+      // Auto-fix invalid tier values (migrate from old "Admin" tier)
+      const validTiers = ["Free", "Basic", "Pro"];
+      if (!validTiers.includes(user.tier)) {
+        user.tier = "Free";
+        await user.save();
+      }
+
+      // CHECK: User is banned or disabled - FORCE LOGOUT immediately
+      if (user.banned) {
+        return res.status(403).json({
+          message: "Your account has been banned",
+          banned: true,
+        });
+      }
+
+      if (!user.active) {
+        return res.status(403).json({
+          message:
+            "Your account has been temporarily disabled. For help restoring access, please reach out to our support team at rahimsiddiqui122@gmail.com",
+          disabled: true,
+        });
+      }
+
       if (
-        !user ||
         !user.sessions ||
         !Array.isArray(user.sessions) ||
         !user.sessions.some((s) => String(s._id) === String(req.sessionId))

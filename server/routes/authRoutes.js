@@ -48,6 +48,16 @@ router.post("/register", async (req, res) => {
       verificationCodeExpires: codeExpires,
     });
 
+    // Emit real-time event for new user signup (for admin dashboard)
+    if (req.app.locals.io) {
+      req.app.locals.io.emit("newUserSignup", {
+        userId: user._id,
+        name: user.name,
+        email: user.email,
+        createdAt: user.createdAt,
+      });
+    }
+
     // Send verification email in background (non-blocking)
     sendVerificationEmail(email, verificationCode).catch(() => {});
 
@@ -206,6 +216,54 @@ router.post("/login", async (req, res) => {
   }
 });
 
+// Change full name (display name) - top-level route
+router.post("/change-fullname", protect, async (req, res) => {
+  const { newFullName } = req.body;
+
+  try {
+    const user = await User.findById(req.userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    if (!newFullName || newFullName.trim() === "") {
+      return res.status(400).json({ message: "Full name cannot be empty" });
+    }
+
+    if (newFullName.length < 6) {
+      return res
+        .status(400)
+        .json({ message: "Full name must be at least 6 characters" });
+    }
+
+    // Prevent full name being identical to username
+    if (user.username && newFullName === user.username) {
+      return res
+        .status(400)
+        .json({ message: "Full name cannot be the same as username" });
+    }
+
+    // Check if full name already exists on another user
+    const existing = await User.findOne({ name: newFullName });
+    if (existing && String(existing._id) !== String(user._id)) {
+      return res.status(400).json({ message: "Full name already taken" });
+    }
+
+    user.name = newFullName;
+    await user.save();
+
+    res.status(200).json({
+      message: "Full name updated",
+      user: {
+        id: user._id,
+        name: user.name,
+        username: user.username,
+        email: user.email,
+      },
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 // Confirm password for sensitive operations
 router.post("/confirm-password", protect, async (req, res) => {
   const { password } = req.body;
@@ -256,6 +314,11 @@ router.post("/verify-email", async (req, res) => {
     // Check if code is correct
     if (user.verificationCode !== code) {
       return res.status(400).json({ message: "Invalid verification code" });
+      // Check if full name already exists on another user
+      const existing = await User.findOne({ name: newFullName });
+      if (existing && String(existing._id) !== String(user._id)) {
+        return res.status(400).json({ message: "Full name already taken" });
+      }
     }
 
     user.isVerified = true;
@@ -400,6 +463,100 @@ router.post("/change-password", protect, async (req, res) => {
 
     res.status(200).json({
       message: "Password changed successfully",
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Change username
+// Check username availability (public)
+router.get("/check-username", async (req, res) => {
+  try {
+    const { username } = req.query;
+    if (!username || username.trim() === "") {
+      return res.status(400).json({ message: "Username is required" });
+    }
+
+    // Basic validation to short-circuit invalid usernames
+    if (username.length < 6 || /\s/.test(username) || /[A-Z]/.test(username)) {
+      return res.status(200).json({ available: false });
+    }
+
+    const existing = await User.findOne({ username });
+    if (existing) return res.status(200).json({ available: false });
+
+    return res.status(200).json({ available: true });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+router.post("/change-username", protect, async (req, res) => {
+  const { newUsername } = req.body;
+
+  try {
+    const user = await User.findById(req.userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Validate new username
+    if (!newUsername || newUsername.trim() === "") {
+      return res.status(400).json({ message: "Username cannot be empty" });
+    }
+
+    if (newUsername.length < 6) {
+      return res
+        .status(400)
+        .json({ message: "Username must be at least 6 characters" });
+    }
+
+    // Check for spaces
+    if (/\s/.test(newUsername)) {
+      return res
+        .status(400)
+        .json({ message: "Username cannot contain spaces" });
+    }
+
+    // Check for uppercase letters
+    if (/[A-Z]/.test(newUsername)) {
+      return res
+        .status(400)
+        .json({ message: "Username cannot contain uppercase letters" });
+    }
+
+    // Check if username is the same as current
+    if (newUsername === user.username) {
+      return res.status(400).json({
+        message: "New username must be different from current username",
+      });
+    }
+
+    // Check if username already exists
+    const existingUser = await User.findOne({ username: newUsername });
+    if (existingUser) {
+      return res.status(400).json({ message: "Username already taken" });
+    }
+
+    // Prevent username matching full name
+    if (newUsername === user.name) {
+      return res
+        .status(400)
+        .json({ message: "Username cannot be the same as full name" });
+    }
+
+    user.username = newUsername;
+    await user.save();
+
+    res.status(200).json({
+      message: "Username changed successfully",
+      user: {
+        id: user._id,
+        name: user.name,
+        username: user.username,
+        email: user.email,
+      },
     });
   } catch (err) {
     res.status(500).json({ message: "Server error" });
