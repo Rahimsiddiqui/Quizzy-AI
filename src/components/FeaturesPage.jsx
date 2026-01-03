@@ -18,8 +18,7 @@ const FeaturesPage = () => {
         "Customizable difficulty levels",
         "Covers all major subjects and topics",
       ],
-      image:
-        "https://plus.unsplash.com/premium_photo-1678374802947-ad2d80cff2e9?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      image: "/images/ai-generated-quizzes.avif",
     },
     {
       icon: BookOpen,
@@ -32,8 +31,7 @@ const FeaturesPage = () => {
         "Visual learning support with images",
         "Progress tracking and analytics",
       ],
-      image:
-        "https://images.unsplash.com/photo-1663864796966-8b3402e94ca4?q=80&w=869&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      image: "/images/smart-flashcards.avif",
     },
     {
       icon: BarChart3,
@@ -46,8 +44,7 @@ const FeaturesPage = () => {
         "Time spent tracking",
         "Improvement recommendations",
       ],
-      image:
-        "https://plus.unsplash.com/premium_photo-1661384118133-8f8b6eef9715?q=80&w=1167&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      image: "/images/detailed-analytics.avif",
     },
     {
       icon: Zap,
@@ -60,8 +57,7 @@ const FeaturesPage = () => {
         "Optimized for all devices",
         "Zero lag study experience",
       ],
-      image:
-        "https://images.unsplash.com/photo-1552664730-d307ca884978?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=60",
+      image: "/images/lightning-fast.avif",
     },
   ];
 
