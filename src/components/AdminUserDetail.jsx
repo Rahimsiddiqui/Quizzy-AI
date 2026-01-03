@@ -249,6 +249,7 @@ function AdminUserDetail() {
                   src={user.picture}
                   alt={user.name}
                   className="w-full h-full object-cover"
+                  loading="lazy"
                 />
               ) : (
                 user.name.charAt(0).toUpperCase()

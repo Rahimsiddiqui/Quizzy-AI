@@ -100,6 +100,7 @@ const FeaturesPage = () => {
                       src={feature.image}
                       alt={feature.title}
                       className="w-full h-64 object-cover rounded-xl hover:scale-105 transition-transform duration-300"
+                      loading="lazy"
                     />
                   </div>
                 ) : null}
@@ -144,6 +145,7 @@ const FeaturesPage = () => {
                       src={feature.image}
                       alt={feature.title}
                       className="w-full h-64 object-cover rounded-xl hover:scale-105 transition-transform duration-300"
+                      loading="lazy"
                     />
                   </div>
                 ) : null}

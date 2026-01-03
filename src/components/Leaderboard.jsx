@@ -17,6 +17,7 @@ const Medal = ({ type }) => {
       src={imageMap[type]}
       alt={`${type} medal`}
       className="w-8 h-8 object-contain"
+      loading="lazy"
     />
   );
 };
@@ -276,6 +277,7 @@ const Leaderboard = ({ user }) => {
                               src={player.picture}
                               alt={player.name}
                               className="w-full h-full object-cover"
+                              loading="lazy"
                             />
                           ) : (
                             player.name.charAt(0)

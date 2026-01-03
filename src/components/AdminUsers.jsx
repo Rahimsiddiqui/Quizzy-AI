@@ -482,6 +482,7 @@ export default function AdminUsers() {
                               src={u.picture}
                               alt={u.name}
                               className="w-full h-full object-cover"
+                              loading="lazy"
                             />
                           ) : (
                             u.name.charAt(0)

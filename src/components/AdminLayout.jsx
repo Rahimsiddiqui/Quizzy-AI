@@ -4,10 +4,8 @@ import {
   LayoutDashboard,
   Users,
   BookOpenCheck,
-  BarChart3,
   LogOut,
   Search,
-  Brain,
 } from "lucide-react";
 import { getAdminInfo } from "../services/adminService";
 import StorageService from "../services/storageService";
@@ -115,7 +113,7 @@ export default function AdminLayout() {
               {!sidebarCollapsed && (
                 <Link
                   to="/admin/dashboard"
-                  className={`flex items-center gap-2 text-primary dark:text-blue-400 font-bold tracking-tight transition-opacity duration-300 hover:opacity-90 overflow-x-none min-w-fit ${
+                  className={`flex items-center gap-1 text-primary dark:text-blue-400 font-bold tracking-tight transition-opacity duration-300 hover:opacity-90 overflow-x-none min-w-fit ${
                     sidebarCollapsed
                       ? "justify-center opacity-0"
                       : "text-xl opacity-100"
@@ -123,7 +121,12 @@ export default function AdminLayout() {
                   aria-label="Go to Qubli AI Dashboard"
                   title="Qubli AI"
                 >
-                  <Brain className="w-7 h-7" />
+                  <img
+                    src="/icons/favicon.png"
+                    className="w-10 h-10"
+                    alt="Brand Icon"
+                    loading="lazy"
+                  />
                   {!sidebarCollapsed && (
                     <span
                       className={`transition-opacity duration-300 ease-in-out ${

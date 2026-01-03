@@ -1814,6 +1814,7 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
                             src={twoFAQRCode}
                             alt="2FA QR Code"
                             className="w-48 h-48"
+                            loading="lazy"
                           />
                         </div>
                       )}
