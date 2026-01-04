@@ -210,13 +210,11 @@ export const getUsers = async (req, res) => {
     const filter =
       conditions.length > 1 ? { $and: conditions } : conditions[0] || {};
 
-    console.log("Admin getUsers - Filter:", JSON.stringify(filter));
     const users = await User.find(filter)
       .select("_id name email role active banned createdAt lastLogin picture")
       .skip(skip)
       .limit(limit)
       .sort({ createdAt: -1 });
-    console.log("Admin getUsers - Found users:", users.length);
 
     const total = await User.countDocuments(filter);
 
