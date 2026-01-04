@@ -258,9 +258,9 @@ app.post("/api/subscription/refund", protect, async (req, res) => {
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f5f5f5; padding: 20px; border-radius: 8px;">
           <div style="background-color: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
             <h2 style="color: #333; margin-top: 0;">Refund Confirmation</h2>
-            <p style="color: #666; line-height: 1.6;">Hi ${
+            <p style="color: #666; line-height: 1.6;">Hi, ${
               user.name || "User"
-            },</p>
+            }!</p>
             
             <p style="color: #666; line-height: 1.6;">Thank you for using Qubli AI. Your refund request has been processed successfully.</p>
             
@@ -287,7 +287,7 @@ app.post("/api/subscription/refund", protect, async (req, res) => {
             
             <p style="color: #666; line-height: 1.6;">If you have any questions or need further assistance, please don't hesitate to contact our support team.</p>
             
-            <p style="color: #999; font-size: 12px; margin-top: 30px;">Best regards,<br>Qubli AI Team</p>
+            <p style="color: #999; font-size: 12px; margin-top: 30px;">Best regards,<br>Qubli AI Team!</p>
           </div>
         </div>
       `;

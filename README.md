@@ -72,26 +72,36 @@ npm install
 3. **Configure ENV Variables**
 
 ```bash
+# JWT Secret
 JWT_SECRET=your_jwt_secret
+
+# API Key
+GEMINI_API_KEY_FREE=your_gemini_free_api_key
+GEMINI_API_KEY_BASIC=your_gemini_basic_api_key
+GEMINI_API_KEY_PRO=your_gemini_pro_api_key
+
+# Database
 MONGODB_URI=your_mongodb_uri
 
-GEMINI_API_KEY=your_gemini_api_key
-
+# Email Configuration (for sending verification codes)
 EMAIL_SERVICE=gmail
-EMAIL_USER=your_email_address
-EMAIL_PASSWORD=your_email_app_password
+EMAIL_USER=your_email
+EMAIL_PASSWORD=your_email_password
 
+# Server Configuration
 FRONTEND_URL=http://localhost:5173
-VITE_API_URL=http://localhost:5000/api
+VITE_API_URL=http://localhost:5000
 NODE_ENV=development
 
+# Frontend Environment Variables
 VITE_GOOGLE_CLIENT_ID=your_google_client_id
 VITE_GITHUB_CLIENT_ID=your_github_client_id
-VITE_GITHUB_CLIENT_SECRET=your_github_client_secret
 
+# Google OAuth
 GOOGLE_CLIENT_ID=your_google_client_id
 GOOGLE_CLIENT_SECRET=your_google_client_secret
 
+# GitHub OAuth
 GITHUB_CLIENT_ID=your_github_client_id
 GITHUB_CLIENT_SECRET=your_github_client_secret
 ```
@@ -123,12 +133,14 @@ Qubli AI includes a complete admin dashboard for managing users, quizzes, and re
 npm install
 
 # 2. Seed admin user
-npm run seed:admin
+npm run seed:admin example@gmail.com password "Full Name"
 
 # 3. Start development
 npm run dev:all
 
 # 4. Login at http://localhost:5173/admin/login
+# Email: example@gmail.com
+# Password: password
 ```
 
 ### Features
@@ -140,21 +152,7 @@ npm run dev:all
 - 📈 Performance charts (7-day activity, average scores)
 - 🔄 Real-time updates via Socket.io
 
-### Documentation
-
-- **[ADMIN_COMPLETE.md](ADMIN_COMPLETE.md)** — Full overview
-- **[QUICK_START.md](QUICK_START.md)** — Fast setup (5 min)
-- **[API_DOCUMENTATION.md](API_DOCUMENTATION.md)** — API reference
-- **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** — Common issues
-
 ---
-
-<!-- ## ⌨ Quick Keyboard Shortcuts
-
-| Shortcut                       | Action               |
-| ------------------------------ | -------------------- |
-| `Ctrl+\` / `Cmd+\`             | Toggle Sidebar       |
-| `Ctrl+Shift+O` / `Cmd+Shift+O` | Create Quiz          | -->
 
 ## 📄 License
 
