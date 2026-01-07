@@ -78,7 +78,7 @@ function AdminQuizDetail() {
 
   if (loading) {
     return (
-      <div className="space-y-8 animate-fade-in w-full pb-10">
+      <div className="space-y-8 animate-fade-in-up w-full pb-10">
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate("/admin/quizzes")}
@@ -99,7 +99,7 @@ function AdminQuizDetail() {
 
   if (!quiz) {
     return (
-      <div className="space-y-8 animate-fade-in w-full pb-10">
+      <div className="space-y-8 animate-fade-in-up w-full pb-10">
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate("/admin/quizzes")}
@@ -119,7 +119,7 @@ function AdminQuizDetail() {
   }
 
   return (
-    <div className="space-y-8 animate-fade-in w-full pb-10">
+    <div className="space-y-8 animate-fade-in-up w-full pb-10">
       {/* Header with Back Button */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-4">
@@ -141,7 +141,7 @@ function AdminQuizDetail() {
         </div>
         <button
           onClick={handleDownloadQuiz}
-          className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-xl point font-medium hover:shadow-lg hover:shadow-primary/20 transition-all"
+          className="flex items-center gap-2 px-4 py-2 bg-primary dark:bg-blue-800/70 text-white rounded-xl point font-medium hover:shadow-lg hover:shadow-primary/20 transition-all"
         >
           <Download size={18} />
           Download
@@ -153,7 +153,7 @@ function AdminQuizDetail() {
         {/* Left Column - Quiz Info */}
         <div className="lg:col-span-1 space-y-5">
           {/* Quiz Overview Card */}
-          <div className="bg-surface border shadow-md-custom border-border rounded-2xl p-6 dark:bg-slate-900/40">
+          <div className="bg-surface border shadow-md-custom border-border rounded-2xl p-6">
             <h2 className="text-sm font-bold text-textMuted uppercase tracking-[0.15em] mb-6">
               Quiz Overview
             </h2>
@@ -164,7 +164,7 @@ function AdminQuizDetail() {
                 <label className="text-xs text-textMuted font-semibold uppercase">
                   Title
                 </label>
-                <p className="text-textMain font-medium mt-2 wrap-break-word">
+                <p className="text-textMain dark:text-textMain/90 font-medium mt-2 wrap-break-word">
                   {quiz.title}
                 </p>
               </div>
@@ -172,11 +172,14 @@ function AdminQuizDetail() {
               {/* Topic */}
               <div>
                 <label className="text-xs text-textMuted font-semibold uppercase flex items-center gap-2">
-                  <Layers size={14} className="text-primary" />
+                  <Layers
+                    size={14}
+                    className="text-primary dark:text-blue-500"
+                  />
                   Topic
                 </label>
                 <div className="mt-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surfaceHighlight border border-border">
-                  <span className="text-sm font-medium text-textMain">
+                  <span className="text-sm font-medium text-textMain dark:text-textMain/90">
                     {quiz.topic}
                   </span>
                 </div>
@@ -191,10 +194,10 @@ function AdminQuizDetail() {
                   <span
                     className={`inline-block px-3 py-1.5 rounded-full text-xs font-bold ${
                       quiz.difficulty === "Easy"
-                        ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
+                        ? "bg-emerald-200/70 text-emerald-600 dark:bg-emerald-800/40 dark:text-emerald-500"
                         : quiz.difficulty === "Medium"
-                        ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
-                        : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300"
+                        ? "bg-amber-200/70 text-amber-600 dark:bg-amber-800/30"
+                        : "bg-red-200 text-red-600 dark:bg-red-800/30 dark:text-red-500"
                     }`}
                   >
                     {quiz.difficulty}
@@ -205,19 +208,24 @@ function AdminQuizDetail() {
               {/* Creator */}
               <div className="my-5">
                 <label className="text-xs text-textMuted font-semibold uppercase flex items-center gap-2">
-                  <User size={14} className="text-primary" />
+                  <User size={14} className="text-primary dark:text-blue-500" />
                   Created By
                 </label>
-                <p className="text-textMain font-medium mt-2">{quiz.creator}</p>
+                <p className="text-textMain dark:text-textMain/90 font-medium mt-2">
+                  {quiz.creator}
+                </p>
               </div>
 
               {/* Date */}
               <div>
                 <label className="text-xs text-textMuted font-semibold uppercase flex items-center gap-2">
-                  <Calendar size={14} className="text-primary" />
+                  <Calendar
+                    size={14}
+                    className="text-primary dark:text-blue-500"
+                  />
                   Created On
                 </label>
-                <p className="text-textMain font-medium mt-2">
+                <p className="text-textMain dark:text-textMain/90 font-medium mt-2">
                   {new Date(quiz.createdAt).toLocaleDateString("en-US", {
                     weekday: "long",
                     year: "numeric",
@@ -236,7 +244,7 @@ function AdminQuizDetail() {
                   <label className="text-xs text-textMuted font-semibold uppercase">
                     Exam Style
                   </label>
-                  <p className="text-textMain font-medium mt-2">
+                  <p className="text-textMain dark:text-textMain/90 font-medium mt-2">
                     {quiz.examStyle}
                   </p>
                 </div>
@@ -245,9 +253,12 @@ function AdminQuizDetail() {
           </div>
 
           {/* Performance Card */}
-          <div className="bg-surface shadow-md-custom border border-border rounded-2xl p-6 dark:bg-slate-900/40">
-            <h2 className="text-sm font-bold text-textMuted uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
-              <BarChart3 size={16} className="text-primary" />
+          <div className="bg-surface shadow-md-custom border border-border rounded-2xl p-6">
+            <h2 className="text-sm font-bold text-textMuted uppercase tracking-[0.15em] mb-6 flex items-center gap-2">
+              <BarChart3
+                size={16}
+                className="text-primary dark:text-blue-500"
+              />
               Performance
             </h2>
 
@@ -260,11 +271,11 @@ function AdminQuizDetail() {
                 <div className="mt-3 relative">
                   <div className="w-full bg-surfaceHighlight border border-border rounded-full h-3 overflow-hidden">
                     <div
-                      className="bg-gradient-to-r from-primary to-blue-500 h-full transition-all duration-300"
+                      className="bg-linear-to-r from-primary to-blue-500 h-full transition-all duration-300"
                       style={{ width: `${quiz.score || 0}%` }}
                     />
                   </div>
-                  <p className="text-textMain font-bold mt-2 text-lg">
+                  <p className="text-textMain dark:text-textMain/80 font-bold mt-2 text-lg">
                     {quiz.score || 0}%
                   </p>
                 </div>
@@ -276,7 +287,7 @@ function AdminQuizDetail() {
                   <label className="text-xs text-textMuted font-semibold uppercase">
                     Total Marks
                   </label>
-                  <p className="text-textMain font-bold mt-2 text-lg">
+                  <p className="text-textMain dark:text-textMain/80 font-bold mt-2 text-lg">
                     {quiz.totalMarks}
                   </p>
                 </div>
@@ -336,10 +347,10 @@ function AdminQuizDetail() {
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
-                            <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold">
+                            <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 dark:bg-blue-800/30 text-primary dark:text-blue-400 text-xs font-bold">
                               {qIndex + 1}
                             </span>
-                            <p className="text-textMain font-semibold flex-1 break-words">
+                            <p className="text-textMain dark:text-textMain/80 font-semibold flex-1 wrap-break-word">
                               {question.question ||
                                 question.text ||
                                 `Question ${qIndex + 1}`}

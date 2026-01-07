@@ -365,7 +365,7 @@ const Dashboard = ({ user }) => {
     );
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500 pb-20">
+    <div className="space-y-8 animate-fade-in pb-20">
       <header className="flex flex-col md:flex-row justify-between items-start md:items-end border-b border-border pb-6 gap-4">
         <div>
           <h1 className="text-3xl font-bold text-textMain tracking-tight">
@@ -548,10 +548,10 @@ const Dashboard = ({ user }) => {
       <div className="bg-surface p-6 rounded-2xl border border-border shadow-md-custom">
         <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
           <div>
-            <h2 className="text-lg font-bold text-textMain text-center md:text-left">
+            <h2 className="text-2xl font-bold text-textMain text-center md:text-left">
               All Quizzes
             </h2>
-            <p className="text-xs text-textMuted mt-1">
+            <p className="text-xs text-textMuted mt-2 mb-1">
               Total: {quizzes.length} | Avg Score: {totalAvgScore}%
             </p>
           </div>
@@ -565,7 +565,7 @@ const Dashboard = ({ user }) => {
                 placeholder="Search quizzes..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 text-sm shadow-sm-custom bg-surfaceHighlight border border-border rounded-lg outline-none focus:ring-2 focus:ring-primary transition-all"
+                className="w-full pl-9 pr-4 py-2 text-sm shadow-md-custom bg-surfaceHighlight border border-border rounded-lg outline-none focus:ring-2 focus:ring-primary transition-all"
               />
               {searchTerm && (
                 <XCircle
@@ -578,7 +578,7 @@ const Dashboard = ({ user }) => {
               <select
                 value={filterDifficulty}
                 onChange={(e) => setFilterDifficulty(e.target.value)}
-                className="pl-3 pr-8 py-2 text-sm shadow-sm-custom bg-surfaceHighlight border border-border rounded-lg outline-none focus:ring-2 focus:ring-primary appearance-none cursor-pointer transition-all"
+                className="pl-3 pr-8 py-2 text-sm shadow-md-custom bg-surfaceHighlight border border-border rounded-lg outline-none focus:ring-2 focus:ring-primary appearance-none cursor-pointer transition-all"
               >
                 <option value="All">All</option>
                 <option value="Easy">Easy</option>

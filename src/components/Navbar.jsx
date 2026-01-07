@@ -1,5 +1,5 @@
 import React from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 
 const Navbar = () => {
@@ -43,8 +43,8 @@ const Navbar = () => {
 
         {/* Desktop nav */}
         <div className="hidden md:flex items-center gap-8">
-          <a
-            href="/features"
+          <Link
+            to="/features"
             className={`transition-colors duration-200 ${
               isActive("/features")
                 ? "text-primary dark:text-blue-500 font-semibold"
@@ -52,9 +52,9 @@ const Navbar = () => {
             }`}
           >
             Features
-          </a>
-          <a
-            href="/testimonials"
+          </Link>
+          <Link
+            to="/testimonials"
             className={`transition-colors duration-200 ${
               isActive("/testimonials")
                 ? "text-primary font-semibold"
@@ -62,7 +62,7 @@ const Navbar = () => {
             }`}
           >
             Testimonials
-          </a>
+          </Link>
           <button
             onClick={() => navigate("/auth")}
             className="px-6 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-blue-700 transition-colors shadow-lg shadow-primary/20 point"
@@ -81,8 +81,8 @@ const Navbar = () => {
         } w-max max-w-xs max-h-[calc(100vh-64px)] overflow-y-auto`}
       >
         <div className="px-6 py-6 space-y-4 flex flex-col">
-          <a
-            href="/features"
+          <Link
+            to="/features"
             onClick={() => setMobileMenuOpen(false)}
             className={`pl-2 pr-4 py-3 rounded-[5px] transition-all text-textMain duration-200 border-b border-border ${
               isActive("/features")
@@ -91,9 +91,9 @@ const Navbar = () => {
             }`}
           >
             Features
-          </a>
-          <a
-            href="/testimonials"
+          </Link>
+          <Link
+            to="/testimonials"
             onClick={() => setMobileMenuOpen(false)}
             className={`pl-2 pr-4 py-3 rounded-[5px] transition-all text-textMain duration-200 border-b border-border ${
               isActive("/testimonials")
@@ -102,7 +102,7 @@ const Navbar = () => {
             }`}
           >
             Testimonials
-          </a>
+          </Link>
           <button
             onClick={() => {
               navigate("/auth");

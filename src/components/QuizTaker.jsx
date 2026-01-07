@@ -336,7 +336,7 @@ const StudyFlashcards = ({
   if (quizFlashcards?.length === 0 || !quiz?.isFlashcardSet) {
     return (
       <div className="text-center py-12 bg-surface rounded-2xl border border-border">
-        <div className="w-16 h-16 bg-gray-100 dark:bg-gray-900 rounded-full flex items-center justify-center mx-auto mb-4">
+        <div className="w-16 h-16 bg-gray-100 dark:bg-gray-900/60 rounded-full flex items-center justify-center mx-auto mb-4">
           <Layers className="w-8 h-8 text-gray-400" />
         </div>
         <h3 className="text-xl font-bold text-textMain mb-2">
@@ -1972,7 +1972,7 @@ const QuizTaker = ({ user, onComplete, onLimitUpdate }) => {
           onClose={() => setCelebratingAchievement(null)}
         />
       )}
-      <div className="max-w-2xl mx-auto no-print animate-in fade-in slide-in-from-bottom-2 duration-500 pb-12">
+      <div className="max-w-2xl mx-auto no-print animate-fade-in-up pb-12">
         {/* Common Header */}
         <div className="flex justify-between items-center mb-6">
           <div className="overflow-hidden">
@@ -2270,7 +2270,7 @@ const QuizTaker = ({ user, onComplete, onLimitUpdate }) => {
         {/* Export Answer Sheet Modal */}
         {showExportModal && (
           <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-surface rounded-xl shadow-2xl max-w-md w-full overflow-hidden border border-border/50 animate-in fade-in zoom-in-95 duration-200">
+            <div className="bg-surface rounded-xl shadow-2xl max-w-md w-full overflow-hidden border border-border/50 animate-fade-in">
               {/* Header */}
               <div className="bg-linear-to-r from-blue-500/20 to-blue-600/20 px-6 py-6 border-b border-border">
                 <h3 className="text-lg font-bold text-textMain">

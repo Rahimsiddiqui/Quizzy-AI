@@ -1,7 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Star } from "lucide-react";
-import Navbar from "./Navbar.jsx";
 
 const TestimonialsPage = () => {
   const navigate = useNavigate();
@@ -82,9 +81,7 @@ const TestimonialsPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background text-textMain">
-      <Navbar />
-
+    <div className="min-h-screen bg-background text-textMain animate-fade-in-up">
       {/* Hero Section */}
       <section className="pt-40 py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">

@@ -1,5 +1,5 @@
 import React from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import {
   ArrowRight,
@@ -14,7 +14,6 @@ import {
   Twitter,
   Mail,
 } from "lucide-react";
-import Navbar from "./Navbar.jsx";
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -29,9 +28,7 @@ const LandingPage = () => {
   }, [searchParams]);
 
   return (
-    <div className="min-h-screen bg-background text-textMain">
-      <Navbar />
-
+    <div className="min-h-screen bg-background text-textMain animate-fade-in-up">
       {/* Hero Section */}
       <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
@@ -187,12 +184,12 @@ const LandingPage = () => {
           </div>
 
           <div className="text-center mt-12">
-            <a
-              href="/features"
+            <Link
+              to="/features"
               className="text-lg font-semibold text-primary hover:text-blue-700 dark:text-blue-500 dark:hover:text-primary transition-colors"
             >
               Explore All Features →
-            </a>
+            </Link>
           </div>
         </div>
       </section>
@@ -309,18 +306,18 @@ const LandingPage = () => {
           </div>
 
           <div className="text-center mt-12">
-            <a
-              href="/testimonials"
+            <Link
+              to="/testimonials"
               className="text-lg font-semibold text-primary hover:text-blue-700 dark:text-blue-500 dark:hover:text-primary transition-colors"
             >
               Read More Testimonials →
-            </a>
+            </Link>
           </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-primary/10 to-blue-600/10 border-t border-b border-border">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-linear-to-br from-primary/10 to-blue-600/10 border-t border-b border-border">
         <div
           className="max-w-4xl mx-auto text-center animate-fade-in-up"
           style={{ animationDelay: "200ms" }}
@@ -368,20 +365,20 @@ const LandingPage = () => {
               <h4 className="font-bold mb-4">Product</h4>
               <ul className="space-y-2 text-textMuted text-sm">
                 <li>
-                  <a
-                    href="/features"
+                  <Link
+                    to="/features"
                     className="hover:text-textMain transition-colors"
                   >
                     Features
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a
-                    href="/pricing"
+                  <Link
+                    to="/pricing"
                     className="hover:text-textMain transition-colors"
                   >
                     Pricing
-                  </a>
+                  </Link>
                 </li>
                 <li>
                   <a href="#" className="hover:text-textMain transition-colors">
@@ -396,20 +393,20 @@ const LandingPage = () => {
               <h4 className="font-bold mb-4">Company</h4>
               <ul className="space-y-2 text-textMuted text-sm">
                 <li>
-                  <a
-                    href="/about"
+                  <Link
+                    to="/about"
                     className="hover:text-textMain transition-colors"
                   >
                     About
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a
-                    href="/contact"
+                  <Link
+                    to="/contact"
                     className="hover:text-textMain transition-colors"
                   >
                     Contact
-                  </a>
+                  </Link>
                 </li>
                 <li>
                   <a href="#" className="hover:text-textMain transition-colors">
@@ -424,20 +421,20 @@ const LandingPage = () => {
               <h4 className="font-bold mb-4">Legal</h4>
               <ul className="space-y-2 text-textMuted text-sm">
                 <li>
-                  <a
-                    href="/policies"
+                  <Link
+                    to="/policies"
                     className="hover:text-textMain transition-colors"
                   >
                     Policies
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a
-                    href="/terms"
+                  <Link
+                    to="/terms"
                     className="hover:text-textMain transition-colors"
                   >
                     Terms
-                  </a>
+                  </Link>
                 </li>
               </ul>
             </div>

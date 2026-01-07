@@ -71,10 +71,22 @@ export const getQuizResults = async (page = 1, limit = 10, quiz = "") => {
   return res.data;
 };
 
-export const getQuizzes = async (page = 1, limit = 10, difficulty = null) => {
+export const getQuizzes = async (
+  page = 1,
+  limit = 10,
+  difficulty = null,
+  isActive = null,
+  search = ""
+) => {
   const params = { page, limit };
   if (difficulty) {
     params.difficulty = difficulty;
+  }
+  if (isActive !== null) {
+    params.isActive = isActive;
+  }
+  if (search) {
+    params.search = search;
   }
   const res = await adminApi.get("/quizzes", { params });
   return res.data;

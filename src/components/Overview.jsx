@@ -123,7 +123,7 @@ const Overview = ({ user }) => {
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500 pb-20">
+    <div className="space-y-8 animate-fade-in pb-20">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <h1 className="text-3xl font-bold text-textMain tracking-tight">
           Performance Overview
@@ -269,12 +269,12 @@ const Overview = ({ user }) => {
                           <span className="text-textMuted">-</span>
                         ) : (
                           <span
-                            className={`font-extrabold text-base ${
+                            className={`font-bold text-base ${
                               q?.score >= 80
-                                ? "text-green-600"
+                                ? "text-green-600 dark:text-green-500"
                                 : q?.score >= 50
-                                ? "text-orange-600"
-                                : "text-red-600"
+                                ? "text-amber-600 dark:text-amber-500"
+                                : "text-red-600 dark:text-red-500"
                             }`}
                           >
                             {q?.score}%

@@ -16,7 +16,7 @@ export default function ConfirmActionModal({
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-surface border border-border rounded-2xl max-w-md w-full p-6 shadow-lg animate-fade-in">
-        <div className="flex flex-col justify-center text-center items-center gap-4 mb-4">
+        <div className="flex flex-col justify-center text-center relative z-100 items-center gap-4 mb-4">
           <div
             className={`p-3 rounded-xl ${
               isDangerous

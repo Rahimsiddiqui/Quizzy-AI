@@ -108,7 +108,7 @@ export const FlashcardReview = () => {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center h-[50vh] text-center animate-in fade-in duration-500">
+      <div className="flex flex-col items-center justify-center h-[50vh] text-center animate-fade-in">
         <RotateCcw className="w-10 h-10 text-primary animate-spin" />
         <h2 className="text-xl font-bold text-textMain mt-4">
           Loading Flashcards...
@@ -119,7 +119,7 @@ export const FlashcardReview = () => {
 
   if (cards.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-[50vh] text-center animate-in fade-in duration-500">
+      <div className="flex flex-col items-center justify-center h-[50vh] text-center animate-fade-in">
         <div className="p-4 bg-gray-100 rounded-full mb-4">
           <RotateCcw className="w-8 h-8 text-gray-400" />
         </div>
@@ -136,7 +136,7 @@ export const FlashcardReview = () => {
 
   if (!currentCard) {
     return (
-      <div className="flex flex-col items-center justify-center h-[50vh] text-center animate-in fade-in duration-500">
+      <div className="flex flex-col items-center justify-center h-[50vh] text-center animate-fade-in">
         <div className="p-4 bg-green-100 rounded-full mb-4">
           <CheckCircle className="w-12 h-12 text-green-600" />
         </div>
@@ -212,7 +212,7 @@ export const FlashcardReview = () => {
       </div>
 
       {isFlipped && (
-        <div className="mt-8 grid grid-cols-4 gap-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+        <div className="mt-8 grid grid-cols-4 gap-4 animate-fade-in-up">
           {RATING_BUTTONS.map(({ rating, label, color, tooltip }) => {
             const days = getNextReviewDays(
               currentCard.interval,

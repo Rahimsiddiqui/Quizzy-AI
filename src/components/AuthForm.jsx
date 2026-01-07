@@ -165,14 +165,14 @@ const AuthForm = ({ onLogin }) => {
   const renderStatusIcon = (isValid, value) => {
     if (!value) return null;
     return isValid ? (
-      <Check className="absolute right-3 top-3.5 w-5 h-5 text-green-500 dark:text-green-400 animate-in zoom-in duration-200" />
+      <Check className="absolute right-3 top-3.5 w-5 h-5 text-green-500 dark:text-green-400 animate-fade-in" />
     ) : (
-      <X className="absolute right-3 top-3.5 w-5 h-5 text-red-500 dark:text-red-400 animate-in zoom-in duration-200" />
+      <X className="absolute right-3 top-3.5 w-5 h-5 text-red-500 dark:text-red-400 animate-fade-in" />
     );
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden animate-fade-in-up">
       {/* Decorative Background */}
       <div className="absolute top-[-10%] left-[-10%] w-125 h-125 bg-blue-100 dark:bg-blue-900 rounded-full blur-[100px] pointer-events-none opacity-60"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-125 h-125 bg-indigo-100 dark:bg-indigo-950 rounded-full blur-[100px] pointer-events-none opacity-60"></div>
@@ -333,7 +333,7 @@ const AuthForm = ({ onLogin }) => {
           {error && (
             <div
               className="text-red-500 dark:text-red-300 text-sm text-center 
-            bg-red-50 dark:bg-red-800/40 p-2 rounded-lg border border-red-100 dark:border-red-900 animate-in fade-in slide-in-from-top-2"
+            bg-red-50 dark:bg-red-800/40 p-2 rounded-lg border border-red-100 dark:border-red-900 animate-fade-in"
             >
               {error}
             </div>

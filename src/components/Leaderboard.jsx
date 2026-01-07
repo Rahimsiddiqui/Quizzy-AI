@@ -120,7 +120,7 @@ const Leaderboard = ({ user }) => {
   };
 
   return (
-    <div className="min-h-screen bg-background text-textMain py-8">
+    <div className="min-h-screen bg-background text-textMain py-8 animate-fade-in-up">
       <div className="max-w-6xl mx-auto px-4">
         <div className="mb-7 space-y-5">
           <h1 className="text-4xl font-bold">Global Leaderboard</h1>
@@ -338,7 +338,7 @@ const Leaderboard = ({ user }) => {
         )}
 
         {/* Info Footer */}
-        <div className="mt-8 p-4 bg-blue-100 dark:bg-blue-800/30 border border-blue-200 dark:border-blue-800/50 rounded-lg">
+        <div className="mt-8 p-4 shadow-sm-custom bg-blue-100 dark:bg-blue-800/30 border border-blue-200 dark:border-blue-800/50 rounded-lg">
           <p className="text-sm text-blue-700 dark:text-blue-400">
             💡 <strong>Pro Tip:</strong> Earn EXP by creating quizzes,
             completing quizzes, creating flashcards, and more! Level up and

@@ -102,7 +102,7 @@ const VerifyEmail = () => {
   }
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-linear-to-br from-primary/10 to-secondary/10 p-4">
+    <div className="flex justify-center items-center min-h-screen bg-linear-to-br from-primary/10 to-secondary/10 p-4 animate-fade-in-up">
       <div className="w-full max-w-md bg-surface rounded-2xl shadow-xl py-8 px-5 sm:px-8">
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">

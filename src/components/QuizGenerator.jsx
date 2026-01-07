@@ -394,7 +394,7 @@ const QuizGenerator = ({ user, onGenerateSuccess }) => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12">
+    <div className="max-w-4xl mx-auto animate-fade-in-up pb-12">
       <style>
         {`@keyframes gentle-bounce {0%,100% { transform: translateY(0); } 50% { transform: translateY(-12px); }}`}
       </style>
@@ -406,7 +406,7 @@ const QuizGenerator = ({ user, onGenerateSuccess }) => {
         </div>
       </div>
 
-      <div className="bg-surface rounded-2xl border border-border p-6 md:p-8 shadow-xl">
+      <div className="bg-surface rounded-2xl border border-border p-6 md:p-8 shadow-lg-custom">
         <div className="flex p-1 bg-surfaceHighlight rounded-xl mb-8 w-full max-w-md mx-auto">
           <button
             type="button"
@@ -444,7 +444,7 @@ const QuizGenerator = ({ user, onGenerateSuccess }) => {
                   value={topic}
                   onChange={(e) => setTopic(e.target.value)}
                   placeholder="e.g., Quantum Physics, French Revolution, Organic Chemistry"
-                  className="w-full p-4 bg-surfaceHighlight border border-border rounded-xl text-textMain focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all placeholder-gray-400 font-medium"
+                  className="w-full p-4 bg-surfaceHighlight border border-border rounded-xl text-textMain focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all placeholder-gray-400 font-medium shadow-md-custom"
                 />
               </div>
             ) : (
@@ -576,7 +576,7 @@ const QuizGenerator = ({ user, onGenerateSuccess }) => {
                   <div
                     key={style.id}
                     onClick={() => handleExamStyleSelect(style.id, style.tier)}
-                    className={`relative p-4 rounded-xl min-h-38 border-2 transition-all cursor-pointer flex flex-col justify-between h-full shadow-sm-custom ${
+                    className={`relative p-4 rounded-xl min-h-38 border-2 transition-all cursor-pointer flex flex-col justify-between h-full shadow-md-custom ${
                       examStyleId === style.id
                         ? "border-primary dark:border-blue-400 bg-primary/5"
                         : "border-border bg-surface hover:bg-surfaceHighlight hover:border-primary/30 dark:hover:border-blue-400/50"
@@ -626,7 +626,7 @@ const QuizGenerator = ({ user, onGenerateSuccess }) => {
                 <select
                   value={difficulty}
                   onChange={(e) => setDifficulty(e.target.value)}
-                  className="w-full p-3 bg-surfaceHighlight border border-border rounded-xl text-textMain outline-none focus:ring-2 focus:ring-primary appearance-none cursor-pointer"
+                  className="w-full p-3 bg-surfaceHighlight border border-border rounded-xl text-textMain outline-none focus:ring-2 focus:ring-primary appearance-none cursor-pointer shadow-sm-custom"
                 >
                   {Object.values(Difficulty).map((d) => (
                     <option key={d} value={d}>
@@ -651,7 +651,7 @@ const QuizGenerator = ({ user, onGenerateSuccess }) => {
                 max={userMaxQuestions}
                 value={questionCount}
                 onChange={handleQuestionCountChange}
-                className="w-full p-3 bg-surfaceHighlight border border-border rounded-xl text-textMain outline-none focus:ring-2 focus:ring-primary placeholder-gray-400"
+                className="w-full p-3 bg-surfaceHighlight border border-border rounded-xl text-textMain outline-none focus:ring-2 focus:ring-primary placeholder-gray-400 shadow-sm-custom"
               />
             </div>
 
@@ -668,7 +668,7 @@ const QuizGenerator = ({ user, onGenerateSuccess }) => {
                 max={userMaxMarks}
                 value={totalMarks}
                 onChange={handleTotalMarksChange}
-                className="w-full p-3 bg-surfaceHighlight border border-border rounded-xl text-textMain outline-none focus:ring-2 focus:ring-primary placeholder-gray-400"
+                className="w-full p-3 bg-surfaceHighlight border border-border rounded-xl text-textMain outline-none focus:ring-2 focus:ring-primary placeholder-gray-400 shadow-sm-custom"
               />
             </div>
 
@@ -695,7 +695,7 @@ const QuizGenerator = ({ user, onGenerateSuccess }) => {
             </div>
           </div>
 
-          <div className="p-4 bg-surfaceHighlight rounded-xl border border-border shadow-md">
+          <div className="p-4 bg-surfaceHighlight rounded-xl border border-border shadow-md-custom">
             <div className="flex xs:flex-row flex-col xs:items-center xs:justify-between gap-4 items-center">
               <div className="xs:flex xs:items-center xs:gap-3 flex flex-col items-center gap-0">
                 <div

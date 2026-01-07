@@ -4,10 +4,12 @@ import {
   LayoutDashboard,
   Users,
   BookOpenCheck,
+  BookOpen,
   LogOut,
   Search,
+  Activity,
 } from "lucide-react";
-import { getAdminInfo } from "../services/adminService";
+import { getAdminInfo, getUsers, getQuizzes } from "../services/adminService";
 import StorageService from "../services/storageService";
 import ConfirmLogoutModal from "./ConfirmLogoutModal.jsx";
 
@@ -15,6 +17,7 @@ const menuItems = [
   { to: "/admin/dashboard", label: "Overview", icon: LayoutDashboard },
   { to: "/admin/users", label: "Users", icon: Users },
   { to: "/admin/quizzes", label: "Quizzes", icon: BookOpenCheck },
+  { to: "/admin/activity", label: "Activity", icon: Activity },
 ];
 
 export default function AdminLayout() {
@@ -23,6 +26,13 @@ export default function AdminLayout() {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
   const [isAuthChecking, setIsAuthChecking] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState({
+    users: [],
+    quizzes: [],
+  });
+  const [isSearching, setIsSearching] = useState(false);
+  const [showResults, setShowResults] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -79,6 +89,47 @@ export default function AdminLayout() {
   const pageTitle =
     location.pathname.replace("/admin/", "").split("/")[0] || "dashboard";
   const displayTitle = pageTitle.charAt(0).toUpperCase() + pageTitle.slice(1);
+
+  // Debounced search logic
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults({ users: [], quizzes: [] });
+      setShowResults(false);
+      return;
+    }
+
+    const delayDebounceFn = setTimeout(async () => {
+      setIsSearching(true);
+      setShowResults(true);
+      try {
+        const [usersRes, quizzesRes] = await Promise.all([
+          getUsers(1, 4, searchQuery),
+          getQuizzes(1, 4, null, null, searchQuery),
+        ]);
+        setSearchResults({
+          users: usersRes.users || [],
+          quizzes: quizzesRes.quizzes || [],
+        });
+      } catch (error) {
+        console.error("Search error:", error);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery]);
+
+  // Close results on click outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (!e.target.closest(".search-container")) {
+        setShowResults(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // Show loading state while checking authentication
   if (isAuthChecking) {
@@ -247,16 +298,110 @@ export default function AdminLayout() {
           </div>
 
           <div className="flex items-center gap-6">
-            <div className="relative hidden md:block">
+            <div className="relative hidden group md:block search-container">
               <Search
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                className={`absolute left-3 top-1/2 -translate-y-1/2 transition-colors ${
+                  isSearching
+                    ? "text-primary animate-pulse"
+                    : "text-textMuted group-focus-within:text-primary dark:group-focus-within:text-blue-400"
+                }`}
                 size={16}
               />
               <input
                 type="text"
-                placeholder="Search anything..."
-                className="pl-10 pr-4 py-2 text-sm shadow-sm-custom bg-surfaceHighlight text-textMain border-none rounded-xl focus:ring-2 focus:ring-primary dark:focus:ring-blue-800 w-64 transition-all"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onFocus={() => searchQuery.trim() && setShowResults(true)}
+                placeholder="Search users or quizzes..."
+                className="pl-10 pr-4 py-2 bg-surfaceHighlight/30 border border-border rounded-xl text-textMain text-sm focus:outline-none focus:ring-2 focus:ring-primary/80 w-64 lg:w-80 transition-all shadow-md-custom"
               />
+
+              {/* Search Results Dropdown */}
+              {showResults && (
+                <div className="absolute top-full mt-2 left-0 right-0 bg-surface border border-border rounded-2xl shadow-md-custom overflow-hidden z-50 animate-fade-in">
+                  {isSearching && searchQuery.trim() && (
+                    <div className="p-4 text-center text-textMuted text-sm">
+                      Searching...
+                    </div>
+                  )}
+
+                  {!isSearching &&
+                    searchResults.users.length === 0 &&
+                    searchResults.quizzes.length === 0 && (
+                      <div className="p-4 text-center text-textMuted text-sm">
+                        No results found for "{searchQuery}"
+                      </div>
+                    )}
+
+                  {!isSearching && (
+                    <div className="max-h-[70vh] overflow-y-auto">
+                      {/* Users Category */}
+                      {searchResults.users.length > 0 && (
+                        <div>
+                          <div className="px-4 py-2 bg-surfaceHighlight/50 border-b border-border text-[10px] font-bold text-textMuted uppercase tracking-wider">
+                            Users
+                          </div>
+                          {searchResults.users.map((u) => (
+                            <button
+                              key={u._id}
+                              onClick={() => {
+                                navigate(`/admin/users/${u._id}`);
+                                setShowResults(false);
+                                setSearchQuery("");
+                              }}
+                              className="w-full flex items-center gap-3 px-4 py-3 hover:bg-primary/5 dark:hover:bg-blue-900/20 text-left transition-colors group point"
+                            >
+                              <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-800/40 text-primary dark:text-blue-400 flex items-center justify-center text-xs font-bold">
+                                {u.name.charAt(0)}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-bold text-textMain truncate">
+                                  {u.name}
+                                </p>
+                                <p className="text-xs text-textMuted truncate">
+                                  {u.email}
+                                </p>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Quizzes Category */}
+                      {searchResults.quizzes.length > 0 && (
+                        <div>
+                          <div className="px-4 py-2 bg-surfaceHighlight/50 border-b border-border text-[10px] font-bold text-textMuted uppercase tracking-wider border-t">
+                            Quizzes
+                          </div>
+                          {searchResults.quizzes.map((q) => (
+                            <button
+                              key={q._id}
+                              onClick={() => {
+                                navigate(`/admin/quizzes/${q._id}`);
+                                setShowResults(false);
+                                setSearchQuery("");
+                              }}
+                              className="w-full flex items-center gap-3 px-4 py-3 hover:bg-primary/5 dark:hover:bg-blue-900/20 text-left transition-colors group point"
+                            >
+                              <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                                <BookOpen size={16} />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-bold text-textMain truncate">
+                                  {q.title}
+                                </p>
+                                <p className="text-xs text-textMuted truncate">
+                                  {q.topic} • {q.difficulty}
+                                </p>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
             <div className="h-8 w-px bg-surfaceHighlight" />
             <div className="flex items-center gap-3">
@@ -268,7 +413,7 @@ export default function AdminLayout() {
                   Online
                 </p>
               </div>
-              <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 flex items-center justify-center font-bold border-2 border-border shadow-sm">
+              <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-800/40 text-primary dark:text-blue-400 flex items-center justify-center font-bold border-2 border-none">
                 {admin?.name?.charAt(0).toUpperCase()}
               </div>
             </div>

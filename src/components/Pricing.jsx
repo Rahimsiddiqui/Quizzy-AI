@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Check, ArrowRight, ChevronDown, Star, Zap, Crown } from "lucide-react";
-import Navbar from "./Navbar.jsx";
 
 const Pricing = () => {
   const [expandedFaq, setExpandedFaq] = useState(null);
@@ -135,9 +134,7 @@ const Pricing = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background text-textMain">
-      <Navbar />
-
+    <div className="min-h-screen bg-background text-textMain animate-fade-in-up">
       {/* Hero Section */}
       <section className="pt-40 py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">

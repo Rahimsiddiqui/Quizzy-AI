@@ -2,8 +2,6 @@ import React, { useState } from "react";
 import { CircularProgress } from "@mui/material";
 import { toast } from "react-toastify";
 
-import Navbar from "./Navbar.jsx";
-
 const Contact = () => {
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
@@ -34,9 +32,7 @@ const Contact = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background text-textMain">
-      <Navbar />
-
+    <div className="min-h-screen bg-background text-textMain animate-fade-in-up">
       {/* Hero Section */}
       <section className="pt-40 py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">

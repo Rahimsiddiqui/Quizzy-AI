@@ -33,12 +33,14 @@ import AdminUsers from "./components/AdminUsers.jsx";
 import AdminUserDetail from "./components/AdminUserDetail.jsx";
 import AdminQuizzes from "./components/AdminQuizzes.jsx";
 import AdminQuizDetail from "./components/AdminQuizDetail.jsx";
+import AdminActivity from "./components/AdminActivity.jsx";
 // Static pages
 import Pricing from "./components/Pricing.jsx";
 import About from "./components/About.jsx";
 import Contact from "./components/Contact.jsx";
 import Policies from "./components/Policies.jsx";
 import Terms from "./components/Terms.jsx";
+import PublicLayout from "./components/PublicLayout.jsx";
 import StorageService from "./services/storageService.js";
 import { useTheme } from "./hooks/useTheme.js";
 
@@ -223,6 +225,7 @@ const App = () => {
             <Route path="users/:userId" element={<AdminUserDetail />} />
             <Route path="quizzes" element={<AdminQuizzes />} />
             <Route path="quizzes/:quizId" element={<AdminQuizDetail />} />
+            <Route path="activity" element={<AdminActivity />} />
           </Route>
 
           <Route
@@ -238,79 +241,81 @@ const App = () => {
 
           <Route path="/auth/verify-email" element={<VerifyEmail />} />
 
-          <Route
-            path="/features"
-            element={
-              <PublicOnlyRoute auth={auth}>
-                <FeaturesPage />
-              </PublicOnlyRoute>
-            }
-          />
-
-          <Route
-            path="/testimonials"
-            element={
-              <PublicOnlyRoute auth={auth}>
-                <TestimonialsPage />
-              </PublicOnlyRoute>
-            }
-          />
-
-          {/* Static pages */}
-          <Route
-            path="/pricing"
-            element={
-              <PublicOnlyRoute auth={auth}>
-                <Pricing />
-              </PublicOnlyRoute>
-            }
-          />
-          <Route
-            path="/about"
-            element={
-              <PublicOnlyRoute auth={auth}>
-                <About />
-              </PublicOnlyRoute>
-            }
-          />
-          <Route path="/contact" element={<Contact />} />
-          <Route
-            path="/policies"
-            element={
-              <PublicOnlyRoute auth={auth}>
-                <Policies />
-              </PublicOnlyRoute>
-            }
-          />
-          <Route
-            path="/privacy"
-            element={
-              <PublicOnlyRoute auth={auth}>
-                <Policies />
-              </PublicOnlyRoute>
-            }
-          />
-          <Route
-            path="/terms"
-            element={
-              <PublicOnlyRoute auth={auth}>
-                <Terms />
-              </PublicOnlyRoute>
-            }
-          />
-
-          <Route
-            path="/"
-            element={
-              auth.isAuthenticated ? (
-                <Navigate to="/dashboard" replace />
-              ) : (
+          <Route element={<PublicLayout />}>
+            <Route
+              path="/features"
+              element={
                 <PublicOnlyRoute auth={auth}>
-                  <LandingPage onLogin={handleLoginSuccess} />
+                  <FeaturesPage />
                 </PublicOnlyRoute>
-              )
-            }
-          />
+              }
+            />
+
+            <Route
+              path="/testimonials"
+              element={
+                <PublicOnlyRoute auth={auth}>
+                  <TestimonialsPage />
+                </PublicOnlyRoute>
+              }
+            />
+
+            {/* Static pages */}
+            <Route
+              path="/pricing"
+              element={
+                <PublicOnlyRoute auth={auth}>
+                  <Pricing />
+                </PublicOnlyRoute>
+              }
+            />
+            <Route
+              path="/about"
+              element={
+                <PublicOnlyRoute auth={auth}>
+                  <About />
+                </PublicOnlyRoute>
+              }
+            />
+            <Route path="/contact" element={<Contact />} />
+            <Route
+              path="/policies"
+              element={
+                <PublicOnlyRoute auth={auth}>
+                  <Policies />
+                </PublicOnlyRoute>
+              }
+            />
+            <Route
+              path="/privacy"
+              element={
+                <PublicOnlyRoute auth={auth}>
+                  <Policies />
+                </PublicOnlyRoute>
+              }
+            />
+            <Route
+              path="/terms"
+              element={
+                <PublicOnlyRoute auth={auth}>
+                  <Terms />
+                </PublicOnlyRoute>
+              }
+            />
+
+            <Route
+              path="/"
+              element={
+                auth.isAuthenticated ? (
+                  <Navigate to="/dashboard" replace />
+                ) : (
+                  <PublicOnlyRoute auth={auth}>
+                    <LandingPage onLogin={handleLoginSuccess} />
+                  </PublicOnlyRoute>
+                )
+              }
+            />
+          </Route>
 
           <Route
             path="/dashboard"

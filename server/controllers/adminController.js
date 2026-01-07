@@ -70,9 +70,19 @@ export const adminLogin = async (req, res) => {
   }
 };
 
-const getStorageUsedMB = async () => {
-  const stats = await mongoose.connection.db.stats();
-  return Math.round(stats.dataSize / (1024 * 1024));
+const getStorageUsedStats = async () => {
+  try {
+    const stats = await mongoose.connection.db.stats();
+    // Return both dataSize and storageSize for more context
+    return {
+      dataMB: (stats.dataSize / (1024 * 1024)).toFixed(2),
+      storageMB: (stats.storageSize / (1024 * 1024)).toFixed(2),
+      indexMB: (stats.indexSize / (1024 * 1024)).toFixed(2),
+    };
+  } catch (err) {
+    console.error("Storage stat error:", err);
+    return { dataMB: "0.00", storageMB: "0.00", indexMB: "0.00" };
+  }
 };
 
 // Get Dashboard Stats
@@ -140,13 +150,14 @@ export const getDashboardStats = async (req, res) => {
       }
     });
 
-    const storageUsedMB = await getStorageUsedMB();
+    const storageStats = await getStorageUsedStats();
 
     const statsData = {
       stats: {
         totalUsers,
         totalQuizzes,
-        storageUsedMB,
+        storageUsedMB: storageStats.storageMB,
+        dataUsedMB: storageStats.dataMB,
         totalAttempts,
         newUsersToday,
       },
@@ -498,7 +509,7 @@ export const getQuizResults = async (req, res) => {
 
     const skip = (page - 1) * limit;
 
-    const filter = {};
+    const filter = { score: { $ne: null } }; // Only completed quizzes have scores
     if (quizFilter) {
       filter.title = { $regex: quizFilter, $options: "i" };
     }
@@ -541,6 +552,13 @@ export const getQuizzes = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const difficulty = req.query.difficulty || null;
+    const search = req.query.search || "";
+    const isActive =
+      req.query.isActive === "false"
+        ? false
+        : req.query.isActive === "true"
+        ? true
+        : null;
 
     const skip = (page - 1) * limit;
 
@@ -548,6 +566,15 @@ export const getQuizzes = async (req, res) => {
     const filterQuery = {};
     if (difficulty) {
       filterQuery.difficulty = difficulty;
+    }
+    if (isActive !== null) {
+      filterQuery.isActive = isActive;
+    }
+    if (search) {
+      filterQuery.$or = [
+        { title: { $regex: search, $options: "i" } },
+        { topic: { $regex: search, $options: "i" } },
+      ];
     }
 
     const quizzes = await Quiz.find(filterQuery)

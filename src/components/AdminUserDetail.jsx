@@ -229,7 +229,7 @@ function AdminUserDetail() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-8 animate-fade-in">
+    <div className="min-h-screen bg-background p-4 md:p-8 animate-fade-in-up">
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <button
