@@ -3,6 +3,7 @@ import {
   generateQuizEndpoint,
   generateReviewEndpoint,
   chatWithAIEndpoint,
+  gradeAnswerEndpoint,
 } from "../controllers/aiController.js";
 import protect from "../middleware/auth.js";
 
@@ -12,5 +13,6 @@ const router = express.Router();
 router.route("/generate").post(protect, generateQuizEndpoint);
 router.route("/review").post(protect, generateReviewEndpoint);
 router.route("/chat").post(protect, chatWithAIEndpoint);
+router.route("/grade").post(protect, gradeAnswerEndpoint);
 
 export default router;

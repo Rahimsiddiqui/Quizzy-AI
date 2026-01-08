@@ -209,7 +209,7 @@ const StorageService = {
     }
     try {
       return JSON.parse(user);
-    } catch (err) {
+    } catch {
       // Failed to parse stored user — clear corrupted value
       localStorage.removeItem("user");
       return null;
@@ -250,7 +250,7 @@ const StorageService = {
 
       if (!userId) return quizzes;
       return quizzes.filter((q) => q.userId === userId);
-    } catch (err) {
+    } catch {
       // Failed to fetch quizzes - return empty list to avoid breaking UI
       return [];
     }
@@ -325,7 +325,7 @@ const StorageService = {
       // Fall back to fetching from server if not in cache
       const data = await request("/api/reviews/last");
       return data.review || null;
-    } catch (err) {
+    } catch {
       // No previous AI review found or an error occurred
       return null;
     }

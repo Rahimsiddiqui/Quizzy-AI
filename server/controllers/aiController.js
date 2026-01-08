@@ -4,6 +4,7 @@ import {
   generateQuizHelper,
   generatePerformanceReviewHelper,
   chatWithAIHelper,
+  gradeAnswerHelper,
 } from "../helpers/aiHelper.js";
 
 export const generateQuizEndpoint = async (req, res) => {
@@ -96,4 +97,16 @@ export const chatWithAIEndpoint = asyncHandler(async (req, res) => {
 
   const reply = await chatWithAIHelper(user, messages, context);
   res.status(200).json({ reply });
+});
+
+export const gradeAnswerEndpoint = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.userId);
+  const { question, userAnswer, topic } = req.body;
+
+  if (!question || !question.text) {
+    return res.status(400).json({ message: "Question object is required." });
+  }
+
+  const result = await gradeAnswerHelper(user, question, userAnswer, topic);
+  res.status(200).json(result);
 });

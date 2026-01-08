@@ -66,7 +66,7 @@ const checkAndUnlockAchievements = async (user, userData) => {
   const newAchievements = [];
   const unlockedIds = new Set(user.achievements.map((a) => a.id));
 
-  for (const [achievement] of Object.entries(ACHIEVEMENTS)) {
+  for (const [, achievement] of Object.entries(ACHIEVEMENTS)) {
     // Skip if already unlocked
     if (unlockedIds.has(achievement.id)) continue;
 

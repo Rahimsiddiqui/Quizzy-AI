@@ -8,7 +8,7 @@ import { SubscriptionTier, QuestionType } from "../config/types.js";
 // --- Gemini Configuration ---
 const BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models";
 
-const PRO_MODEL = "gemini-3-flash";
+const PRO_MODEL = "gemini-3-pro-preview";
 const BASIC_MODEL = "gemini-2.5-flash";
 const FREE_MODEL = "gemini-2.5-flash-lite";
 
@@ -448,7 +448,30 @@ ${
           data = JSON.parse(fullResponse);
         } catch (err) {
           console.error("Failed to parse extracted text as JSON:", err.message);
-          throw new Error("Failed to parse quiz JSON from stream");
+
+          // Try to repair common JSON issues from streaming
+          let repairedJson = fullResponse.trim();
+
+          // Remove any trailing incomplete content after the last complete question
+          // Look for the closing structure of the quiz JSON
+          const lastValidClose = repairedJson.lastIndexOf("}]}");
+          if (lastValidClose > 0) {
+            repairedJson = repairedJson.substring(0, lastValidClose + 3);
+            console.log(
+              "Truncated to last valid close at position:",
+              lastValidClose
+            );
+
+            try {
+              data = JSON.parse(repairedJson);
+              console.log("Successfully parsed after truncation repair");
+            } catch (repairErr) {
+              console.error("Repair attempt failed:", repairErr.message);
+              throw new Error("Failed to parse quiz JSON from stream");
+            }
+          } else {
+            throw new Error("Failed to parse quiz JSON from stream");
+          }
         }
       } catch (error) {
         // Fallback to non-streaming if streaming fails
@@ -719,5 +742,150 @@ export const chatWithAIHelper = async (user, messages, context) => {
     return reply;
   } catch (error) {
     throw new Error(`Chat failed: ${error.message}`);
+  }
+};
+
+/**
+ * AI-powered grading for Short Answer and Essay questions.
+ * Acts as a strict academic examiner.
+ * @param {object} user - The user object (for model selection)
+ * @param {object} question - The question object with text, type, marks, correctAnswer
+ * @param {string} userAnswer - The student's submitted answer
+ * @param {string} topic - The quiz topic for context
+ * @returns {Promise<object>} - { marksAwarded, totalMarks, justification, suggestion }
+ */
+export const gradeAnswerHelper = async (user, question, userAnswer, topic) => {
+  const apiKey = selectApiKey(user);
+  const model = selectModel(user);
+
+  const questionType =
+    question.type === "Short Answer" || question.type === "ShortAnswer"
+      ? "Short Answer"
+      : "Essay";
+
+  const systemInstruction = `You are a strict academic examiner. Your job is to grade student answers fairly but rigorously.
+
+IMPORTANT RULES:
+1. Be exam-realistic - do NOT be overgenerous with marks
+2. For Short Answer: Award marks based on key points expected (accuracy, completeness)
+3. For Essay: Distribute marks across knowledge (40%), explanation (30%), evaluation/analysis (30%)
+4. Deduct marks for: inaccuracies, irrelevant content, lack of depth, poor structure
+5. Award partial credit where appropriate
+6. Be consistent and fair in your assessment
+
+You MUST return ONLY valid JSON, no other text.`;
+
+  const prompt = `Grade the following ${questionType} answer.
+
+**Topic:** ${topic}
+**Question:** ${question.text}
+**Total Marks Available:** ${question.marks || 1}
+${
+  question.correctAnswer
+    ? `**Expected Key Points/Model Answer:** ${question.correctAnswer}`
+    : ""
+}
+
+**Student's Answer:** 
+${userAnswer || "(No answer provided)"}
+
+---
+
+Evaluate based on:
+- Accuracy and correctness of information
+- Relevance to the question asked
+- Depth of explanation (especially for essays)
+- Structure and clarity of response
+
+Award marks fairly. If the answer is empty or completely wrong, award 0.
+
+Return ONLY this JSON structure:
+{
+  "marksAwarded": <number between 0 and ${question.marks || 1}>,
+  "totalMarks": ${question.marks || 1},
+  "justification": "<Brief 1-2 sentence explanation of why these marks were given>",
+  "suggestion": "<One concise tip to improve the answer>" or null
+}`;
+
+  const payload = {
+    contents: [
+      {
+        role: "user",
+        parts: [{ text: prompt }],
+      },
+    ],
+    systemInstruction: {
+      parts: [{ text: systemInstruction }],
+    },
+    generationConfig: {
+      temperature: 0.3, // Lower temperature for more consistent grading
+      topP: 0.8,
+    },
+  };
+
+  try {
+    const response = await retryGeminiRequest(() =>
+      fetch(getApiUrl(model, apiKey), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      }).then(async (res) => {
+        if (!res.ok) {
+          const text = await res.text();
+          const error = new Error("Gemini Grading API Error");
+          error.response = { status: res.status, text };
+          throw error;
+        }
+        return res;
+      })
+    );
+
+    const resultText = await response.text();
+    let result;
+    try {
+      result = resultText ? JSON.parse(resultText) : null;
+    } catch {
+      result = null;
+    }
+
+    if (!result) throw new Error("Invalid grading response.");
+
+    const replyText = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!replyText) throw new Error("Empty response from AI.");
+
+    // Parse the JSON from the AI response
+    // Clean the response - remove markdown code blocks if present
+    let cleanedReply = replyText.trim();
+    if (cleanedReply.startsWith("```json")) {
+      cleanedReply = cleanedReply.slice(7);
+    } else if (cleanedReply.startsWith("```")) {
+      cleanedReply = cleanedReply.slice(3);
+    }
+    if (cleanedReply.endsWith("```")) {
+      cleanedReply = cleanedReply.slice(0, -3);
+    }
+    cleanedReply = cleanedReply.trim();
+
+    const gradingResult = JSON.parse(cleanedReply);
+
+    // Validate and clamp marks
+    const maxMarks = question.marks || 1;
+    gradingResult.marksAwarded = Math.max(
+      0,
+      Math.min(maxMarks, gradingResult.marksAwarded || 0)
+    );
+    gradingResult.totalMarks = maxMarks;
+
+    return gradingResult;
+  } catch (error) {
+    console.error("Grading error:", error);
+    // Return a fallback result on error
+    return {
+      marksAwarded: 0,
+      totalMarks: question.marks || 1,
+      justification:
+        "Unable to grade this answer automatically. Please review manually.",
+      suggestion: null,
+    };
   }
 };

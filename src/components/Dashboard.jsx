@@ -31,8 +31,51 @@ import {
 } from "lucide-react";
 
 import StorageService from "../services/storageService.js";
-import { Difficulty } from "../../server/config/types.js";
+import { generateQuiz } from "../services/geminiService.js";
+import { Difficulty, QuestionType } from "../../server/config/types.js";
 import StudyBuddy from "./StudyBuddy.jsx";
+
+// --- LOADER COMPONENT ---
+const WeakPointsLoader = ({ isOpen, progress, stage }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div
+      className="fixed inset-0 bg-surface/90 backdrop-blur-md flex flex-col items-center justify-center p-6 animate-fade-in"
+      style={{ zIndex: 100 }}
+    >
+      <div className="w-full max-w-md text-center space-y-8">
+        <div className="relative w-24 h-24 mx-auto">
+          <div className="absolute inset-0 rounded-full border-4 border-primary/20"></div>
+          <div
+            className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin"
+            style={{ animationDuration: "1.5s" }}
+          ></div>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="text-xl font-bold text-primary">{progress}%</span>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <h2 className="text-2xl font-bold text-textMain animate-pulse">
+            {stage}
+          </h2>
+          <p className="text-textMuted text-sm">
+            AI is analyzing your performance history to create a targeted
+            quiz...
+          </p>
+        </div>
+
+        <div className="w-full bg-surfaceHighlight rounded-full h-2 overflow-hidden">
+          <div
+            className="h-full bg-primary transition-all duration-500 ease-out"
+            style={{ width: `${progress}%` }}
+          ></div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const KPI_STATS = [
   {
@@ -144,6 +187,11 @@ const Dashboard = ({ user }) => {
   });
   const [isStudyBuddyOpen, setIsStudyBuddyOpen] = useState(false);
 
+  // Weak Points Generator State
+  const [isGeneratingWeakQuiz, setIsGeneratingWeakQuiz] = useState(false);
+  const [generationProgress, setGenerationProgress] = useState(0);
+  const [generationStage, setGenerationStage] = useState("Initializing...");
+
   useEffect(() => {
     if (user) refreshQuizzes();
 
@@ -206,9 +254,21 @@ const Dashboard = ({ user }) => {
         diffStats[q.difficulty].sum += q.score || 0;
 
         const topic = q.topic.toLowerCase();
-        if (!topicStats[topic]) topicStats[topic] = { total: 0, sum: 0 };
-        topicStats[topic].total++;
-        topicStats[topic].sum += q.score || 0;
+
+        // Filter out generic/fallback topics
+        const isGenericTopic = [
+          "the attached image content",
+          "the attached document content",
+          "the youtube video content",
+          "provided content",
+          "general knowledge",
+        ].some((t) => topic.includes(t));
+
+        if (!isGenericTopic) {
+          if (!topicStats[topic]) topicStats[topic] = { total: 0, sum: 0 };
+          topicStats[topic].total++;
+          topicStats[topic].sum += q.score || 0;
+        }
 
         q.questions.forEach((ques) => {
           if (!typeStats[ques.type])
@@ -449,11 +509,94 @@ const Dashboard = ({ user }) => {
               </p>
             </div>
             <button
-              onClick={() =>
-                navigate("/generate", {
-                  state: { topic: `Review: ${stats.weakestTopic}` },
-                })
-              }
+              onClick={async () => {
+                if (isGeneratingWeakQuiz) return;
+
+                setIsGeneratingWeakQuiz(true);
+                setGenerationProgress(0);
+                setGenerationStage("Analyzing Weakness...");
+
+                // Simulation Timers
+                const timers = [];
+                timers.push(
+                  setTimeout(() => {
+                    setGenerationProgress(20);
+                    setGenerationStage("Preparing Questions...");
+                  }, 800)
+                );
+                timers.push(
+                  setTimeout(() => {
+                    setGenerationProgress(45);
+                    setGenerationStage("Generating Content...");
+                  }, 2500)
+                );
+                timers.push(
+                  setTimeout(() => {
+                    setGenerationProgress(70);
+                    setGenerationStage("Structuring Quiz...");
+                  }, 4500)
+                );
+                timers.push(
+                  setTimeout(() => {
+                    setGenerationProgress(90);
+                    setGenerationStage("Finalizing...");
+                  }, 6500)
+                );
+
+                try {
+                  const quiz = await generateQuiz(
+                    `Review: ${stats.weakestTopic}`, // Topic
+                    "Medium", // Difficulty
+                    5, // Question Count
+                    [QuestionType.MCQ], // Types
+                    10, // Total Marks
+                    "standard" // Exam Style
+                  );
+
+                  setGenerationStage("Saving Quiz...");
+                  const payload = {
+                    ...quiz,
+                    userId: user?._id || user?.id,
+                    isFlashcardSet: false, // Default for quick boost
+                  };
+
+                  const savedQuiz = await StorageService.saveQuiz(payload);
+                  const quizId = savedQuiz._id || savedQuiz.id;
+
+                  if (!quizId) throw new Error("Failed to persist quiz.");
+
+                  // AWARD EXP (Consistency with QuizGenerator)
+                  try {
+                    await StorageService.awardQuizCreationExp(
+                      quiz.questions.length
+                    );
+                  } catch (expErr) {
+                    console.error("Error awarding EXP:", expErr);
+                  }
+
+                  // NOTIFY APP
+                  window.dispatchEvent(new Event("quizGenerated"));
+
+                  // Clear simulation timers
+                  timers.forEach(clearTimeout);
+
+                  setGenerationProgress(100);
+                  setGenerationStage("Ready!");
+
+                  // Small delay for 100% visualization
+                  setTimeout(() => {
+                    navigate(`/quiz/${quizId}`);
+                  }, 600);
+                } catch (error) {
+                  timers.forEach(clearTimeout);
+                  setIsGeneratingWeakQuiz(false);
+                  console.error("Gemini Generation Error:", error);
+                  toast.error(
+                    error.message ||
+                      "Failed to generate targeted quiz. Please try again."
+                  );
+                }
+              }}
               className="whitespace-nowrap px-6 py-3 bg-white dark:bg-white/95 hover:shadow-md-custom text-primary dark:text-blue-500 font-bold rounded-xl transition-colors flex items-center gap-2 point"
             >
               <Target className="w-5 h-5" />
@@ -826,6 +969,12 @@ const Dashboard = ({ user }) => {
         isOpen={isStudyBuddyOpen}
         onClose={() => setIsStudyBuddyOpen(false)}
         context={{ type: "dashboard", topic: "General Study" }}
+      />
+      {/* Weak Points Loader Overlay */}
+      <WeakPointsLoader
+        isOpen={isGeneratingWeakQuiz}
+        progress={generationProgress}
+        stage={generationStage}
       />
     </div>
   );

@@ -33,7 +33,7 @@ export async function request(endpoint, method = "GET", body) {
     let data;
     try {
       data = JSON.parse(text);
-    } catch (err) {
+    } catch {
       // Invalid JSON returned from server - propagate as a user-friendly error
       throw new Error("Server returned invalid JSON.");
     }

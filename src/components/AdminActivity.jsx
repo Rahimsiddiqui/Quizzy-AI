@@ -113,7 +113,7 @@ export default function AdminActivity() {
   const handleReset = () => {
     setSearch("");
     setFilter("all");
-    setPage(1);
+    setPagination(1);
     toast.info("Filters reset to default");
   };
 

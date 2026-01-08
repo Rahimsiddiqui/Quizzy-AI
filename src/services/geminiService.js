@@ -173,3 +173,20 @@ export const chatWithAI = async (messages, context) => {
   const response = await request("/api/ai/chat", "POST", payload);
   return response.reply;
 };
+
+/**
+ * Grades a Short Answer or Essay question using AI.
+ * @param {object} question - The question object { text, type, marks, correctAnswer }
+ * @param {string} userAnswer - The student's answer
+ * @param {string} topic - The quiz topic for context
+ * @returns {Promise<object>} - { marksAwarded, totalMarks, justification, suggestion }
+ */
+export const gradeAnswer = async (question, userAnswer, topic) => {
+  const payload = {
+    question,
+    userAnswer,
+    topic,
+  };
+  const response = await request("/api/ai/grade", "POST", payload);
+  return response;
+};

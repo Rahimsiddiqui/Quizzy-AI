@@ -27,7 +27,10 @@ import {
 import { toast } from "react-toastify";
 
 import StorageService from "../services/storageService.js";
-import { generateAndSaveReview } from "../services/geminiService.js";
+import {
+  generateAndSaveReview,
+  gradeAnswer,
+} from "../services/geminiService.js";
 import { QuestionType } from "../../server/config/types.js";
 import PrintView from "./PrintView.jsx";
 import AchievementCelebration from "./AchievementCelebration.jsx";
@@ -202,7 +205,7 @@ const QuizResultsView = ({
                     ? "bg-green-300 text-green-800 dark:bg-green-900 dark:text-green-300"
                     : "bg-red-300 text-red-800 dark:bg-red-900 dark:text-red-300"
                 }
-`}
+              `}
               >
                 {idx + 1}
               </span>
@@ -210,48 +213,68 @@ const QuizResultsView = ({
                 {cleanQuestionText(q.text)}
               </h3>
             </div>
-            {q.marks && (
-              <span
-                className={`text-sm font-semibold bg-white/50 dark:bg-surfaceHighlight mt-0.75 px-2 py-1 rounded border border-black/5 ${
-                  q.marks === 1 ? "min-w-18" : "min-w-20"
-                } text-center`}
+            <div className="flex items-center justify-center gap-4">
+              {(q.marks || q.aiTotalMarks) && (
+                <span
+                  className={`text-sm font-semibold bg-white/50 dark:bg-surfaceHighlight mt-0.75 px-2 py-1 rounded border border-black/5 min-w-22 text-center`}
+                >
+                  {q.aiMarks ?? (q.isCorrect ? q.marks : 0)}/
+                  {q.aiTotalMarks ?? q.marks}{" "}
+                  {(q.aiTotalMarks ?? q.marks) <= 1 ? "mark" : "marks"}
+                </span>
+              )}
+              <button
+                onClick={() => onAskAI(q)}
+                className="p-1.5 bg-primary/10 text-primary dark:bg-blue-400/10 dark:text-blue-400 rounded-lg hover:bg-primary/20 dark:hover:bg-blue-400/20 transition-colors mt-0.5 point"
+                title="Ask AI about this question"
               >
-                {q.marks} {q.marks === 1 ? "mark" : "marks"}
-              </span>
-            )}
-            <button
-              onClick={() => onAskAI(q)}
-              className="p-1.5 bg-primary/10 text-primary dark:bg-blue-400/10 dark:text-blue-400 rounded-lg hover:bg-primary/20 dark:hover:bg-blue-400/20 transition-colors mt-0.5"
-              title="Ask AI about this question"
-            >
-              <Bot className="w-5 h-5" />
-            </button>
+                <Bot className="w-5 h-5" />
+              </button>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-6 text-sm ml-0 md:ml-11">
             <div className="p-3 rounded-lg border border-border/50 bg-white dark:bg-surfaceHighlight">
-              <span className="block text-xs text-textMuted mb-1 uppercase tracking-wide">
+              <span className="block text-xs text-textMuted mb-2 uppercase tracking-wide">
                 Your Answer
               </span>
               <div
-                className={
+                className={`font-medium max-h-23 overflow-y-auto ${
                   q.isCorrect
-                    ? "text-green-700 font-medium dark:text-green-400"
-                    : "text-red-700 font-medium dark:text-red-400"
-                }
+                    ? "text-green-700 dark:text-green-400"
+                    : "text-red-700 dark:text-red-400"
+                }`}
               >
                 {q.userAnswer || "(No answer)"}
               </div>
             </div>
             <div className="p-3 bg-white rounded-lg border border-border/50 dark:bg-surfaceHighlight">
-              <span className="block text-xs text-textMuted mb-1 uppercase tracking-wide">
+              <span className="block text-xs text-textMuted mb-2 uppercase tracking-wide">
                 Correct Answer
               </span>
-              <div className="text-green-700 dark:text-green-400 font-medium">
+              <div className="text-green-700 dark:text-green-400 font-medium max-h-23 overflow-y-auto">
                 {q.correctAnswer}
               </div>
             </div>
           </div>
+
+          {/* AI Justification - for subjective questions */}
+          {q.aiJustification && (
+            <div className="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg border border-blue-200 dark:border-blue-800 ml-0 md:ml-11 mb-3">
+              <span className="block text-xs text-blue-600 dark:text-blue-400 mb-1 uppercase tracking-wide font-semibold">
+                AI Examiner Feedback
+              </span>
+              <div className="text-sm text-blue-800 dark:text-blue-200">
+                {q.aiJustification}
+              </div>
+              {q.aiSuggestion && (
+                <div className="mt-2 pt-2 border-t border-blue-200 dark:border-blue-700 text-sm text-blue-700 dark:text-blue-300 italic">
+                  💡 <strong>To improve:</strong> {q.aiSuggestion}
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="pt-3 border-t border-black/10 dark:border-white/20 text-sm text-textMuted ml-0 md:ml-11">
             <span className="font-semibold text-textMain">Explanation:</span>{" "}
             {q.explanation}
@@ -477,9 +500,10 @@ const QuizTaker = ({ user, onComplete, onLimitUpdate }) => {
   const [isFetching, setIsFetching] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [quizFlashcards, setQuizFlashcards] = useState([]);
-  const [activeTab, setActiveTab] = useState("quiz"); // quiz, flashcards
+  const [activeTab, setActiveTab] = useState("exam"); // exam, flashcards
   const [isStudyBuddyOpen, setIsStudyBuddyOpen] = useState(false);
   const [customStudyContext, setCustomStudyContext] = useState(null);
+  const [initialAIPrompt, setInitialAIPrompt] = useState(null);
   const [isCreatingFlashcards, setIsCreatingFlashcards] = useState(false);
   // Increment this key to force remounting the StudyFlashcards component when new cards are created
   const [flashcardsResetKey, setFlashcardsResetKey] = useState(0);
@@ -661,19 +685,6 @@ const QuizTaker = ({ user, onComplete, onLimitUpdate }) => {
     setAnswers((prev) => ({ ...prev, [qid]: val }));
   };
 
-  const calculateScore = () => {
-    if (!quiz || !quiz.questions || quiz.questions.length === 0) return 0;
-    let correct = 0;
-    quiz.questions.forEach((q) => {
-      const qid = q.id || q._id;
-      const userAns = answers[qid]?.toLowerCase().trim() || "";
-      const correctAns = q.correctAnswer?.toLowerCase().trim() || "";
-      if (userAns === correctAns) correct++;
-      else if (q.type === "MCQ" && answers[qid] === q.correctAnswer) correct++;
-    });
-    return Math.round((correct / quiz.questions.length) * 100);
-  };
-
   const handleSubmit = async () => {
     if (!quiz || isSubmitting) return;
     const currentQId =
@@ -682,24 +693,83 @@ const QuizTaker = ({ user, onComplete, onLimitUpdate }) => {
 
     setIsSubmitting(true);
     try {
-      const score = calculateScore();
+      // Grade each question - use AI for Short Answer and Essay
+      // Grade each question - use a sequential loop to avoid hitting AI rate limits
+      const gradedQuestions = [];
+      for (const q of quiz.questions) {
+        const qid = q.id || q._id;
+        const userAnswer = answers[qid] || "";
+
+        // Check if this is a subjective question type
+        const isSubjective =
+          q.type === QuestionType.ShortAnswer ||
+          q.type === QuestionType.Essay ||
+          q.type === "Short Answer" ||
+          q.type === "Essay";
+
+        if (isSubjective && userAnswer.trim()) {
+          // AI grading for subjective questions
+          try {
+            const gradeResult = await gradeAnswer(q, userAnswer, quiz.topic);
+            gradedQuestions.push({
+              ...q,
+              userAnswer,
+              isCorrect: gradeResult.marksAwarded >= (q.marks || 1) * 0.5, // 50%+ is considered correct
+              aiMarks: gradeResult.marksAwarded,
+              aiTotalMarks: gradeResult.totalMarks,
+              aiJustification: gradeResult.justification,
+              aiSuggestion: gradeResult.suggestion,
+            });
+          } catch (gradeErr) {
+            console.error("AI grading failed for question:", qid, gradeErr);
+            // Fallback: mark as needs manual review
+            gradedQuestions.push({
+              ...q,
+              userAnswer,
+              isCorrect: false,
+              aiMarks: 0,
+              aiTotalMarks: q.marks || 1,
+              aiJustification:
+                "Unable to grade automatically. Please review manually.",
+              aiSuggestion: null,
+            });
+          }
+        } else {
+          // Simple string comparison for MCQ, True/False, etc.
+          const isCorrect =
+            userAnswer.toLowerCase().trim() ===
+            q.correctAnswer?.toLowerCase().trim();
+          gradedQuestions.push({
+            ...q,
+            userAnswer,
+            isCorrect,
+            aiMarks: isCorrect ? q.marks || 1 : 0,
+            aiTotalMarks: q.marks || 1,
+          });
+        }
+      }
+
+      // Calculate score based on AI-awarded marks
+      const totalMarksAwarded = gradedQuestions.reduce(
+        (sum, q) => sum + (q.aiMarks || 0),
+        0
+      );
+      const totalMarksAvailable = gradedQuestions.reduce(
+        (sum, q) => sum + (q.aiTotalMarks || q.marks || 1),
+        0
+      );
+      const score =
+        totalMarksAvailable > 0
+          ? Math.round((totalMarksAwarded / totalMarksAvailable) * 100)
+          : 0;
+
       const updatedQuiz = {
         ...quiz,
         score,
         completedAt: Date.now(),
         isFlashcardSet: quiz.isFlashcardSet || false,
+        questions: gradedQuestions,
       };
-
-      updatedQuiz.questions = updatedQuiz.questions.map((q) => {
-        const qid = q.id || q._id; // Use consistent ID
-        return {
-          ...q,
-          userAnswer: answers[qid] || "",
-          isCorrect:
-            answers[qid]?.toLowerCase().trim() ===
-            q.correctAnswer?.toLowerCase().trim(),
-        };
-      });
 
       // Save and use server response if available
       const saved = await StorageService.saveQuiz(updatedQuiz);
@@ -2166,6 +2236,18 @@ const QuizTaker = ({ user, onComplete, onLimitUpdate }) => {
                     explanation: question.explanation,
                     userAnswer: question.userAnswer,
                   });
+                  // Set predefined prompt for auto-submit
+                  // Use the stored isCorrect property (set by AI grading for subjective questions)
+                  const prompt = question.isCorrect
+                    ? `I got this question correct but I'd like to understand it deeper. Can you explain the concept behind: "${question.text}" and why the answer is "${question.correctAnswer}"?`
+                    : `I got this wrong. The question was: "${
+                        question.text
+                      }". I answered "${
+                        question.userAnswer || "nothing"
+                      }" but the correct answer is "${
+                        question.correctAnswer
+                      }". Can you explain why my answer was wrong and help me understand the correct answer?`;
+                  setInitialAIPrompt(prompt);
                   setIsStudyBuddyOpen(true);
                 }}
               />
@@ -2400,6 +2482,7 @@ const QuizTaker = ({ user, onComplete, onLimitUpdate }) => {
               onClose={() => {
                 setIsStudyBuddyOpen(false);
                 setCustomStudyContext(null);
+                setInitialAIPrompt(null);
               }}
               context={
                 customStudyContext || {
@@ -2411,6 +2494,7 @@ const QuizTaker = ({ user, onComplete, onLimitUpdate }) => {
                   explanation: quiz.questions[currentIdx]?.explanation,
                 }
               }
+              initialPrompt={initialAIPrompt}
             />
           </>
         )}

@@ -15,8 +15,6 @@ import {
   Users,
   Clock,
   ArrowUpRight,
-  BookOpen,
-  BarChart3,
   Trophy,
   Activity,
   PlusCircle,
@@ -128,22 +126,6 @@ export default function AdminDashboard() {
       (item._id || "").toLowerCase().includes(searchStr)
     );
   });
-
-  const calculateTrend = (current, previous = 0) => {
-    if (previous === 0 || current === 0) return null;
-    const percentChange = ((current - previous) / previous) * 100;
-    return percentChange > 0
-      ? `+${Math.round(percentChange)}%`
-      : `${Math.round(percentChange)}%`;
-  };
-
-  const estimatedDailyAverage = stats.totalUsers
-    ? Math.max(1, Math.floor(stats.totalUsers / 30))
-    : 0;
-  const newUsersTrend = calculateTrend(
-    stats.newUsersToday || 0,
-    estimatedDailyAverage
-  );
 
   const MetricCard = ({ title, value, iconComponent, trend, bgColor }) => {
     const isNegativeTrend = trend && trend.startsWith("-");
