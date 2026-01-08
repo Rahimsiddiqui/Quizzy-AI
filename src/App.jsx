@@ -41,6 +41,7 @@ import Contact from "./components/Contact.jsx";
 import Policies from "./components/Policies.jsx";
 import Terms from "./components/Terms.jsx";
 import PublicLayout from "./components/PublicLayout.jsx";
+import NotFound from "./components/NotFound.jsx";
 import StorageService from "./services/storageService.js";
 import { useTheme } from "./hooks/useTheme.js";
 
@@ -432,6 +433,9 @@ const App = () => {
             path="/flashcards"
             element={<Navigate to="/overview" replace />}
           />
+
+          {/* Catch-all 404 route */}
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </Router>
     </>
