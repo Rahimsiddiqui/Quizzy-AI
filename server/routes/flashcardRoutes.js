@@ -28,7 +28,7 @@ router.get("/", protect, async (req, res) => {
         totalPages: Math.ceil(total / limit),
       },
     });
-  } catch (error) {
+  } catch {
     // Failed to fetch flashcards
     res.status(500).json({ message: "Failed to fetch flashcards." });
   }
@@ -43,7 +43,7 @@ router.post("/bulk", protect, async (req, res) => {
     }));
     const newCards = await Flashcard.insertMany(cardsWithUser);
     res.status(201).json(newCards);
-  } catch (error) {
+  } catch {
     // Bulk insert failed
     res.status(400).json({ message: "Error saving flashcards." });
   }
@@ -61,7 +61,7 @@ router.put("/:id", protect, async (req, res) => {
         .status(404)
         .json({ message: "Flashcard not found or unauthorized." });
     res.status(200).json(card);
-  } catch (error) {
+  } catch {
     res.status(500).json({ message: "Error updating flashcard." });
   }
 });

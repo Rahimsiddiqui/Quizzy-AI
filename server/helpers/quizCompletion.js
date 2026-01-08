@@ -10,7 +10,7 @@ const handleQuizCompletion = async (completedQuiz, user, navigate) => {
     await generateAndSaveReview(user, updatedQuizzes);
 
     navigate("/overview");
-  } catch (error) {
+  } catch {
     navigate("/overview?error=review_fail");
   }
 };

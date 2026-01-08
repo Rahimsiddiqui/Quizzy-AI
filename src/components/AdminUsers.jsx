@@ -184,6 +184,7 @@ export default function AdminUsers() {
   const handleReset = () => {
     setLoading(true);
     setFilters({ search: "", role: "", status: "" });
+    setDebouncedSearch(""); // Immediately clear debounced search to prevent double-fetch
     setPagination((p) => ({ ...p, page: 1, limit: 10 }));
     toast.info("Filters reset to default");
   };

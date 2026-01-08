@@ -35,7 +35,6 @@ async function retryGeminiRequest(fn, retries = 5, baseDelay = 1000) {
     } catch (err) {
       lastError = err;
       const status = err.response?.status || err.status;
-      const errorText = err.response?.text || err.message;
 
       // Retry only on overload or rate-limit
       if (status === 503 || status === 429) {
@@ -303,7 +302,7 @@ ${
       let result;
       try {
         result = resultText ? JSON.parse(resultText) : null;
-      } catch (err) {
+      } catch {
         result = null;
       }
 
@@ -326,7 +325,7 @@ ${
 
       try {
         data = JSON.parse(candidate.content.parts[0].text);
-      } catch (err) {
+      } catch {
         throw new Error("Failed to parse questions from lite model");
       }
     } else {
@@ -483,7 +482,7 @@ ${
         let result;
         try {
           result = resultText ? JSON.parse(resultText) : null;
-        } catch (err) {
+        } catch {
           result = null;
         }
 
@@ -506,7 +505,7 @@ ${
 
         try {
           data = JSON.parse(candidate.content.parts[0].text);
-        } catch (err) {
+        } catch {
           throw new Error("Failed to parse questions from AI");
         }
       }
@@ -564,8 +563,6 @@ export const generatePerformanceReviewHelper = async (user, quizzes) => {
   if (!completedQuizzes.length)
     return "Complete some quizzes to get an AI-powered performance review!";
 
-  const model = selectModel(user);
-
   const summary = completedQuizzes
     .map(
       (q) =>
@@ -617,7 +614,7 @@ Output: A sharp, direct, high-impact review.
     let result;
     try {
       result = resultText ? JSON.parse(resultText) : null;
-    } catch (err) {
+    } catch {
       result = null;
     }
 
@@ -632,7 +629,7 @@ Output: A sharp, direct, high-impact review.
     }
 
     return review;
-  } catch (error) {
+  } catch {
     throw new Error("Failed to generate performance review. Please try again.");
   }
 };
@@ -710,7 +707,7 @@ export const chatWithAIHelper = async (user, messages, context) => {
     let result;
     try {
       result = resultText ? JSON.parse(resultText) : null;
-    } catch (err) {
+    } catch {
       result = null;
     }
 

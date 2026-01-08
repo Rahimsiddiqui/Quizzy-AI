@@ -75,7 +75,7 @@ app.get("/api/users/me", protect, async (req, res) => {
 
     const updatedUser = await checkMonthlyReset(user, TIER_LIMITS);
     res.status(200).json({ user: updatedUser });
-  } catch (error) {
+  } catch {
     res.status(500).json({ message: "Internal Server Error, Try Again!" });
   }
 });
@@ -131,7 +131,7 @@ app.post("/api/limits/decrement/:type", protect, async (req, res) => {
     }
 
     res.status(200).json({ success, message, remaining: user.get(limitField) });
-  } catch (error) {
+  } catch {
     res.status(500).json({
       success: false,
       message: "Server error during limit decrement.",
@@ -215,7 +215,7 @@ app.post("/api/subscription/upgrade", protect, async (req, res) => {
       message: `Successfully upgraded to ${tier} tier.`,
       user: { ...user.toObject(), password: undefined },
     });
-  } catch (error) {
+  } catch {
     res.status(500).json({ message: "Server error during upgrade." });
   }
 });
@@ -308,7 +308,7 @@ app.post("/api/subscription/refund", protect, async (req, res) => {
         "Refund request submitted. Your plan has been downgraded to Free tier. A confirmation email has been sent to your email address.",
       user: { ...user.toObject(), password: undefined },
     });
-  } catch (error) {
+  } catch {
     res.status(500).json({ message: "Server error during refund request." });
   }
 });

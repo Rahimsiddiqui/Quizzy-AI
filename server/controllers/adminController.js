@@ -297,7 +297,6 @@ export const getUserDetail = async (req, res) => {
       scores.length > 0
         ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
         : 0;
-    const accuracy = totalQuizzes > 0 ? quizzesPassed : 0;
     const accuracyPercent =
       totalQuizzes > 0 ? Math.round((quizzesPassed / totalQuizzes) * 100) : 0;
 
@@ -353,7 +352,6 @@ export const toggleUserActive = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    const wasActive = user.active;
     user.active = !user.active;
 
     // Record in status history
@@ -397,7 +395,6 @@ export const toggleUserBan = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    const wasBanned = user.banned;
     user.banned = !user.banned;
 
     // Record in status history

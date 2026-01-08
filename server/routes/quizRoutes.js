@@ -30,7 +30,7 @@ router.get("/", protect, async (req, res) => {
         totalPages: Math.ceil(total / limit),
       },
     });
-  } catch (error) {
+  } catch {
     // Failed to fetch quizzes
     res.status(500).json({ message: "Failed to fetch quizzes." });
   }
@@ -45,7 +45,7 @@ router.post("/", protect, async (req, res) => {
     const savedQuizData = newQuiz.toObject();
 
     res.status(201).json(savedQuizData);
-  } catch (error) {
+  } catch {
     // Quiz creation failed
     res.status(400).json({ message: "Error saving quiz." });
   }
@@ -65,7 +65,7 @@ router.put("/:id", protect, async (req, res) => {
         .json({ message: "Quiz not found or unauthorized." });
 
     res.status(200).json(quiz);
-  } catch (error) {
+  } catch {
     res.status(500).json({ message: "Error updating quiz." });
   }
 });
@@ -87,7 +87,7 @@ router.delete("/:id", protect, async (req, res) => {
     });
 
     res.status(200).json({ message: "Quiz deleted successfully." });
-  } catch (error) {
+  } catch {
     res.status(500).json({ message: "Error deleting quiz." });
   }
 });

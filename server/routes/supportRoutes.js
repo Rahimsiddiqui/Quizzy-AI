@@ -1,5 +1,4 @@
 import express from "express";
-import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
 const router = express.Router();
 
@@ -56,7 +55,7 @@ router.post("/feedback", async (req, res) => {
     res.status(200).json({
       message: "Feedback submitted successfully. Thank you!",
     });
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Server error" });
   }
 });

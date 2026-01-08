@@ -90,7 +90,7 @@ export const getOAuthUserInfo = async (provider, accessToken) => {
         );
         const primaryEmail = emailResponse.data.find((e) => e.primary);
         email = primaryEmail?.email || data.login + "@github.com";
-      } catch (emailError) {
+      } catch {
         email = data.login + "@github.com";
       }
     }

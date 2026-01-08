@@ -66,7 +66,7 @@ const checkAndUnlockAchievements = async (user, userData) => {
   const newAchievements = [];
   const unlockedIds = new Set(user.achievements.map((a) => a.id));
 
-  for (const [key, achievement] of Object.entries(ACHIEVEMENTS)) {
+  for (const [achievement] of Object.entries(ACHIEVEMENTS)) {
     // Skip if already unlocked
     if (unlockedIds.has(achievement.id)) continue;
 
@@ -108,7 +108,7 @@ const checkAndUnlockAchievements = async (user, userData) => {
  * @returns {Object} Award result
  */
 const awardQuizCompletionExp = async (user, quizData) => {
-  const { score = 0, totalMarks = 100, questionCount = 10 } = quizData;
+  const { score = 0, totalMarks = 100 } = quizData;
 
   let baseExp = EXP_REWARDS.QUIZ_COMPLETED;
 

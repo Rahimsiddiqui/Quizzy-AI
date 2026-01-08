@@ -116,6 +116,7 @@ export default function AdminQuizzes() {
   const handleReset = () => {
     setLoading(true);
     setSearchTerm("");
+    setDebouncedSearchTerm(""); // Immediately clear debounced state
     setSelectedDifficulty(null);
     setPagination((p) => ({ ...p, page: 1 }));
     toast.info("Filters reset to default");

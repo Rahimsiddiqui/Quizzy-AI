@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import CircularProgress from "@mui/material/CircularProgress";
 import { ToastContainer, Zoom } from "react-toastify";
 import { Analytics } from "@vercel/analytics/react";
@@ -48,7 +48,6 @@ import { useTheme } from "./hooks/useTheme.js";
 const ProtectedRoute = ({ children, auth }) => {
   const location = useLocation();
   const token = localStorage.getItem("token");
-  const storedUser = localStorage.getItem("user");
 
   // If token is missing from localStorage but auth says we're authenticated,
   // the user was logged out in another window/tab, so redirect
@@ -165,7 +164,7 @@ const App = () => {
     try {
       const updatedUser = await StorageService.refreshUser();
       setAuth({ ...auth, user: updatedUser });
-    } catch (error) {
+    } catch {
       // Failed to refresh user - ignore and keep current auth state
     }
   };

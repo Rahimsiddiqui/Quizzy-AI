@@ -18,7 +18,7 @@ export async function initiate2FA(userEmail) {
       qrCode,
       manualEntryKey: secret.base32,
     };
-  } catch (error) {
+  } catch {
     throw new Error("Failed to initiate 2FA setup");
   }
 }
@@ -34,7 +34,7 @@ export function verify2FAToken(secret, token) {
     });
 
     return verified;
-  } catch (error) {
+  } catch {
     return false;
   }
 }

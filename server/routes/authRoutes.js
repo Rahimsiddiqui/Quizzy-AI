@@ -259,7 +259,7 @@ router.post("/change-fullname", protect, async (req, res) => {
         email: user.email,
       },
     });
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Server error" });
   }
 });
@@ -287,7 +287,7 @@ router.post("/confirm-password", protect, async (req, res) => {
     }
 
     return res.status(200).json({ message: "Password confirmed" });
-  } catch (err) {
+  } catch {
     // Server error
     return res.status(500).json({ message: "Server error" });
   }
@@ -314,11 +314,6 @@ router.post("/verify-email", async (req, res) => {
     // Check if code is correct
     if (user.verificationCode !== code) {
       return res.status(400).json({ message: "Invalid verification code" });
-      // Check if full name already exists on another user
-      const existing = await User.findOne({ name: newFullName });
-      if (existing && String(existing._id) !== String(user._id)) {
-        return res.status(400).json({ message: "Full name already taken" });
-      }
     }
 
     user.isVerified = true;
@@ -379,7 +374,7 @@ router.post("/verify-email", async (req, res) => {
         passwordIsUserSet: user.passwordIsUserSet,
       },
     });
-  } catch (err) {
+  } catch {
     // Server error
     res.status(500).json({ message: "Server error" });
   }
@@ -464,7 +459,7 @@ router.post("/change-password", protect, async (req, res) => {
     res.status(200).json({
       message: "Password changed successfully",
     });
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Server error" });
   }
 });
@@ -487,7 +482,7 @@ router.get("/check-username", async (req, res) => {
     if (existing) return res.status(200).json({ available: false });
 
     return res.status(200).json({ available: true });
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Server error" });
   }
 });
@@ -558,7 +553,7 @@ router.post("/change-username", protect, async (req, res) => {
         email: user.email,
       },
     });
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Server error" });
   }
 });
@@ -577,7 +572,7 @@ router.delete("/delete-account", protect, async (req, res) => {
     res.status(200).json({
       message: "Account deleted successfully",
     });
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Server error" });
   }
 });
@@ -602,7 +597,7 @@ router.get("/sessions", protect, async (req, res) => {
     }));
 
     res.status(200).json({ sessions });
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Server error" });
   }
 });
@@ -646,7 +641,7 @@ router.delete("/sessions/:sessionId/logout", protect, async (req, res) => {
         sessionsRemaining: 0,
       });
     }
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Server error" });
   }
 });
@@ -667,7 +662,7 @@ router.post("/logout-all", protect, async (req, res) => {
     res.status(200).json({
       message: "Logged out from all devices successfully",
     });
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Server error" });
   }
 });
@@ -694,7 +689,7 @@ router.post("/2fa/setup", protect, async (req, res) => {
     };
 
     res.status(200).json(setupData);
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Server error" });
   }
 });
@@ -862,7 +857,7 @@ router.delete("/oauth/disconnect/:provider", protect, async (req, res) => {
     } else {
       res.status(404).json({ message: "OAuth account not connected" });
     }
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Server error" });
   }
 });
