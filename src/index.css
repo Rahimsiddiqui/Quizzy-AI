@@ -22,7 +22,7 @@
   --breakpoint-xs: 520px;
 }
 
-/* Custom Shadow */
+/* Custom Shadows */
 @utility shadow-sm-custom {
   box-shadow: 0 2px 4px 0 rgb(0 0 0 / 0.05);
   @apply dark:shadow-sm dark:shadow-slate-600/50;
