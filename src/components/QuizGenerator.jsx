@@ -48,7 +48,8 @@ const QuizGenerator = ({ user, onGenerateSuccess }) => {
   const [totalMarks, setTotalMarks] = useState(10);
   const [selectedTypes, setSelectedTypes] = useState([QuestionType.MCQ]);
   const [examStyleId, setExamStyleId] = useState("standard");
-  const [files, setFiles] = useState([]);
+  const [pdfFiles, setPdfFiles] = useState([]);
+  const [imageFiles, setImageFiles] = useState([]);
   const [generateFlashcards, setGenerateFlashcards] = useState(
     user?.tier !== "Free"
   );
@@ -102,36 +103,19 @@ const QuizGenerator = ({ user, onGenerateSuccess }) => {
   };
 
   const changeMode = (newMode) => {
-    if (newMode !== mode) {
-      setFiles([]);
-      setMode(newMode);
-    }
+    setMode(newMode);
   };
 
   const processSelectedFiles = async (incomingFileList) => {
     if (!incomingFileList || incomingFileList.length === 0) return;
     const incomingArray = Array.from(incomingFileList);
-    const isPro = user?.tier === "Pro";
-    const currentCount = files.length;
-    const incomingCount = incomingArray.length;
-
-    if (!isPro && currentCount + incomingCount > 1) {
-      if (currentCount >= 1 || incomingCount > 1) {
-        toast.error("Free/Basic plans are limited to 1 PDF per quiz.");
-        navigate("/subscription");
-        return;
-      }
-    }
 
     const validFiles = incomingArray.filter((f) => {
-      const isPdf = f.type === "application/pdf";
-      const isImage = f.type.startsWith("image/");
-
-      if (mode === "pdf" && !isPdf) {
+      if (mode === "pdf" && f.type !== "application/pdf") {
         toast.error("Skipped non-PDF files.");
         return false;
       }
-      if (mode === "image" && !isImage) {
+      if (mode === "image" && !f.type.startsWith("image/")) {
         toast.error("Skipped non-image files.");
         return false;
       }
@@ -144,35 +128,31 @@ const QuizGenerator = ({ user, onGenerateSuccess }) => {
 
     if (!validFiles.length) return;
 
-    setReading(true);
-    try {
-      const filePromises = validFiles.map(
-        (fileItem) =>
-          new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-              const dataUrl = ev.target.result;
-              const base64 = dataUrl.split(",")[1];
-              resolve({
-                id: Math.random().toString(36).substr(2, 9),
-                name: fileItem.name,
-                data: base64,
-                mime: fileItem.type,
-                size: fileItem.size,
-                previewUrl: dataUrl,
-              });
-            };
-            reader.onerror = reject;
-            reader.readAsDataURL(fileItem);
-          })
-      );
-      const newProcessedFiles = await Promise.all(filePromises);
-      setFiles((prev) => [...prev, ...newProcessedFiles]);
-    } catch {
-      toast.error("Failed to read one or more files.");
-    } finally {
-      setReading(false);
-    }
+    const filePromises = validFiles.map(
+      (fileItem) =>
+        new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            const dataUrl = ev.target.result;
+            const base64 = dataUrl.split(",")[1];
+            resolve({
+              id: Math.random().toString(36).substr(2, 9),
+              name: fileItem.name,
+              data: base64,
+              mime: fileItem.type,
+              size: fileItem.size,
+              previewUrl: dataUrl,
+            });
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(fileItem);
+        })
+    );
+
+    const newFiles = await Promise.all(filePromises);
+
+    if (mode === "pdf") setPdfFiles((prev) => [...prev, ...newFiles]);
+    if (mode === "image") setImageFiles((prev) => [...prev, ...newFiles]);
   };
 
   const handleFileChange = (e) => {
@@ -201,10 +181,18 @@ const QuizGenerator = ({ user, onGenerateSuccess }) => {
     setIsDragging(false);
   };
 
+  const files = mode === "pdf" ? pdfFiles : mode === "image" ? imageFiles : [];
+
+  const removePdf = (fileId) =>
+    setPdfFiles((prev) => prev.filter((f) => f.id !== fileId));
+  const removeImage = (fileId) =>
+    setImageFiles((prev) => prev.filter((f) => f.id !== fileId));
+
   const removeFile = (e, fileId) => {
     e.preventDefault();
     e.stopPropagation();
-    setFiles((prev) => prev.filter((f) => f.id !== fileId));
+    if (mode === "pdf") removePdf(fileId);
+    if (mode === "image") removeImage(fileId);
   };
 
   const handlePreview = (e, url) => {

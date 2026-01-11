@@ -235,12 +235,13 @@ const ACHIEVEMENTS = {
 };
 
 const Achievements = ({ user }) => {
-  const isDark = useDarkMode();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [celebratingAchievement, setCelebratingAchievement] = useState(null);
+
+  useDarkMode();
 
   useEffect(() => {
     fetchUserStats();

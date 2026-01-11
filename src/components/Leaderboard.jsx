@@ -27,7 +27,8 @@ const Leaderboard = ({ user }) => {
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState("all");
   const [userRank, setUserRank] = useState(null);
-  const darkMode = useDarkMode();
+
+  useDarkMode();
 
   useEffect(() => {
     fetchLeaderboard();

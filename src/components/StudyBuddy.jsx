@@ -18,61 +18,54 @@ import { chatWithAI } from "../services/geminiService";
 import ReactMarkdown from "react-markdown";
 import { v4 as uuidv4 } from "uuid";
 
-// Typewriter component for gradual text reveal
-const TypewriterMessage = ({ content, onComplete, speed = 15 }) => {
+// --- Constants ---
+const WORD_LIMIT = 200;
+
+// --- Typewriter Component (Smoother Char-by-Char) ---
+const TypewriterMessage = ({ content, onComplete, speed = 8 }) => {
   const [displayedContent, setDisplayedContent] = useState("");
   const [isComplete, setIsComplete] = useState(false);
-  const [isSkipped, setIsSkipped] = useState(false);
   const intervalRef = useRef(null);
 
-  const skipToEnd = useCallback(() => {
+  const stopTyping = useCallback(() => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
+      intervalRef.current = null;
     }
+  }, []);
+
+  const skipToEnd = useCallback(() => {
+    stopTyping();
     setDisplayedContent(content);
     setIsComplete(true);
-    setIsSkipped(true);
     if (onComplete) onComplete();
-  }, [content, onComplete]);
-
-  const onCompleteRef = useRef(onComplete);
-  useEffect(() => {
-    onCompleteRef.current = onComplete;
-  }, [onComplete]);
+  }, [content, onComplete, stopTyping]);
 
   useEffect(() => {
-    if (isSkipped) return;
-
     setDisplayedContent("");
     setIsComplete(false);
+    stopTyping();
 
-    // Type word by word for smoother experience
-    const words = content.split(/(\s+)/);
     let currentIndex = 0;
-    let currentText = "";
+    const totalLength = content.length;
 
     intervalRef.current = setInterval(() => {
-      if (currentIndex < words.length) {
-        currentText += words[currentIndex];
-        setDisplayedContent(currentText);
+      if (currentIndex < totalLength) {
+        setDisplayedContent(content.slice(0, currentIndex + 1));
         currentIndex++;
       } else {
-        clearInterval(intervalRef.current);
+        stopTyping();
         setIsComplete(true);
-        if (onCompleteRef.current) onCompleteRef.current();
+        if (onComplete) onComplete();
       }
     }, speed);
 
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    };
-  }, [content, speed, isSkipped]); // Removed onComplete from deps
+    return () => stopTyping();
+  }, [content, speed, onComplete, stopTyping]);
 
   return (
-    <div className="relative">
-      <div className="prose dark:prose-invert prose-sm max-w-none space-y-2 [&>ul]:list-disc [&>ul]:pl-4 [&>ol]:list-decimal [&>ol]:pl-4 [&>p:last-child]:inline [&>p:last-child]:m-0">
+    <div className="relative group w-full">
+      <div className="prose dark:prose-invert prose-sm max-w-none min-h-[24px] [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
         <ReactMarkdown
           components={{
             code({ inline, className, children, ...props }) {
@@ -89,19 +82,23 @@ const TypewriterMessage = ({ content, onComplete, speed = 15 }) => {
                 </code>
               );
             },
+            // This keeps the cursor attached to the text smoothly
+            p({ children }) {
+              return (
+                <p className="mb-2 last:mb-0 last:inline-block">{children}</p>
+              );
+            },
           }}
         >
           {displayedContent}
         </ReactMarkdown>
-        {/* Blinking cursor */}
-        {!isComplete && (
-          <span className="inline-block w-1.5 h-4 bg-indigo-500 dark:bg-indigo-400 animate-pulse ml-1 align-middle" />
-        )}
       </div>
+
+      {/* Floating Skip Button */}
       {!isComplete && (
         <button
           onClick={skipToEnd}
-          className="absolute -bottom-6 right-0 text-xs text-textMuted hover:text-primary flex items-center gap-1 transition-colors point"
+          className="absolute bottom-0 -right-2 translate-y-full mt-3 text-xs text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 flex items-center gap-1 transition-colors z-10 backdrop-blur-sm rounded px-1 point"
           title="Skip to full message"
         >
           <SkipForward className="w-3 h-3" />
@@ -112,43 +109,46 @@ const TypewriterMessage = ({ content, onComplete, speed = 15 }) => {
   );
 };
 
+// --- Main Component ---
 const StudyBuddy = ({ context, isOpen, onClose, initialPrompt }) => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [minimized, setMinimized] = useState(false);
   const [typingMessageIndex, setTypingMessageIndex] = useState(-1);
-  const [view, setView] = useState("chat"); // "chat" or "history"
+  const [view, setView] = useState("chat");
   const [recentChats, setRecentChats] = useState([]);
   const [currentSessionId, setCurrentSessionId] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const initialPromptProcessedRef = useRef(null); // Track processed initialPrompts
+  const initialPromptProcessedRef = useRef(null);
 
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
+
+  // --- Word Count Logic ---
+  const wordCount = input.trim().split(/\s+/).filter(Boolean).length;
+  const isOverLimit = wordCount > WORD_LIMIT;
 
   const scrollToBottom = useCallback((behavior = "smooth") => {
     messagesEndRef.current?.scrollIntoView({ behavior, block: "end" });
   }, []);
 
-  // Initialize and Load Chats
+  // Load History
   useEffect(() => {
     const savedChats = localStorage.getItem("qubli_ai_chats");
     if (savedChats) {
       try {
-        const parsed = JSON.parse(savedChats);
-        setRecentChats(parsed);
+        setRecentChats(JSON.parse(savedChats));
       } catch (err) {
         console.error("Failed to parse chat history", err);
       }
     }
   }, []);
 
-  // Session Management
+  // Session Init
   useEffect(() => {
     if (!isOpen) return;
 
-    // Check if we should resume a context-specific session
     if (context?.quizId) {
       const existingSession = recentChats.find(
         (c) => c.quizId === context.quizId
@@ -160,7 +160,6 @@ const StudyBuddy = ({ context, isOpen, onClose, initialPrompt }) => {
       }
     }
 
-    // Default: Welcome message if no session active
     if (!currentSessionId && messages.length === 0) {
       const newId = uuidv4();
       setCurrentSessionId(newId);
@@ -176,7 +175,7 @@ const StudyBuddy = ({ context, isOpen, onClose, initialPrompt }) => {
     }
   }, [isOpen, context?.quizId, currentSessionId, messages.length, recentChats]);
 
-  // Persist Current Session
+  // Save Session
   useEffect(() => {
     if (!currentSessionId || messages.length === 0) return;
 
@@ -185,7 +184,6 @@ const StudyBuddy = ({ context, isOpen, onClose, initialPrompt }) => {
       const sessionIdx = updatedChats.findIndex(
         (c) => c.id === currentSessionId
       );
-
       const sessionData = {
         id: currentSessionId,
         topic: context?.topic || "General Discussion",
@@ -194,24 +192,19 @@ const StudyBuddy = ({ context, isOpen, onClose, initialPrompt }) => {
         messages: messages.map((m) => ({ ...m, isTyping: false })),
       };
 
-      if (sessionIdx >= 0) {
-        updatedChats[sessionIdx] = sessionData;
-      } else {
-        updatedChats.unshift(sessionData);
-      }
+      if (sessionIdx >= 0) updatedChats[sessionIdx] = sessionData;
+      else updatedChats.unshift(sessionData);
 
-      // Limit history to 20 chats
-      if (updatedChats.length > 20) {
-        updatedChats = updatedChats.slice(0, 20);
-      }
+      if (updatedChats.length > 20) updatedChats = updatedChats.slice(0, 20);
 
       setRecentChats(updatedChats);
       localStorage.setItem("qubli_ai_chats", JSON.stringify(updatedChats));
-    }, 500); // Debounce saves
+    }, 500);
 
     return () => clearTimeout(timeoutId);
   }, [messages, currentSessionId, context]);
 
+  // Scrolling
   useEffect(() => {
     scrollToBottom();
   }, [messages, isOpen, minimized, view, scrollToBottom]);
@@ -246,9 +239,7 @@ const StudyBuddy = ({ context, isOpen, onClose, initialPrompt }) => {
     const updated = recentChats.filter((c) => c.id !== id);
     setRecentChats(updated);
     localStorage.setItem("qubli_ai_chats", JSON.stringify(updated));
-    if (currentSessionId === id) {
-      startNewChat();
-    }
+    if (currentSessionId === id) startNewChat();
   };
 
   const clearAllHistory = () => {
@@ -261,7 +252,7 @@ const StudyBuddy = ({ context, isOpen, onClose, initialPrompt }) => {
 
   const handleSend = async (e) => {
     e.preventDefault();
-    if (!input.trim() || loading) return;
+    if (!input.trim() || loading || isOverLimit) return;
 
     const userMsg = { role: "user", content: input, isTyping: false };
     setMessages((prev) => [...prev, userMsg]);
@@ -308,7 +299,7 @@ const StudyBuddy = ({ context, isOpen, onClose, initialPrompt }) => {
     [scrollToBottom]
   );
 
-  // Auto-submit initialPrompt
+  // Initial Prompt Auto-send
   useEffect(() => {
     if (
       isOpen &&
@@ -324,7 +315,6 @@ const StudyBuddy = ({ context, isOpen, onClose, initialPrompt }) => {
 
       const runAuto = async () => {
         try {
-          // Include basic model intro in history for context
           const history = [
             {
               role: "model",
@@ -399,27 +389,25 @@ const StudyBuddy = ({ context, isOpen, onClose, initialPrompt }) => {
         </div>
         <div className="flex items-center gap-1">
           {view === "chat" ? (
-            <>
-              <button
-                onClick={() => setView("history")}
-                className="p-1.5 hover:bg-white/20 rounded-lg transition-colors point"
-                title="Chat History"
-              >
-                <History className="w-4 h-4" />
-              </button>
-            </>
+            <button
+              onClick={() => setView("history")}
+              className="p-1.5 hover:bg-white/20 rounded-lg transition-colors point"
+              title="Chat History"
+            >
+              <History className="w-4 h-4" />
+            </button>
           ) : (
             <>
               <button
                 onClick={clearAllHistory}
-                className="p-1.5 hover:bg-red-500/30 rounded-lg transition-colors point"
+                className="p-2 hover:bg-red-600/70 dark:hover:bg-red-600/60 rounded-lg transition-colors point"
                 title="Clear All History"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
               <button
                 onClick={startNewChat}
-                className="p-1.5 hover:bg-white/20 rounded-lg transition-colors point"
+                className="p-2 hover:bg-white/20 rounded-lg transition-colors point"
                 title="New Chat"
               >
                 <Plus className="w-4 h-4" />
@@ -428,13 +416,15 @@ const StudyBuddy = ({ context, isOpen, onClose, initialPrompt }) => {
           )}
           <button
             onClick={() => setMinimized(true)}
-            className="p-1.5 hover:bg-white/20 rounded-lg transition-colors point"
+            className="p-2 hover:bg-white/20 rounded-lg transition-colors point"
+            title="Minimize"
           >
             <Minimize2 className="w-4 h-4" />
           </button>
           <button
             onClick={onClose}
-            className="p-1.5 hover:bg-red-600/70 rounded-lg transition-colors point"
+            className="p-2 hover:bg-red-600/70 dark:hover:bg-red-600/60 rounded-lg transition-colors point"
+            title="Close"
           >
             <X className="w-4 h-4" />
           </button>
@@ -466,10 +456,10 @@ const StudyBuddy = ({ context, isOpen, onClose, initialPrompt }) => {
                 <div
                   key={session.id}
                   onClick={() => loadSession(session)}
-                  className={`group p-3 rounded-xl cursor-pointer transition-all border ${
+                  className={`group p-3 rounded-xl point transition-all border ${
                     currentSessionId === session.id
-                      ? "bg-primary/5 border-primary/20"
-                      : "bg-white dark:bg-surface border-transparent hover:border-border hover:bg-white/50"
+                      ? "bg-blue-100 dark:bg-blue-800/40 border-primary/20"
+                      : "bg-white dark:bg-surface border-transparent hover:border-border hover:bg-white/50 dark:hover:bg-white/10"
                   }`}
                 >
                   <div className="flex justify-between items-start gap-2">
@@ -532,7 +522,7 @@ const StudyBuddy = ({ context, isOpen, onClose, initialPrompt }) => {
                       <TypewriterMessage
                         content={msg.content}
                         onComplete={() => handleTypingComplete(idx)}
-                        speed={40}
+                        speed={10}
                       />
                     ) : (
                       <div className="prose dark:prose-invert prose-sm max-w-none space-y-2">
@@ -581,32 +571,54 @@ const StudyBuddy = ({ context, isOpen, onClose, initialPrompt }) => {
 
           <form
             onSubmit={handleSend}
-            className="p-3 bg-white mb-12 xs:mb-0 dark:bg-surface border-t border-border flex items-end gap-2 shrink-0"
+            className="p-3 bg-white mb-12 xs:mb-0 dark:bg-surface border-t border-border shrink-0"
           >
-            <textarea
-              rows={1}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSend(e);
-                }
-              }}
-              placeholder="Ask me anything..."
-              className="flex-1 bg-gray-100 dark:bg-gray-800 border border-border rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none resize-none max-h-[100px] text-textMain"
-            />
-            <button
-              type="submit"
-              disabled={!input.trim() || loading}
-              className="p-3 bg-primary text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 shadow-sm"
+            <div className="flex items-end gap-2 relative">
+              <textarea
+                rows={1}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSend(e);
+                  }
+                }}
+                placeholder="Ask me anything..."
+                className={`flex-1 bg-gray-100 dark:bg-gray-800 border rounded-xl px-4 py-3 text-sm focus:ring-2 outline-none resize-none max-h-[100px] text-textMain transition-all ${
+                  isOverLimit
+                    ? "border-red-500 focus:ring-red-200 dark:focus:ring-red-500"
+                    : "border-border focus:ring-primary/20"
+                }`}
+              />
+              <button
+                type="submit"
+                disabled={!input.trim() || loading || isOverLimit}
+                className={`p-3 rounded-xl shadow-sm transition-colors ${
+                  !input.trim() || loading || isOverLimit
+                    ? "bg-gray-300 dark:bg-gray-700 cursor-not-allowed text-gray-500"
+                    : "bg-primary text-white hover:bg-blue-700 point"
+                }`}
+              >
+                {loading ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <Send className="w-5 h-5" />
+                )}
+              </button>
+            </div>
+            {/* Word Limit Indicator */}
+            <div
+              className={`text-[10px] text-right mt-1 px-1 transition-colors ${
+                isOverLimit
+                  ? "text-red-500 font-bold"
+                  : wordCount > WORD_LIMIT * 0.9
+                  ? "text-orange-500"
+                  : "text-textMuted"
+              }`}
             >
-              {loading ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : (
-                <Send className="w-5 h-5" />
-              )}
-            </button>
+              {wordCount} / {WORD_LIMIT} words
+            </div>
           </form>
         </>
       )}

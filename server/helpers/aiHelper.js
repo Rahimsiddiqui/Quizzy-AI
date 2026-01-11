@@ -660,47 +660,41 @@ Output: A sharp, direct, high-impact review.
 // --- Chat with AI Helper ---
 export const chatWithAIHelper = async (user, messages, context) => {
   const model = selectModel(user);
-  const apiKey = selectApiKey(user);
+  const apiKey = selectApiKey(user); // Construct system instruction based on context
 
-  // Construct system instruction based on context
-  let systemInstruction = `You are Qubli AI's intelligent Study Buddy. Your goal is to help students learn, explain concepts, and answer questions based on the provided context.
-  
-  User Info:
-  - Name: ${user.name}
-  - Level: ${user.tier === "Pro" ? "Advanced" : "Student"}
-  
-  Guidelines:
-  1. Be encouraging, helpful, and concise.
-  2. If the user asks for the answer to a question in the context, try to guide them or explain the concept rather than just giving the letter (unless they are reviewing results).
-  3. Use markdown for formatting (bold, italic, code blocks, lists).
-  4. Keep responses strict and relevant to the study context.
-  `;
+  let systemInstruction = `You are Qubli AI's intelligent Study Buddy. Your sole purpose is to assist the user with learning, studying, and reviewing academic material provided within the Qubli application.
+
+User Info:
+- Name: ${user.name}
+- Level: ${user.tier === "Pro" ? "Advanced" : "Student"}
+
+Guidelines:
+1. Be encouraging, helpful, and concise. Your replies must be relevant *only* to academic subjects, study techniques, or material presented in the app.
+2. **STRICTLY DO NOT** discuss or reveal information about API keys, model names, internal code, data structures, subscription tiers, or anything about your programming. You are an *in-app* Study Buddy, not a programmer's tool.
+3. If the user asks for the answer to a question in the context, try to guide them or explain the concept rather than just giving the letter (unless they are reviewing results).
+4. Use markdown for clear formatting (bold, italic, code blocks, lists).
+5. Always maintain a professional and educational tone.
+`;
 
   if (context) {
     if (context.type === "quiz_review") {
       systemInstruction += `\n
-      Active Context: Quiz Review
-      Quiz Topic: ${context.topic}
-      Question being discussed: ${context.questionText}
-      Correct Answer: ${context.correctAnswer}
-      Explanation: ${context.explanation}
-      
-      The user is reviewing a specific question. Help them understand why the correct answer is correct and why their answer (if explicitly mentioned) might be wrong.`;
+Active Context: Quiz Review
+Quiz Topic: ${context.topic}
+Question being discussed: ${context.questionText}
+Correct Answer: ${context.correctAnswer}
+Explanation: ${context.explanation}
+ 
+The user is reviewing a specific question. Help them understand why the correct answer is correct and why their answer (if explicitly mentioned) might be wrong.`;
     } else if (context.type === "dashboard") {
-      systemInstruction += `\nActive Context: Dashboard / General Study. Answer general questions or questions about their progress.`;
+      systemInstruction += `\nActive Context: Dashboard / General Study. Answer general study questions or questions about their progress.`;
     }
-  }
+  } // Convert history to Gemini format
 
-  // Convert history to Gemini format
   const history = messages.map((msg) => ({
     role: msg.role === "user" ? "user" : "model",
     parts: [{ text: msg.content }],
   }));
-
-  // Add system instruction as the first part or use systemInstruction if model supports it (Gemini 1.5 does via systemInstruction param, but here we simply prepend context to the first user message or history for simplicity with existing helper structure)
-
-  // Note: For simple chat endpoint, we might not use the full multi-turn history object if we just send the new message + history as text,
-  // but using the proper structure is better.
 
   const payload = {
     contents: history,

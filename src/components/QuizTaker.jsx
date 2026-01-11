@@ -2302,7 +2302,7 @@ const QuizTaker = ({ user, onComplete, onLimitUpdate }) => {
                             onClick={() => handleAnswer(opt)}
                             className={`p-4 text-left rounded-xl border transition-all cursor-pointer ${
                               answers[currentQId] === opt
-                                ? "bg-primary/10 border-primary dark:border-blue-400 text-primary dark:text-blue-400 shadow-sm ring-1 ring-primary dark:ring-blue-400 font-semibold"
+                                ? "bg-primary/10 border-primary dark:border-blue-600 text-primary dark:text-blue-500 shadow-sm ring-1 ring-primary dark:ring-blue-500 font-semibold"
                                 : "bg-surface border-border text-textMuted hover:bg-surfaceHighlight hover:text-textMain"
                             }`}
                           >
@@ -2461,44 +2461,44 @@ const QuizTaker = ({ user, onComplete, onLimitUpdate }) => {
             </div>
           </div>
         )}
-
-        {/* AI Study Buddy */}
-        {status === "completed" && (
-          <>
-            {!isStudyBuddyOpen && (
-              <button
-                onClick={() => setIsStudyBuddyOpen(true)}
-                className="fixed bottom-15 right-2 sm:bottom-20 md:bottom-4 md:right-4 z-50 p-4 bg-primary text-white rounded-full shadow-lg hover:bg-blue-700 transition-all flex items-center gap-2 animate-fade-in-up point"
-                title="Open AI Study Buddy"
-              >
-                <div className="bg-white/20 p-1 rounded-lg">
-                  <FileText className="w-5 h-5" />
-                </div>
-                <span className="font-bold hidden xs:inline">Ask AI</span>
-              </button>
-            )}
-            <StudyBuddy
-              isOpen={isStudyBuddyOpen}
-              onClose={() => {
-                setIsStudyBuddyOpen(false);
-                setCustomStudyContext(null);
-                setInitialAIPrompt(null);
-              }}
-              context={
-                customStudyContext || {
-                  type: status === "completed" ? "quiz_review" : "quiz_active",
-                  quizId: quiz._id || quiz.id,
-                  topic: quiz.topic,
-                  questionText: quiz.questions[currentIdx]?.text,
-                  correctAnswer: quiz.questions[currentIdx]?.correctAnswer,
-                  explanation: quiz.questions[currentIdx]?.explanation,
-                }
-              }
-              initialPrompt={initialAIPrompt}
-            />
-          </>
-        )}
       </div>
+
+      {/* AI Study Buddy */}
+      {status === "completed" && (
+        <>
+          {!isStudyBuddyOpen && (
+            <button
+              onClick={() => setIsStudyBuddyOpen(true)}
+              className="fixed bottom-15 right-2 sm:bottom-20 md:bottom-4 md:right-4 z-50 p-4 bg-primary text-white rounded-full shadow-lg hover:bg-blue-700 transition-all flex items-center gap-2 animate-fade-in-up point"
+              title="Open AI Study Buddy"
+            >
+              <div className="bg-white/20 p-1 rounded-lg">
+                <FileText className="w-5 h-5" />
+              </div>
+              <span className="font-bold hidden xs:inline">Ask AI</span>
+            </button>
+          )}
+          <StudyBuddy
+            isOpen={isStudyBuddyOpen}
+            onClose={() => {
+              setIsStudyBuddyOpen(false);
+              setCustomStudyContext(null);
+              setInitialAIPrompt(null);
+            }}
+            context={
+              customStudyContext || {
+                type: status === "completed" ? "quiz_review" : "quiz_active",
+                quizId: quiz._id || quiz.id,
+                topic: quiz.topic,
+                questionText: quiz.questions[currentIdx]?.text,
+                correctAnswer: quiz.questions[currentIdx]?.correctAnswer,
+                explanation: quiz.questions[currentIdx]?.explanation,
+              }
+            }
+            initialPrompt={initialAIPrompt}
+          />
+        </>
+      )}
     </>
   );
 };

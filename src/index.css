@@ -97,6 +97,16 @@
   }
 }
 
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -313,4 +323,13 @@ html.dark .delete-btn {
 
 .collapse-animation {
   animation: collapseUp 0.3s ease-in forwards;
+}
+
+.typewriter-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  vertical-align: middle;
+  margin-left: 6px;
+  animation: blink 1s step-start infinite;
 }
