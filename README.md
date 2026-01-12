@@ -1,6 +1,6 @@
 # Qubli AI — AI-Powered Learning Platform
 
-Qubli AI is an AI-powered learning platform that transforms the way you study. It generates personalized quizzes, flashcards, and study materials, adapts to your progress, and focuses on areas that need improvement. Designed for students, professionals, and lifelong learners, Qubli AI maximizes learning efficiency and knowledge retention.
+Qubli AI helps students pass exams by turning their notes, PDFs, and topics into instant quizzes, flashcards, and practice tests. Instead of rereading notes for hours, Qubli forces active recall — the same technique used by top students — so you learn faster, remember longer, and walk into the exam hall confident.
 
 ---
 
