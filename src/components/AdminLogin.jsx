@@ -42,7 +42,7 @@ export default function AdminLogin() {
 
       <div className="w-full max-w-md z-10">
         {/* Login Card */}
-        <div className="bg-surface/80 backdrop-blur-xl border border-border rounded-3xl shadow-2xl shadow-slate-300 dark:shadow-slate-700 p-8">
+        <div className="bg-surface/80 backdrop-blur-xl border border-border rounded-3xl shadow-2xl shadow-slate-300 dark:shadow-slate-700 px-5 py-8 xs:px-8">
           <form onSubmit={handleLogin} className="space-y-6">
             {/* Logo Inside Form */}
             <div className="flex justify-center mb-6">
@@ -119,15 +119,14 @@ export default function AdminLogin() {
                 </>
               )}
             </button>
-
-            {/* Footer */}
-            <p className="text-center mt-8 text-sm text-slate-500 dark:text-slate-400">
-              Not an admin?{" "}
-              <button className="font-semibold text-primary dark:text-blue-500 hover:underline point">
-                Back to Main Site
-              </button>
-            </p>
           </form>
+          {/* Footer */}
+          <p className="text-center mt-8 text-sm text-slate-500 dark:text-slate-400">
+            Not an admin?{" "}
+            <button className="font-semibold text-primary dark:text-blue-500 hover:underline point">
+              Back to Main Site
+            </button>
+          </p>
         </div>
       </div>
     </div>
