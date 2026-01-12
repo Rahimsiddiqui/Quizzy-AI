@@ -13,7 +13,7 @@ const TIER_DATA = {
     colorClasses: {
       iconBg: "bg-gray-100 dark:bg-gray-300",
       iconText: "text-gray-500 dark:text-gray-600",
-      check: "text-green-500 dark:text-green-400",
+      check: "text-green-500 dark:text-green-400",x
       border: "border-border",
       buttonBg:
         "bg-surfaceHighlight hover:bg-gray-400/20 dark:hover:bg-gray-600/40",
@@ -110,9 +110,9 @@ const TierCard = ({ tier, currentTier, handleUpgrade }) => {
 
   const shadowClass =
     tier === SubscriptionTier.Basic
-      ? "shadow-lg shadow-blue-500 dark:shadow-blue-600/40"
+      ? "shadow-md shadow-blue-500 dark:shadow-blue-600/40"
       : tier === SubscriptionTier.Pro &&
-        "shadow-lg shadow-amber-300 dark:shadow-amber-600/40";
+        "shadow-md shadow-amber-300 dark:shadow-amber-600/40";
 
   return (
     <div
