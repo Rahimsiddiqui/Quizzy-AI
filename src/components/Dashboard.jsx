@@ -500,7 +500,7 @@ const Dashboard = ({ user }) => {
       <div
         className={`grid grid-cols-1 sm:grid-cols-2 lg:${
           sidebarCollapsed ? "grid-cols-4" : "grid-cols-2"
-        } gap-4`}
+        } xl:grid-cols-4 gap-4`}
       >
         {KPI_STATS.map((stat, idx) => (
           <div
