@@ -3,4 +3,4 @@ User-agent: *
 Allow: /
 
 # Sitemaps
-Sitemap: https://qubli.ai/sitemap.xml
+Sitemap: https://qubli-ai.vercel.app/sitemap.xml
