@@ -1,10 +1,14 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import {
   X,
   Send,
   Bot,
   User,
   Minimize2,
+  Download,
+  Copy,
+  ArrowUpDown,
+  Check,
   Loader2,
   Sparkles,
   SkipForward,
@@ -13,15 +17,17 @@ import {
   ArrowLeft,
   Trash2,
   Search,
+  ArrowDownUp,
 } from "lucide-react";
 import { chatWithAI } from "../services/geminiService";
 import ReactMarkdown from "react-markdown";
 import { v4 as uuidv4 } from "uuid";
+import remarkGfm from "remark-gfm";
 
 // --- Constants ---
 const WORD_LIMIT = 200;
 
-// --- Typewriter Component (Smoother Char-by-Char) ---
+// --- Typewriter Component ---
 const TypewriterMessage = ({ content, onComplete, speed = 8 }) => {
   const [displayedContent, setDisplayedContent] = useState("");
   const [isComplete, setIsComplete] = useState(false);
@@ -105,6 +111,187 @@ const TypewriterMessage = ({ content, onComplete, speed = 8 }) => {
           Skip
         </button>
       )}
+    </div>
+  );
+};
+
+const DataTable = ({ children }) => {
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
+  const [copied, setCopied] = useState(false);
+
+  // Extract data from React children to perform sorting and exporting
+  const tableData = useMemo(() => {
+    const rows = [];
+    const headers = [];
+
+    // Recursive helper to get text from nested React elements
+    const getText = (node) => {
+      if (!node) return "";
+      if (typeof node === "string") return node;
+      if (Array.isArray(node)) return node.map(getText).join("");
+      return getText(node.props?.children);
+    };
+
+    // Find the header and body within the markdown children
+    const thead = children.find((child) => child.type === "thead");
+    const tbody = children.find((child) => child.type === "tbody");
+
+    if (thead) {
+      const headerRow = thead.props.children;
+      (Array.isArray(headerRow.props.children)
+        ? headerRow.props.children
+        : [headerRow.props.children]
+      ).forEach((th) => {
+        headers.push(getText(th));
+      });
+    }
+
+    if (tbody) {
+      const bodyRows = Array.isArray(tbody.props.children)
+        ? tbody.props.children
+        : [tbody.props.children];
+      bodyRows.forEach((tr) => {
+        const row = {};
+        const cells = Array.isArray(tr.props.children)
+          ? tr.props.children
+          : [tr.props.children];
+        cells.forEach((td, idx) => {
+          row[headers[idx]] = getText(td);
+        });
+        rows.push(row);
+      });
+    }
+
+    return { headers, rows };
+  }, [children]);
+
+  const sortedRows = useMemo(() => {
+    let sortableItems = [...tableData.rows];
+    if (sortConfig.key !== null) {
+      sortableItems.sort((a, b) => {
+        if (a[sortConfig.key] < b[sortConfig.key])
+          return sortConfig.direction === "asc" ? -1 : 1;
+        if (a[sortConfig.key] > b[sortConfig.key])
+          return sortConfig.direction === "asc" ? 1 : -1;
+        return 0;
+      });
+    }
+    return sortableItems;
+  }, [tableData.rows, sortConfig]);
+
+  const requestSort = (key) => {
+    let direction = "asc";
+    if (sortConfig.key === key && sortConfig.direction === "asc")
+      direction = "desc";
+    setSortConfig({ key, direction });
+  };
+
+  const exportCSV = () => {
+    const csvContent = [
+      tableData.headers.join(","),
+      ...sortedRows.map((row) =>
+        tableData.headers.map((h) => `"${row[h]}"`).join(",")
+      ),
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.setAttribute("download", "table_data.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const copyTable = () => {
+    const text = [
+      tableData.headers.join("\t"),
+      ...sortedRows.map((row) =>
+        tableData.headers.map((h) => row[h]).join("\t")
+      ),
+    ].join("\n");
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="my-4 border border-border rounded-xl overflow-hidden bg-white dark:bg-gray-900 shadow-sm">
+      {/* Table Toolbar */}
+      <div className="flex items-center justify-between px-3 py-2 bg-gray-50 dark:bg-gray-800 border-b border-border">
+        <span className="text-[11px] font-bold uppercase tracking-wider text-textMuted">
+          Data Table
+        </span>
+        <div className="flex gap-1">
+          <button
+            onClick={copyTable}
+            className="py-1.5 px-2 hover:bg-black/5 dark:hover:bg-white/10 rounded transition-colors text-textMuted flex items-center gap-1 text-xs point"
+          >
+            {copied ? (
+              <Check className="w-3.5 h-3.5 text-green-500" />
+            ) : (
+              <Copy className="w-3.5 h-3.5" />
+            )}
+            {copied ? "Copied" : "Copy"}
+          </button>
+          <button
+            onClick={exportCSV}
+            className="py-1.5 px-2 hover:bg-black/5 dark:hover:bg-white/10 rounded transition-colors text-textMuted flex items-center gap-1 text-xs point"
+          >
+            <Download className="w-3.5 h-3.5" />
+            CSV
+          </button>
+        </div>
+      </div>
+
+      {/* Responsive Scroll Container */}
+      <div className="overflow-x-auto max-h-[400px] overflow-y-auto custom-scrollbar">
+        <table className="w-full text-left border-collapse min-w-[1000px] table-fixed">
+          <thead className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800 shadow-[0_1px_0_rgba(0,0,0,0.1)]">
+            <tr>
+              {tableData.headers.map((header) => (
+                <th
+                  key={header}
+                  onClick={() => requestSort(header)}
+                  className="px-4 py-3 text-xs font-semibold text-textMain point hover:bg-black/5 dark:hover:bg-white/5 transition-colors group max-w-fit wrap-break-word whitespace-normal"
+                >
+                  <div className="flex gap-2">
+                    <span className="flex-1">{header}</span>
+                    <span className="text-textMuted opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                      {sortConfig.key === header ? (
+                        sortConfig.direction === "asc" ? (
+                          <ArrowDownUp className="w-3 h-3" />
+                        ) : (
+                          <ArrowUpDown className="w-3 h-3" />
+                        )
+                      ) : (
+                        <ArrowUpDown className="w-3 h-3" />
+                      )}
+                    </span>
+                  </div>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border">
+            {sortedRows.map((row, i) => (
+              <tr
+                key={i}
+                className="hover:bg-black/2 dark:bg-surfaceHighlight/50 dark:hover:bg-surfaceHighlight/60 transition-colors"
+              >
+                {tableData.headers.map((header) => (
+                  <td
+                    key={header}
+                    className="px-4 py-3 text-sm text-textMain max-w-fit wrap-break-word whitespace-normal"
+                  >
+                    {row[header]}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };
@@ -488,7 +675,7 @@ const StudyBuddy = ({ context, isOpen, onClose, initialPrompt }) => {
         <>
           <div
             ref={messagesContainerRef}
-            className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50 dark:bg-gray-900/50 [overflow-anchor:none]"
+            className="flex-1 overflow-y-auto p-4 space-y-6 bg-gray-50 dark:bg-gray-900/50 [overflow-anchor:none]"
           >
             {messages.map((msg, idx) => (
               <div
@@ -527,7 +714,11 @@ const StudyBuddy = ({ context, isOpen, onClose, initialPrompt }) => {
                     ) : (
                       <div className="prose dark:prose-invert prose-sm max-w-none space-y-2">
                         <ReactMarkdown
+                          remarkPlugins={[remarkGfm]}
                           components={{
+                            table: ({ children }) => (
+                              <DataTable>{children}</DataTable>
+                            ),
                             code({ inline, className, children, ...props }) {
                               return (
                                 <code

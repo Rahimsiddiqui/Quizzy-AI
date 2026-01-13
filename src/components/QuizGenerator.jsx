@@ -434,9 +434,9 @@ const QuizGenerator = ({ user, onGenerateSuccess }) => {
 
       <div className="bg-surface rounded-2xl border border-border p-6 md:p-8 shadow-lg-custom">
         <div
-          className={`grid xs:grid-cols-2 sm:grid-cols-4 gap-1 xs:gap-3 md:gap-0 ${
-            sidebarCollapsed ? "grid-cols-2" : "grid-cols-4"
-          } p-1 bg-surfaceHighlight rounded-xl mb-10 w-full max-w-3xl mx-auto`}
+          className={`grid xs:grid-cols-2 sm:grid-cols-4 gap-1 xs:gap-3 md:gap-0 md:${
+            !sidebarCollapsed ? "grid-cols-2 md:gap-2" : "grid-cols-4"
+          } lg:grid-cols-4 p-1 bg-surfaceHighlight rounded-xl mb-10 w-full max-w-3xl mx-auto`}
         >
           <button
             type="button"
@@ -792,7 +792,7 @@ const QuizGenerator = ({ user, onGenerateSuccess }) => {
                 <h3 className="font-semibold text-sm text-textMain">
                   Generate Flashcards
                 </h3>
-                <h4 className="font-semibold text-sm text-textMain/80 xs:text-textMain/80 xs:text-xs">
+                <h4 className="font-semibold text-[12px] text-textMain/80 xs:text-textMain/80 xs:text-[11px]">
                   Create a study set automatically
                 </h4>
               </div>

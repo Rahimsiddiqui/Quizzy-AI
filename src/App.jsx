@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import CircularProgress from "@mui/material/CircularProgress";
 import { ToastContainer, Zoom } from "react-toastify";
 import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 
 import {
   BrowserRouter as Router,
@@ -202,6 +203,7 @@ const App = () => {
         }}
       />
       <Analytics />
+      <SpeedInsights />
       <Router>
         <Routes>
           <Route path="/oauth/callback" element={<OAuthCallback />} />

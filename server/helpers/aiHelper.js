@@ -15,7 +15,7 @@ const FREE_MODEL = "gemini-2.5-flash-lite";
 // Select API key based on user tier
 const selectApiKey = (user) => {
   if (!user || user.tier === SubscriptionTier.Free) {
-    return process.env.GEMINI_API_KEY_FREE;
+    return process.env.GEMINI_API_KEY_FREE || process.env.GEMINI_API_KEY_BASIC;
   }
   if (user.tier === SubscriptionTier.Basic) {
     return process.env.GEMINI_API_KEY_BASIC;
@@ -26,6 +26,10 @@ const selectApiKey = (user) => {
   return process.env.GEMINI_API_KEY_FREE;
 };
 
+/**
+ * Robust retry wrapper for Gemini API calls.
+ * Handles rate limits (429) and server overloads (503) with exponential backoff and jitter.
+ */
 async function retryGeminiRequest(fn, retries = 5, baseDelay = 1000) {
   let lastError = null;
 
@@ -36,24 +40,28 @@ async function retryGeminiRequest(fn, retries = 5, baseDelay = 1000) {
       lastError = err;
       const status = err.response?.status || err.status;
 
-      // Retry only on overload or rate-limit
-      if (status === 503 || status === 429) {
+      // Retry only on overload (503), rate-limit (429), or internal errors (500)
+      if (status === 503 || status === 429 || status === 500) {
         // Use exponential backoff with jitter
         const exponentialDelay = baseDelay * Math.pow(2, i);
         const jitter = Math.random() * 1000;
         const waitTime = exponentialDelay + jitter;
         console.log(
-          `Retrying in ${Math.round(waitTime)}ms (rate limit/overload)`
+          `Gemini busy/rate-limited. Retrying in ${Math.round(
+            waitTime
+          )}ms (Attempt ${i + 1}/${retries})...`
         );
         await new Promise((res) => setTimeout(res, waitTime));
       } else if (i === retries - 1) {
         // Last attempt failed
         throw err;
       } else {
-        // Non-retryable error on first attempt, retry anyway
+        // For other errors, we still attempt a standard retry as transient network issues occur
         const delay = baseDelay * Math.pow(2, i);
         console.log(
-          `Retrying in ${delay}ms (non-retryable error, will retry anyway)`
+          `Transient error detected. Retrying in ${delay}ms (Attempt ${
+            i + 1
+          }/${retries})...`
         );
         await new Promise((res) => setTimeout(res, delay));
       }
@@ -103,7 +111,47 @@ const mapStringTypeToEnum = (typeStr) => {
   return QuestionType.MCQ; // fallback
 };
 
-// Structured JSON schema for the AI response
+/**
+ * Validates and repairs JSON strings returned by the AI.
+ * Handles markdown code blocks and common formatting issues.
+ */
+const cleanAndParseJSON = (text) => {
+  if (!text) return null;
+  let cleaned = text.trim();
+
+  // Remove markdown code blocks (```json ... ``` or ``` ... ```)
+  if (cleaned.startsWith("```")) {
+    const firstNewLine = cleaned.indexOf("\n");
+    if (firstNewLine !== -1) {
+      cleaned = cleaned.substring(firstNewLine);
+    }
+  }
+  if (cleaned.endsWith("```")) {
+    cleaned = cleaned.substring(0, cleaned.lastIndexOf("```"));
+  }
+
+  cleaned = cleaned.trim();
+
+  try {
+    return JSON.parse(cleaned);
+  } catch {
+    console.warn("Direct JSON parse failed, attempting repair...");
+    // Try to find the first '{' and last '}'
+    const start = cleaned.indexOf("{");
+    const end = cleaned.lastIndexOf("}");
+    if (start !== -1 && end !== -1) {
+      try {
+        return JSON.parse(cleaned.substring(start, end + 1));
+      } catch (innerErr) {
+        console.error("JSON Repair failed:", innerErr.message);
+        return null;
+      }
+    }
+    return null;
+  }
+};
+
+// Structured JSON schema for the AI response (used for models that support responseSchema)
 const quizResponseSchema = {
   type: "OBJECT",
   properties: {
@@ -165,29 +213,31 @@ export const generateQuizHelper = async (clientData, user, sendProgress) => {
     case "caie_o":
     case "caie_a":
       styleInstruction =
-        "Strictly follow Cambridge Assessment International Education (CAIE) style. Use command words like 'State', 'Define', 'Explain', 'Discuss'. Ensure marking schemes are precise.";
+        "Strictly follow Cambridge Assessment International Education (CAIE) style. Use command words like 'State', 'Define', 'Explain', 'Discuss'. Ensure marking schemes are precise and based on syllabus keywords.";
       break;
     case "sindh_board":
       styleInstruction =
-        "Strictly follow Sindh Board (Pakistan) curriculum style. Focus on bookish definitions and typical board exam phrasing.";
+        "Strictly follow Sindh Board (Pakistan) curriculum style. Focus on bookish definitions, rote-learning key phrases, and typical board exam phrasing found in past papers.";
       break;
     case "class_test":
       styleInstruction =
-        "Format as a standard school unit test. Focus on checking conceptual understanding of the specific chapter/topic.";
+        "Format as a standard school unit test. Focus on checking conceptual understanding of the specific chapter/topic provided.";
       break;
     case "sat":
       styleInstruction =
-        "Format as an SAT aptitude test. Focus on logic, critical thinking, and standard SAT phrasing.";
+        "Format as an SAT aptitude test. Focus on logic, critical thinking, evidence-based reasoning, and standard SAT phrasing.";
       break;
     default:
-      styleInstruction = "";
+      styleInstruction =
+        "Maintain a high academic standard for a general audience.";
   }
 
   const typeString = types.join(", ");
 
   // Build prompt - special handling for PDF mode
   const isPdfMode =
-    typeof topic === "string" && topic.includes("attached document");
+    typeof topic === "string" &&
+    (topic.includes("attached document") || topic.includes("PDF"));
 
   let prompt = `Generate a ${difficulty} level quiz about "${topic}".
 **Exam Style: ${styleLabel}**. ${styleInstruction}
@@ -202,15 +252,15 @@ ${
     : ""
 }
 - For each question, include a field "type" exactly as one of: MCQ, TrueFalse, ShortAnswer, Essay, FillInTheBlank.
-- For 'MCQ', provide 4 options, DON'T PROVIDE WITH OPTIONS PREFIXES LIKE 'A. or B.'.
+- For 'MCQ', provide 4 options. Do NOT provide option prefixes like 'A.' or 'B.'.
 - For 'TrueFalse', provide 2 options (True, False).
-- For Short/Long Answer, 'options' can be empty array.
-- Return JSON only.
-- Question marks must be whole numbers, not numbers like 2.5, 3.5, etc.s`;
+- For Short/Long Answer, 'options' must be an empty array [].
+- Return the response as a single, valid JSON object.
+- Question marks must be whole numbers (integers).`;
 
   const parts = [{ text: prompt }];
 
-  // Handle both single file and array of files
+  // Handle both single file and array of files (PDF/Images)
   if (fileData) {
     const filesArray = Array.isArray(fileData) ? fileData : [fileData];
 
@@ -222,48 +272,188 @@ ${
       }
     }
 
-    if (filesArray.length > 0 && filesArray[0]?.mimeType) {
-      parts[0].text += ` Use the attached document${
-        filesArray.length > 1 ? "s" : ""
-      } context to generate relevant questions.`;
+    if (filesArray.length > 0) {
+      parts[0].text += ` Use the provided context from the attached file(s) to generate these questions.`;
     }
   }
 
-  // Handle YouTube URL
+  // --- Robust YouTube Logic Integration ---
   if (clientData.youtubeUrl) {
+    if (sendProgress) sendProgress("Fetching video transcript", 10);
+
+    const extractVideoId = (url) => {
+      if (!url) return null;
+      const m =
+        url.match(
+          /(?:v=|\/v\/|youtu\.be\/|\/embed\/|watch\?v=|&v=)([0-9A-Za-z_-]{11})/
+        ) || url.match(/^([0-9A-Za-z_-]{11})$/);
+      return m ? m[1] : null;
+    };
+
+    const decodeHtmlEntities = (str) =>
+      str
+        .replace(/&amp;/g, "&")
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'");
+
+    const videoId = extractVideoId(clientData.youtubeUrl);
+    if (!videoId) throw new Error("Invalid YouTube URL provided.");
+
+    let transcriptText = "";
+
+    // Step 1: Try the library
     try {
-      if (sendProgress) sendProgress("Fetching video transcript", 10);
-      const transcriptItems = await YoutubeTranscript.fetchTranscript(
-        clientData.youtubeUrl
-      );
-      const transcriptText = transcriptItems.map((item) => item.text).join(" ");
-
-      // Truncate if too long (approx 30k chars to be safe with tokens, though Pro handles more)
-      const truncatedTranscript =
-        transcriptText.length > 50000
-          ? transcriptText.substring(0, 50000) + "... [truncated]"
-          : transcriptText;
-
-      parts.push({
-        text: `\n\nVideo Transcript Context:\n${truncatedTranscript}\n\n**CRITICAL: Generate questions ONLY based on the video transcript provided above.**`,
-      });
-    } catch (err) {
-      console.error("YouTube Transcript Error:", err);
-      // Fallback: ask AI to try its internal knowledge if transcript fails, or error out.
-      // For now, let's error so user knows.
-      throw new Error(
-        "Could not fetch YouTube transcript. Video might be missing captions."
+      console.log(`Attempting library fetch for video: ${videoId}`);
+      const items = await YoutubeTranscript.fetchTranscript(videoId);
+      if (items && items.length) {
+        transcriptText = items.map((it) => it.text).join(" ");
+        console.log("Library fetch successful.");
+      }
+    } catch (libErr) {
+      console.warn(
+        "YoutubeTranscript library failed, attempting scrape fallback...",
+        libErr.message
       );
     }
-  }
 
-  const contents = [{ role: "user", parts }];
+    // Step 2: Robust Scrape Fallback
+    if (!transcriptText) {
+      try {
+        console.log("Starting fallback scrape...");
+        // Rotating User-Agents typically helps, but here we stick to a standard modern Chrome one
+        const USER_AGENT =
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36";
+
+        const pageResp = await fetch(
+          `https://www.youtube.com/watch?v=${videoId}`,
+          {
+            headers: {
+              "User-Agent": USER_AGENT,
+              "Accept-Language": "en-US,en;q=0.9",
+            },
+          }
+        );
+        const html = await pageResp.text();
+
+        // Check for specific blocking indicators
+        if (
+          html.includes("Sign in to confirm your age") ||
+          html.includes("Sign in to continue")
+        ) {
+          console.warn("YouTube Sign-in/Age Restriction detected.");
+          throw new Error(
+            "This video is age-restricted or requires sign-in. The server cannot access it automatically."
+          );
+        }
+
+        // Enhanced regex
+        const match = html.match(/ytInitialPlayerResponse\s*=\s*({.+?});/s);
+
+        if (match) {
+          const playerJson = JSON.parse(match[1]);
+          const captionTracks =
+            playerJson?.captions?.playerCaptionsTracklistRenderer
+              ?.captionTracks;
+
+          if (captionTracks && captionTracks.length > 0) {
+            console.log(`Found ${captionTracks.length} caption tracks.`);
+            // Prefer English
+            let track =
+              captionTracks.find((t) => t.languageCode === "en") ||
+              captionTracks[0];
+
+            const baseUrl = track.baseUrl.replace(/\\u0026/g, "&");
+
+            const fetchHeaders = {
+              "User-Agent": USER_AGENT,
+              Referer: `https://www.youtube.com/watch?v=${videoId}`,
+              // Note: passing cookies often fails due to session mismatch with signature, so we omit them to rely on public access
+            };
+
+            // Try JSON3 format first
+            console.log("Fetching transcript (json3)...");
+            const capResp = await fetch(`${baseUrl}&fmt=json3`, {
+              headers: fetchHeaders,
+            });
+            const capText = await capResp.text();
+
+            if (capText.trim().startsWith("{")) {
+              const capJson = JSON.parse(capText);
+              transcriptText = (capJson.events || [])
+                .map((ev) =>
+                  ev.segs ? ev.segs.map((s) => s.utf8 || "").join("") : ""
+                )
+                .join(" ");
+            }
+
+            // If JSON3 is empty/failed, try XML parsing fallback
+            if (!transcriptText) {
+              console.log("JSON3 failed/empty, trying XML...");
+              const xmlResp = await fetch(baseUrl, { headers: fetchHeaders });
+              const xml = await xmlResp.text();
+
+              // Check for empty body specifically
+              if (!xml || xml.trim().length === 0) {
+                console.warn(
+                  "XML transcript fetch returned empty body (likely bot detection)."
+                );
+              } else {
+                const matches = [
+                  ...xml.matchAll(/<text[^>]*>([\s\S]*?)<\/text>/gi),
+                ];
+                transcriptText = matches
+                  .map((m) => decodeHtmlEntities(m[1].replace(/<[^>]+>/g, " ")))
+                  .join(" ");
+              }
+            }
+          } else {
+            console.warn("No captionTracks found in player response.");
+          }
+        } else {
+          console.warn(
+            "Could not find ytInitialPlayerResponse in HTML. (Consent page or serious block?)"
+          );
+        }
+      } catch (scrapeErr) {
+        console.warn("Scraping fallback failed:", scrapeErr.message);
+        // If we identified a specific error (like age restriction), re-throw it to be caught below
+        if (
+          scrapeErr.message.includes("age-restricted") ||
+          scrapeErr.message.includes("requires sign-in")
+        ) {
+          throw scrapeErr;
+        }
+      }
+    }
+
+    // FINAL CHECK: Only error out if EVERYTHING failed
+    if (!transcriptText || transcriptText.trim().length === 0) {
+      console.error(
+        `Failed to fetch transcript for ${videoId} after all attempts.`
+      );
+      throw new Error(
+        "Could not fetch YouTube transcript. The video might be age-restricted, private, or blocked by YouTube's anti-bot protection. Please try another video or copy the transcript text manually."
+      );
+    }
+
+    // Truncate to stay within Gemini context safely
+    const truncatedTranscript =
+      transcriptText.length > 25000
+        ? transcriptText.substring(0, 25000) + "... [truncated]"
+        : transcriptText;
+
+    parts.push({
+      text: `\n\nVideo Transcript Context:\n${truncatedTranscript}\n\n**CRITICAL: Generate questions ONLY based on this video transcript content.**`,
+    });
+  }
 
   const payload = {
-    contents,
+    contents: [{ role: "user", parts }],
     generationConfig: {
       responseMimeType: "application/json",
-      responseSchema: quizResponseSchema,
+      responseSchema: model.includes("lite") ? undefined : quizResponseSchema,
       temperature: 0.7,
     },
   };
@@ -271,14 +461,11 @@ ${
   try {
     if (sendProgress) sendProgress("Processing input", 15);
 
-    // Check if model is lite variant (lite doesn't support streaming with JSON schema)
     const isLiteModel = model.includes("lite");
-
     let data = null;
 
     if (isLiteModel) {
-      // Use non-streaming endpoint for lite models
-      if (sendProgress) sendProgress("Generating", 25);
+      if (sendProgress) sendProgress("Generating (Standard)", 30);
 
       const response = await retryGeminiRequest(() =>
         fetch(getApiUrl(model, apiKey), {
@@ -288,282 +475,107 @@ ${
         }).then(async (res) => {
           if (!res.ok) {
             const text = await res.text();
-            const error = new Error("Gemini API Error (Lite)");
-            error.response = { status: res.status, text };
-            throw error;
+            throw new Error(`Gemini Lite API Error: ${res.status} - ${text}`);
           }
           return res;
         })
       );
 
-      if (sendProgress) sendProgress("Parsing response", 50);
-
       const resultText = await response.text();
-      let result;
-      try {
-        result = resultText ? JSON.parse(resultText) : null;
-      } catch {
-        result = null;
-      }
-
-      if (!result || !result.candidates) {
-        throw new Error("Invalid response from lite model");
-      }
-
-      const candidate = result.candidates.find((c) => {
-        const text = c.content?.parts?.[0]?.text;
-        if (!text) return false;
-        try {
-          const parsed = JSON.parse(text);
-          return Array.isArray(parsed.questions) && parsed.questions.length;
-        } catch {
-          return false;
-        }
-      });
-
-      if (!candidate) throw new Error("No valid candidate from lite model");
-
-      try {
-        data = JSON.parse(candidate.content.parts[0].text);
-      } catch {
-        throw new Error("Failed to parse questions from lite model");
-      }
+      const resultJson = JSON.parse(resultText);
+      const aiText = resultJson.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!aiText) throw new Error("Lite model returned empty content.");
+      data = cleanAndParseJSON(aiText);
     } else {
-      // Use streaming endpoint for BASIC and PRO models
+      // PRO/BASIC Models use Streaming for performance
       if (sendProgress) sendProgress("Streaming from AI", 30);
-
       const streamUrl = `${BASE_URL}/${model}:streamGenerateContent?key=${apiKey}`;
 
-      // For streaming - use the full payload with schema
-      const streamPayload = payload;
-
-      let fullResponse = "";
-      let charCount = 0;
-      const estimatedTotalChars = 2000;
-
       try {
-        console.log(
-          "Starting streaming request to:",
-          streamUrl.substring(0, 80)
-        );
-
         const response = await fetch(streamUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(streamPayload),
+          body: JSON.stringify(payload),
         });
 
-        console.log("Stream response status:", response.status);
-
-        if (!response.ok) {
-          const text = await response.text();
-          const error = new Error(
-            `Gemini API Streaming Error: ${response.status}`
-          );
-          error.response = { status: response.status, text };
-          console.error("Stream error response:", text.substring(0, 200));
-          throw error;
-        }
-
-        if (!response.body) {
-          console.log("Response body is null, response:", response);
-          throw new Error("Response body is null - streaming not available");
-        }
+        if (!response.ok) throw new Error(`Stream Error: ${response.status}`);
+        if (!response.body) throw new Error("Readable stream not available.");
 
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         let rawStreamData = "";
-
-        console.log("Starting to read stream...");
+        let fullResponseText = "";
 
         while (true) {
           const { done, value } = await reader.read();
-
-          if (done) {
-            console.log("Stream reading complete");
-            break;
-          }
-
-          if (!value || value.length === 0) {
-            continue;
-          }
+          if (done) break;
 
           const decoded = decoder.decode(value, { stream: true });
           rawStreamData += decoded;
-          charCount += decoded.length;
 
-          const progressPercent = 30 + (charCount / estimatedTotalChars) * 40;
-          if (sendProgress && progressPercent < 70) {
-            sendProgress(
-              "Streaming from AI",
-              Math.min(Math.floor(progressPercent), 69)
+          // Progress simulation during stream
+          if (sendProgress) {
+            const currentPercent = Math.min(
+              30 + rawStreamData.length / 100,
+              70
             );
+            sendProgress("Receiving AI data", Math.floor(currentPercent));
           }
         }
 
-        console.log("Total raw stream data length:", rawStreamData.length);
-        console.log("First 200 chars:", rawStreamData.substring(0, 200));
-        console.log(
-          "Last 100 chars:",
-          rawStreamData.substring(rawStreamData.length - 100)
-        );
-
-        if (sendProgress) sendProgress("Parsing response", 70);
-
-        // The Gemini API sends responses as a JSON array: [{ chunk1 }, { chunk2 }, ... ]
-        try {
-          const responseArray = JSON.parse(rawStreamData);
-          console.log("Parsed as array with", responseArray.length, "chunks");
-
-          if (Array.isArray(responseArray)) {
-            // Extract text from each chunk
-            for (const chunk of responseArray) {
-              if (
-                chunk.candidates &&
-                chunk.candidates[0]?.content?.parts?.[0]?.text
-              ) {
-                fullResponse += chunk.candidates[0].content.parts[0].text;
-              }
+        // Gemini Stream returns an array of chunks
+        const chunks = JSON.parse(rawStreamData);
+        if (Array.isArray(chunks)) {
+          chunks.forEach((chunk) => {
+            if (chunk.candidates?.[0]?.content?.parts?.[0]?.text) {
+              fullResponseText += chunk.candidates[0].content.parts[0].text;
             }
-          }
-        } catch (arrayErr) {
-          console.log(
-            "Failed to parse as array, trying alternative parsing..."
-          );
-          throw arrayErr;
+          });
         }
 
-        console.log("Extracted text length:", fullResponse.length);
-        if (fullResponse) {
-          console.log("Response preview:", fullResponse.substring(0, 200));
-        }
-
-        if (!fullResponse) {
-          throw new Error("No text extracted from streaming response");
-        }
-
-        if (sendProgress) sendProgress("Parsing JSON", 75);
-
-        try {
-          data = JSON.parse(fullResponse);
-        } catch (err) {
-          console.error("Failed to parse extracted text as JSON:", err.message);
-
-          // Try to repair common JSON issues from streaming
-          let repairedJson = fullResponse.trim();
-
-          // Remove any trailing incomplete content after the last complete question
-          // Look for the closing structure of the quiz JSON
-          const lastValidClose = repairedJson.lastIndexOf("}]}");
-          if (lastValidClose > 0) {
-            repairedJson = repairedJson.substring(0, lastValidClose + 3);
-            console.log(
-              "Truncated to last valid close at position:",
-              lastValidClose
-            );
-
-            try {
-              data = JSON.parse(repairedJson);
-              console.log("Successfully parsed after truncation repair");
-            } catch (repairErr) {
-              console.error("Repair attempt failed:", repairErr.message);
-              throw new Error("Failed to parse quiz JSON from stream");
-            }
-          } else {
-            throw new Error("Failed to parse quiz JSON from stream");
-          }
-        }
-      } catch (error) {
-        // Fallback to non-streaming if streaming fails
-        console.log(
-          "Streaming failed, falling back to non-streaming:",
-          error.message
+        if (sendProgress) sendProgress("Parsing response", 75);
+        data = cleanAndParseJSON(fullResponseText);
+      } catch (streamError) {
+        console.warn(
+          "Streaming failed, falling back to POST:",
+          streamError.message
         );
-
-        if (sendProgress)
-          sendProgress("Generating from AI (non-streaming fallback)", 30);
-
+        // Fallback to non-streaming
         const response = await retryGeminiRequest(() =>
           fetch(getApiUrl(model, apiKey), {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
-          }).then(async (res) => {
-            if (!res.ok) {
-              const text = await res.text();
-              const err = new Error("Gemini API Error");
-              err.response = { status: res.status, text };
-              throw err;
-            }
-            return res;
           })
         );
-
-        if (sendProgress) sendProgress("Parsing response", 70);
-
-        const resultText = await response.text();
-        let result;
-        try {
-          result = resultText ? JSON.parse(resultText) : null;
-        } catch {
-          result = null;
-        }
-
-        if (!result || !result.candidates) {
-          throw new Error("Invalid response from AI");
-        }
-
-        const candidate = result.candidates.find((c) => {
-          const text = c.content?.parts?.[0]?.text;
-          if (!text) return false;
-          try {
-            const parsed = JSON.parse(text);
-            return Array.isArray(parsed.questions) && parsed.questions.length;
-          } catch {
-            return false;
-          }
-        });
-
-        if (!candidate) throw new Error("No valid candidate from AI");
-
-        try {
-          data = JSON.parse(candidate.content.parts[0].text);
-        } catch {
-          throw new Error("Failed to parse questions from AI");
-        }
+        const text = await response.text();
+        const json = JSON.parse(text);
+        data = cleanAndParseJSON(
+          json.candidates?.[0]?.content?.parts?.[0]?.text
+        );
       }
     }
 
-    if (!data || !data.questions) {
-      throw new Error("AI returned invalid or empty quiz data");
+    if (!data || !data.questions || !Array.isArray(data.questions)) {
+      throw new Error("AI failed to provide a valid list of questions.");
     }
 
-    if (sendProgress) sendProgress("Formatting & validating", 70);
+    if (sendProgress) sendProgress("Finalizing questions", 85);
 
-    const questions = data.questions.map((q, idx) => {
-      // Send progress for each question processed
-      const progressPercent = 70 + ((idx + 1) / data.questions.length) * 15;
-      if (sendProgress)
-        sendProgress(
-          "Formatting & validating",
-          Math.floor(progressPercent),
-          idx + 1
-        );
+    // Format and validate output structure
+    const questions = data.questions.map((q) => ({
+      id: uuidv4(),
+      type: detectQuestionType(q),
+      text: q.text,
+      options: Array.isArray(q.options) ? q.options : [],
+      correctAnswer: q.correctAnswer,
+      explanation: q.explanation || "Correct based on provided context.",
+      marks: Number(q.marks) || 1,
+    }));
 
-      return {
-        id: uuidv4(),
-        type: detectQuestionType(q),
-        text: q.text,
-        options: q.options || [],
-        correctAnswer: q.correctAnswer,
-        explanation: q.explanation,
-        marks: q.marks || 1,
-      };
-    });
+    if (sendProgress) sendProgress("Complete", 100);
 
-    if (sendProgress) sendProgress("Finalizing", 95);
-
-    const quizData = {
+    return {
       title: data.title || `${topic} Quiz`,
       topic,
       difficulty,
@@ -573,14 +585,15 @@ ${
       totalMarks,
       examStyle: styleLabel,
     };
-
-    return quizData;
   } catch (error) {
+    console.error("Quiz Generation Fatal Error:", error);
     throw new Error(`Failed to generate quiz: ${error.message}`);
   }
 };
 
-// --- Generate Performance Review Helper ---
+/**
+ * AI-powered performance review based on quiz history.
+ */
 export const generatePerformanceReviewHelper = async (user, quizzes) => {
   const completedQuizzes = quizzes.filter((q) => q.score !== undefined);
   if (!completedQuizzes.length)
@@ -599,18 +612,17 @@ export const generatePerformanceReviewHelper = async (user, quizzes) => {
 
 ${summary}
 
-Output: A sharp, direct, high-impact review.
-- Identify 1 key strength prefixing with **Key Strength:**.
-- Identify 1 critical weakness prefixing with **Critical Weakness:**.
-- Give 1 actionable next step prefixing with **Next Step:**.
-- Do NOT start with ${user.name}.
-- Do NOT start the review with 'Review:'.
-- For the words that need bolding use **WORD**, not *WORD*.
-- Do NOT mention difficulty levels or quiz structure in the topic name, just the core topic itself.
-- Do NOT list additional bullet points like "Physics: 60% on 12/29/2025." - Only output the three items above (Key Strength, Critical Weakness, Next Step).`;
+Output a sharp, direct, high-impact review:
+- **Key Strength:** ...
+- **Critical Weakness:** ...
+- **Next Step:** ...
 
-  const contents = [{ role: "user", parts: [{ text: prompt }] }];
-  const payload = { contents };
+Guidelines:
+- Do NOT start with the user's name.
+- Use bold **WORD** for emphasis.
+- Keep it concise and academic.`;
+
+  const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
 
   try {
     const model = selectModel(user);
@@ -622,74 +634,41 @@ Output: A sharp, direct, high-impact review.
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       }).then(async (res) => {
-        if (!res.ok) {
-          const text = await res.text();
-          const error = new Error("Gemini Review API Error");
-          error.response = { status: res.status, text };
-          throw error;
-        }
+        if (!res.ok) throw new Error("Gemini Review API Error");
         return res;
       })
     );
 
-    const resultText = await response.text();
-
-    let result;
-    try {
-      result = resultText ? JSON.parse(resultText) : null;
-    } catch {
-      result = null;
-    }
-
-    if (!result) {
-      throw new Error("Invalid review response from AI");
-    }
-
-    const review = result?.candidates?.[0]?.content?.parts?.[0]?.text || "";
-
-    if (!review) {
-      throw new Error("AI returned empty review");
-    }
-
-    return review;
-  } catch {
-    throw new Error("Failed to generate performance review. Please try again.");
+    const resultJson = await response.json();
+    return (
+      resultJson.candidates?.[0]?.content?.parts?.[0]?.text ||
+      "Review unavailable."
+    );
+  } catch (err) {
+    console.error("Review Error:", err);
+    throw new Error("Failed to generate performance review.");
   }
 };
 
-// --- Chat with AI Helper ---
+/**
+ * Interactive Study Buddy Chat Helper.
+ */
 export const chatWithAIHelper = async (user, messages, context) => {
   const model = selectModel(user);
-  const apiKey = selectApiKey(user); // Construct system instruction based on context
+  const apiKey = selectApiKey(user);
 
-  let systemInstruction = `You are Qubli AI's intelligent Study Buddy. Your sole purpose is to assist the user with learning, studying, and reviewing academic material provided within the Qubli application.
-
-User Info:
-- Name: ${user.name}
-- Level: ${user.tier === "Pro" ? "Advanced" : "Student"}
-
+  let systemInstruction = `You are Qubli AI's Study Buddy. Help ${user.name} learn.
 Guidelines:
-1. Be encouraging, helpful, and concise. Your replies must be relevant *only* to academic subjects, study techniques, or material presented in the app.
-2. **STRICTLY DO NOT** discuss or reveal information about API keys, model names, internal code, data structures, subscription tiers, or anything about your programming. You are an *in-app* Study Buddy, not a programmer's tool.
-3. If the user asks for the answer to a question in the context, try to guide them or explain the concept rather than just giving the letter (unless they are reviewing results).
-4. Use markdown for clear formatting (bold, italic, code blocks, lists).
-5. Always maintain a professional and educational tone.
-`;
+1. Discuss ONLY academic or study-related topics.
+2. Be concise and use Markdown.
+3. NEVER reveal your internal model names (${model}) or API keys.
+4. If a user is stuck on a quiz, guide them to the logic rather than just the answer.`;
 
-  if (context) {
-    if (context.type === "quiz_review") {
-      systemInstruction += `\n
-Active Context: Quiz Review
-Quiz Topic: ${context.topic}
-Question being discussed: ${context.questionText}
-Correct Answer: ${context.correctAnswer}
-Explanation: ${context.explanation}
- 
-The user is reviewing a specific question. Help them understand why the correct answer is correct and why their answer (if explicitly mentioned) might be wrong.`;
-    } else if (context.type === "dashboard") {
-      systemInstruction += `\nActive Context: Dashboard / General Study. Answer general study questions or questions about their progress.`;
-    }
-  } // Convert history to Gemini format
+  if (context?.type === "quiz_review") {
+    systemInstruction += `\nCurrently reviewing: ${context.topic}. 
+    Question: ${context.questionText}. 
+    Correct: ${context.correctAnswer}.`;
+  }
 
   const history = messages.map((msg) => ({
     role: msg.role === "user" ? "user" : "model",
@@ -698,9 +677,7 @@ The user is reviewing a specific question. Help them understand why the correct 
 
   const payload = {
     contents: history,
-    systemInstruction: {
-      parts: [{ text: systemInstruction }],
-    },
+    systemInstruction: { parts: [{ text: systemInstruction }] },
   };
 
   try {
@@ -710,110 +687,54 @@ The user is reviewing a specific question. Help them understand why the correct 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       }).then(async (res) => {
-        if (!res.ok) {
-          const text = await res.text();
-          const error = new Error("Gemini Chat API Error");
-          error.response = { status: res.status, text };
-          throw error;
-        }
+        if (!res.ok) throw new Error("Gemini Chat API Error");
         return res;
       })
     );
 
-    const resultText = await response.text();
-    let result;
-    try {
-      result = resultText ? JSON.parse(resultText) : null;
-    } catch {
-      result = null;
-    }
-
-    if (!result) throw new Error("Invalid chat response.");
-
-    const reply = result?.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!reply) throw new Error("Empty response from AI.");
-
-    return reply;
+    const result = await response.json();
+    return (
+      result?.candidates?.[0]?.content?.parts?.[0]?.text ||
+      "I'm sorry, I couldn't process that."
+    );
   } catch (error) {
-    throw new Error(`Chat failed: ${error.message}`);
+    throw new Error(`Chat connection failed: ${error.message}`);
   }
 };
 
 /**
- * AI-powered grading for Short Answer and Essay questions.
- * Acts as a strict academic examiner.
- * @param {object} user - The user object (for model selection)
- * @param {object} question - The question object with text, type, marks, correctAnswer
- * @param {string} userAnswer - The student's submitted answer
- * @param {string} topic - The quiz topic for context
- * @returns {Promise<object>} - { marksAwarded, totalMarks, justification, suggestion }
+ * Strict academic grading for Essay and Short Answer questions.
  */
 export const gradeAnswerHelper = async (user, question, userAnswer, topic) => {
   const apiKey = selectApiKey(user);
   const model = selectModel(user);
 
-  const questionType =
-    question.type === "Short Answer" || question.type === "ShortAnswer"
-      ? "Short Answer"
-      : "Essay";
+  const systemInstruction = `You are a strict academic examiner.
+  1. Grade rigorously based on factual accuracy and depth.
+  2. Award partial marks where appropriate.
+  3. Return ONLY valid JSON.`;
 
-  const systemInstruction = `You are a strict academic examiner. Your job is to grade student answers fairly but rigorously.
-
-IMPORTANT RULES:
-1. Be exam-realistic - do NOT be overgenerous with marks
-2. For Short Answer: Award marks based on key points expected (accuracy, completeness)
-3. For Essay: Distribute marks across knowledge (40%), explanation (30%), evaluation/analysis (30%)
-4. Deduct marks for: inaccuracies, irrelevant content, lack of depth, poor structure
-5. Award partial credit where appropriate
-6. Be consistent and fair in your assessment
-
-You MUST return ONLY valid JSON, no other text.`;
-
-  const prompt = `Grade the following ${questionType} answer.
-
-**Topic:** ${topic}
-**Question:** ${question.text}
-**Total Marks Available:** ${question.marks || 1}
-${
-  question.correctAnswer
-    ? `**Expected Key Points/Model Answer:** ${question.correctAnswer}`
-    : ""
-}
-
-**Student's Answer:** 
-${userAnswer || "(No answer provided)"}
-
----
-
-Evaluate based on:
-- Accuracy and correctness of information
-- Relevance to the question asked
-- Depth of explanation (especially for essays)
-- Structure and clarity of response
-
-Award marks fairly. If the answer is empty or completely wrong, award 0.
-
-Return ONLY this JSON structure:
-{
-  "marksAwarded": <number between 0 and ${question.marks || 1}>,
-  "totalMarks": ${question.marks || 1},
-  "justification": "<Brief 1-2 sentence explanation of why these marks were given>",
-  "suggestion": "<One concise tip to improve the answer>" or null
-}`;
+  const prompt = `Grade this student answer for the topic: ${topic}.
+  
+  Question: ${question.text}
+  Marks: ${question.marks || 1}
+  Expected: ${question.correctAnswer || "General topic knowledge"}
+  Student Answer: ${userAnswer || "(No answer provided)"}
+  
+  Return JSON:
+  {
+    "marksAwarded": <number>,
+    "totalMarks": ${question.marks || 1},
+    "justification": "Why this mark?",
+    "suggestion": "How to improve?"
+  }`;
 
   const payload = {
-    contents: [
-      {
-        role: "user",
-        parts: [{ text: prompt }],
-      },
-    ],
-    systemInstruction: {
-      parts: [{ text: systemInstruction }],
-    },
+    contents: [{ role: "user", parts: [{ text: prompt }] }],
+    systemInstruction: { parts: [{ text: systemInstruction }] },
     generationConfig: {
-      temperature: 0.3, // Lower temperature for more consistent grading
-      topP: 0.8,
+      responseMimeType: "application/json",
+      temperature: 0.2,
     },
   };
 
@@ -824,61 +745,35 @@ Return ONLY this JSON structure:
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       }).then(async (res) => {
-        if (!res.ok) {
-          const text = await res.text();
-          const error = new Error("Gemini Grading API Error");
-          error.response = { status: res.status, text };
-          throw error;
-        }
+        if (!res.ok) throw new Error("Gemini Grading Error");
         return res;
       })
     );
 
     const resultText = await response.text();
-    let result;
-    try {
-      result = resultText ? JSON.parse(resultText) : null;
-    } catch {
-      result = null;
-    }
+    const resultJson = JSON.parse(resultText);
+    const aiText = resultJson.candidates?.[0]?.content?.parts?.[0]?.text;
 
-    if (!result) throw new Error("Invalid grading response.");
+    const grading = cleanAndParseJSON(aiText);
+    if (!grading) throw new Error("Failed to parse grading result.");
 
-    const replyText = result?.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!replyText) throw new Error("Empty response from AI.");
-
-    // Parse the JSON from the AI response
-    // Clean the response - remove markdown code blocks if present
-    let cleanedReply = replyText.trim();
-    if (cleanedReply.startsWith("```json")) {
-      cleanedReply = cleanedReply.slice(7);
-    } else if (cleanedReply.startsWith("```")) {
-      cleanedReply = cleanedReply.slice(3);
-    }
-    if (cleanedReply.endsWith("```")) {
-      cleanedReply = cleanedReply.slice(0, -3);
-    }
-    cleanedReply = cleanedReply.trim();
-
-    const gradingResult = JSON.parse(cleanedReply);
-
-    // Validate and clamp marks
-    const maxMarks = question.marks || 1;
-    gradingResult.marksAwarded = Math.max(
-      0,
-      Math.min(maxMarks, gradingResult.marksAwarded || 0)
-    );
-    gradingResult.totalMarks = maxMarks;
-
-    return gradingResult;
+    const max = question.marks || 1;
+    return {
+      marksAwarded: Math.max(
+        0,
+        Math.min(max, Number(grading.marksAwarded) || 0)
+      ),
+      totalMarks: max,
+      justification: grading.justification || "Evaluated by AI examiner.",
+      suggestion: grading.suggestion || "Review the key concepts.",
+    };
   } catch (error) {
     console.error("Grading error:", error);
-    // Return a fallback result on error
     return {
       marksAwarded: 0,
       totalMarks: question.marks || 1,
       justification:
-        "Unable to grade this answer automatically. Please review manually.",
+        "Automatic grading failed. Please consult your instructor.",
       suggestion: null,
     };
   }

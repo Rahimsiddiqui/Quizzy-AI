@@ -375,7 +375,7 @@ const StudyFlashcards = ({
         <h3 className="text-xl font-bold text-textMain mb-2">
           No Flashcards Created
         </h3>
-        <p className="text-textMuted mb-6">
+        <p className="text-[15px] text-textMuted mb-6">
           Flashcards were not generated for this quiz.
         </p>
         <button

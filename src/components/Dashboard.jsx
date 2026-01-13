@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { motion, AnimatePresence } from "framer-motion";
+import { useSidebar } from "../context/SidebarContext";
 
 import {
   BarChart,
@@ -24,6 +25,8 @@ import {
   Trash2,
   Zap,
   AlertTriangle,
+  ChevronLeft,
+  ChevronRight,
   Search,
   Filter,
   BookOpen,
@@ -165,6 +168,25 @@ function useTailwindDark() {
   return isDark;
 }
 
+const QuizSkeleton = () => (
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    {[...Array(6)].map((_, i) => (
+      <div
+        key={i}
+        className="bg-surfaceHighlight rounded-xl p-5 border border-border animate-pulse"
+      >
+        <div className="h-4 w-16 bg-border rounded mb-4"></div>
+        <div className="h-6 w-3/4 bg-border rounded mb-2"></div>
+        <div className="h-4 w-1/2 bg-border rounded mb-6"></div>
+        <div className="flex justify-between pt-3 border-t border-border/50">
+          <div className="h-3 w-12 bg-border rounded"></div>
+          <div className="h-3 w-8 bg-border rounded"></div>
+        </div>
+      </div>
+    ))}
+  </div>
+);
+
 const Dashboard = ({ user }) => {
   const [quizzes, setQuizzes] = useState([]);
   const navigate = useNavigate();
@@ -186,6 +208,10 @@ const Dashboard = ({ user }) => {
     weakestType: "N/A",
   });
   const [isStudyBuddyOpen, setIsStudyBuddyOpen] = useState(false);
+  const [boostDismissed, setBoostDismissed] = useState(false);
+  const { sidebarCollapsed } = useSidebar();
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 9;
 
   // Weak Points Generator State
   const [isGeneratingWeakQuiz, setIsGeneratingWeakQuiz] = useState(false);
@@ -222,8 +248,14 @@ const Dashboard = ({ user }) => {
     setIsLoading(true);
     try {
       const userQuizzes = await StorageService.getQuizzes(user._id);
-      setQuizzes(userQuizzes?.quizzes || userQuizzes); // Handle paginated response
-      calculateAdvancedStats(userQuizzes?.quizzes || userQuizzes);
+      const quizList = userQuizzes?.quizzes || userQuizzes;
+
+      setQuizzes(quizList); // Handle paginated response
+      calculateAdvancedStats(quizList);
+
+      if (quizList.length > 0 && quizList.length % 5 === 0) {
+        setBoostDismissed(false);
+      }
     } catch {
       // Failed to refresh quizzes - notify user
       toast.error("Failed to load quizzes. Please try again.");
@@ -414,6 +446,17 @@ const Dashboard = ({ user }) => {
     });
   }, [quizzes, searchTerm, filterDifficulty]);
 
+  const paginatedQuizzes = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredQuizzes.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredQuizzes, currentPage]);
+
+  const totalPages = Math.ceil(filteredQuizzes.length / itemsPerPage);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterDifficulty]);
+
   const totalAvgScore =
     quizzes.filter((q) => q.score !== undefined).length > 0
       ? Math.round(
@@ -453,9 +496,12 @@ const Dashboard = ({ user }) => {
           </div>
         </div>
       </header>
-
       {/* KPI Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div
+        className={`grid grid-cols-1 sm:grid-cols-2 lg:${
+          sidebarCollapsed ? "grid-cols-4" : "grid-cols-2"
+        } gap-4`}
+      >
         {KPI_STATS.map((stat, idx) => (
           <div
             key={idx}
@@ -491,121 +537,123 @@ const Dashboard = ({ user }) => {
           </div>
         ))}
       </div>
-
       {/* Smart Actions */}
-      {stats.weakestTopic !== "N/A" && (
-        <div className="bg-blue-600 dark:bg-blue-800/60 rounded-2xl p-6 text-white shadow-lg-custom animate-fade-in relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
-          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
-            <div>
-              <h3 className="text-xl text-white dark:text-white/95 font-bold mb-2 flex items-center gap-2">
-                <Zap className="w-5 h-5 text-yellow-300" />
-                Boost Your Scores!
-              </h3>
-              <p className="opacity-90 max-w-xl">
-                We noticed you're struggling a bit with{" "}
-                <strong>{stats.weakestTopic}</strong>. Generate a personalized
-                quiz to turn that weakness into a strength.
-              </p>
-            </div>
-            <button
-              onClick={async () => {
-                if (isGeneratingWeakQuiz) return;
+      {stats.weakestTopic !== "N/A" &&
+        !boostDismissed &&
+        quizzes.length > 0 &&
+        quizzes.length % 5 === 0 && (
+          <div className="bg-blue-600 dark:bg-blue-800/60 rounded-2xl p-6 text-white shadow-lg-custom animate-fade-in relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+            <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+              <div>
+                <h3 className="text-xl text-white dark:text-white/95 font-bold mb-2 flex items-center gap-2">
+                  <Zap className="w-5 h-5 text-yellow-300" />
+                  Boost Your Scores!
+                </h3>
+                <p className="opacity-90 max-w-xl">
+                  We noticed you're struggling a bit with{" "}
+                  <strong>{stats.weakestTopic}</strong>. Generate a personalized
+                  quiz to turn that weakness into a strength.
+                </p>
+              </div>
+              <button
+                onClick={async () => {
+                  if (isGeneratingWeakQuiz) return;
 
-                setIsGeneratingWeakQuiz(true);
-                setGenerationProgress(0);
-                setGenerationStage("Analyzing Weakness...");
+                  setBoostDismissed(true);
+                  setIsGeneratingWeakQuiz(true);
+                  setGenerationProgress(0);
+                  setGenerationStage("Analyzing Weakness...");
 
-                // Simulation Timers
-                const timers = [];
-                timers.push(
-                  setTimeout(() => {
-                    setGenerationProgress(20);
-                    setGenerationStage("Preparing Questions...");
-                  }, 800)
-                );
-                timers.push(
-                  setTimeout(() => {
-                    setGenerationProgress(45);
-                    setGenerationStage("Generating Content...");
-                  }, 2500)
-                );
-                timers.push(
-                  setTimeout(() => {
-                    setGenerationProgress(70);
-                    setGenerationStage("Structuring Quiz...");
-                  }, 4500)
-                );
-                timers.push(
-                  setTimeout(() => {
-                    setGenerationProgress(90);
-                    setGenerationStage("Finalizing...");
-                  }, 6500)
-                );
-
-                try {
-                  const quiz = await generateQuiz(
-                    `Review: ${stats.weakestTopic}`, // Topic
-                    "Medium", // Difficulty
-                    5, // Question Count
-                    [QuestionType.MCQ], // Types
-                    10, // Total Marks
-                    "standard" // Exam Style
+                  // Simulation Timers
+                  const timers = [];
+                  timers.push(
+                    setTimeout(() => {
+                      setGenerationProgress(20);
+                      setGenerationStage("Preparing Questions...");
+                    }, 800)
+                  );
+                  timers.push(
+                    setTimeout(() => {
+                      setGenerationProgress(45);
+                      setGenerationStage("Generating Content...");
+                    }, 2500)
+                  );
+                  timers.push(
+                    setTimeout(() => {
+                      setGenerationProgress(70);
+                      setGenerationStage("Structuring Quiz...");
+                    }, 4500)
+                  );
+                  timers.push(
+                    setTimeout(() => {
+                      setGenerationProgress(90);
+                      setGenerationStage("Finalizing...");
+                    }, 6500)
                   );
 
-                  setGenerationStage("Saving Quiz...");
-                  const payload = {
-                    ...quiz,
-                    userId: user?._id || user?.id,
-                    isFlashcardSet: false, // Default for quick boost
-                  };
-
-                  const savedQuiz = await StorageService.saveQuiz(payload);
-                  const quizId = savedQuiz._id || savedQuiz.id;
-
-                  if (!quizId) throw new Error("Failed to persist quiz.");
-
-                  // AWARD EXP (Consistency with QuizGenerator)
                   try {
-                    await StorageService.awardQuizCreationExp(
-                      quiz.questions.length
+                    const quiz = await generateQuiz(
+                      `Review: ${stats.weakestTopic}`, // Topic
+                      "Medium", // Difficulty
+                      5, // Question Count
+                      [QuestionType.MCQ], // Types
+                      10, // Total Marks
+                      "standard" // Exam Style
                     );
-                  } catch (expErr) {
-                    console.error("Error awarding EXP:", expErr);
+
+                    setGenerationStage("Saving Quiz...");
+                    const payload = {
+                      ...quiz,
+                      userId: user?._id || user?.id,
+                      isFlashcardSet: false, // Default for quick boost
+                    };
+
+                    const savedQuiz = await StorageService.saveQuiz(payload);
+                    const quizId = savedQuiz._id || savedQuiz.id;
+
+                    if (!quizId) throw new Error("Failed to persist quiz.");
+
+                    // AWARD EXP (Consistency with QuizGenerator)
+                    try {
+                      await StorageService.awardQuizCreationExp(
+                        quiz.questions.length
+                      );
+                    } catch (expErr) {
+                      console.error("Error awarding EXP:", expErr);
+                    }
+
+                    // NOTIFY APP
+                    window.dispatchEvent(new Event("quizGenerated"));
+
+                    // Clear simulation timers
+                    timers.forEach(clearTimeout);
+
+                    setGenerationProgress(100);
+                    setGenerationStage("Ready!");
+
+                    // Small delay for 100% visualization
+                    setTimeout(() => {
+                      navigate(`/quiz/${quizId}`);
+                    }, 600);
+                  } catch (error) {
+                    timers.forEach(clearTimeout);
+                    setIsGeneratingWeakQuiz(false);
+                    console.error("Gemini Generation Error:", error);
+                    toast.error(
+                      error.message ||
+                        "Failed to generate targeted quiz. Please try again."
+                    );
                   }
-
-                  // NOTIFY APP
-                  window.dispatchEvent(new Event("quizGenerated"));
-
-                  // Clear simulation timers
-                  timers.forEach(clearTimeout);
-
-                  setGenerationProgress(100);
-                  setGenerationStage("Ready!");
-
-                  // Small delay for 100% visualization
-                  setTimeout(() => {
-                    navigate(`/quiz/${quizId}`);
-                  }, 600);
-                } catch (error) {
-                  timers.forEach(clearTimeout);
-                  setIsGeneratingWeakQuiz(false);
-                  console.error("Gemini Generation Error:", error);
-                  toast.error(
-                    error.message ||
-                      "Failed to generate targeted quiz. Please try again."
-                  );
-                }
-              }}
-              className="whitespace-nowrap px-6 py-3 bg-white dark:bg-white/85 hover:shadow-md-custom text-primary dark:text-blue-700 font-bold rounded-xl transition-colors flex items-center gap-2 point"
-            >
-              <Target className="w-5 h-5" />
-              Target Weak Points
-            </button>
+                }}
+                className="whitespace-nowrap px-6 py-3 bg-white dark:bg-white/85 hover:shadow-md-custom text-primary dark:text-blue-700 font-bold rounded-xl transition-colors flex items-center gap-2 point"
+              >
+                <Target className="w-5 h-5" />
+                Target Weak Points
+              </button>
+            </div>
           </div>
-        </div>
-      )}
-
+        )}
       {/* Analytics Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Difficulty Chart */}
@@ -720,10 +768,13 @@ const Dashboard = ({ user }) => {
           )}
         </div>
       </div>
-
       {/* All Quizzes Section */}
       <div className="bg-surface p-6 rounded-2xl border border-border shadow-md-custom">
-        <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+        <div
+          className={`flex flex-col min-[950px]:${
+            sidebarCollapsed ? "flex-row" : "flex-col"
+          } min-[1130px]:flex-row justify-between items-center mb-6 gap-4`}
+        >
           <div>
             <h2 className="text-2xl font-bold text-textMain text-center md:text-left">
               All Quizzes
@@ -733,8 +784,94 @@ const Dashboard = ({ user }) => {
             </p>
           </div>
 
+          <div className="flex flex-col min-[450px]:flex-row items-center gap-4 mb-2 min-[450px]:gap-3">
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="flex items-center gap-1 px-3.5 py-2 border border-border rounded-xl text-xs font-bold text-textMain hover:bg-surfaceHighlight shadow-sm transition-all disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed"
+            >
+              <ChevronLeft size={14} />
+              Prev
+            </button>
+
+            <div className="flex items-center gap-1 mx-2">
+              {totalPages <= 5 ? (
+                [...Array(totalPages)].map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setCurrentPage(i + 1)}
+                    className={`w-8 h-8 rounded-lg text-xs font-bold transition-all point shadow-sm ${
+                      currentPage === i + 1
+                        ? "bg-primary text-white shadow-lg shadow-primary/20"
+                        : "text-textMuted hover:text-textMain bg-surface border border-border"
+                    }`}
+                  >
+                    {i + 1}
+                  </button>
+                ))
+              ) : (
+                <>
+                  {totalPages > 2 && (
+                    <>
+                      <button
+                        onClick={() => setCurrentPage(1)}
+                        className="w-8 h-8 rounded-lg text-xs font-bold text-textMuted hover:text-textMain bg-surface border border-border transition-all shadow-sm"
+                      >
+                        1
+                      </button>
+                      {totalPages > 3 && (
+                        <span className="px-1 text-textMuted">...</span>
+                      )}
+                    </>
+                  )}
+                  {[
+                    Math.max(1, currentPage - 1),
+                    currentPage,
+                    Math.min(totalPages, currentPage + 1),
+                  ]
+                    .filter((p, i, arr) => arr.indexOf(p) === i)
+                    .map((p) => (
+                      <button
+                        key={p}
+                        onClick={() => setCurrentPage(p)}
+                        className={`w-8 h-8 rounded-lg text-xs font-bold transition-all shadow-sm ${
+                          currentPage === p
+                            ? "bg-primary text-white shadow-lg shadow-primary/20"
+                            : "text-textMuted hover:text-textMain bg-surface border border-border"
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    ))}
+                  {currentPage < totalPages - 1 && (
+                    <>
+                      {currentPage < totalPages - 2 && (
+                        <span className="px-1 text-textMuted">...</span>
+                      )}
+                      <button
+                        onClick={() => setCurrentPage(totalPages)}
+                        className="w-8 h-8 rounded-lg text-xs font-bold text-textMuted hover:text-textMain bg-surface border border-border transition-all shadow-sm"
+                      >
+                        {totalPages}
+                      </button>
+                    </>
+                  )}
+                </>
+              )}
+            </div>
+
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="flex items-center gap-1 px-3.5 py-2 bg-primary text-white rounded-xl text-xs font-bold hover:brightness-110 shadow-lg shadow-primary/20 transition-all disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed"
+            >
+              Next
+              <ChevronRight size={14} />
+            </button>
+          </div>
+
           {/* Search and Filter */}
-          <div className="flex gap-2 w-full md:w-auto">
+          <div className="flex flex-col min-[450px]:flex-row gap-3 w-full md:w-auto">
             <div className="relative flex-1 md:w-64">
               <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
               <input
@@ -755,7 +892,7 @@ const Dashboard = ({ user }) => {
               <select
                 value={filterDifficulty}
                 onChange={(e) => setFilterDifficulty(e.target.value)}
-                className="pl-3 pr-8 py-2 text-sm shadow-md-custom bg-surfaceHighlight border border-border rounded-lg outline-none focus:ring-2 focus:ring-primary appearance-none cursor-pointer transition-all"
+                className="pl-3 pr-8 py-2 text-sm shadow-md-custom bg-surfaceHighlight border border-border rounded-lg outline-none focus:ring-2 focus:ring-primary appearance-none cursor-pointer transition-all w-full"
               >
                 <option value="All">All</option>
                 <option value="Easy">Easy</option>
@@ -769,12 +906,10 @@ const Dashboard = ({ user }) => {
 
         {/* Quiz List */}
         {isLoading && quizzes.length === 0 ? (
-          <div className="col-span-full text-center text-textMuted py-10">
-            Loading Quizzes{loadingDots}
-          </div>
+          <QuizSkeleton />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredQuizzes.length === 0 ? (
+            {paginatedQuizzes.length === 0 ? (
               <div className="col-span-full text-center text-textMuted py-10">
                 {quizzes.length === 0 ? (
                   <>
@@ -791,7 +926,7 @@ const Dashboard = ({ user }) => {
                 )}
               </div>
             ) : (
-              filteredQuizzes.map((quiz) => (
+              paginatedQuizzes.map((quiz) => (
                 <motion.div
                   key={quiz._id}
                   initial={{ opacity: 1, scale: 1 }}
@@ -953,7 +1088,6 @@ const Dashboard = ({ user }) => {
           </motion.div>
         )}
       </AnimatePresence>
-
       {/* AI Study Buddy */}
       {!isStudyBuddyOpen && (
         <button

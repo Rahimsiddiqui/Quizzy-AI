@@ -227,7 +227,7 @@ export default function AdminLayout() {
                   sidebarCollapsed ? "col" : "row"
                 } items-center gap-3 px-3 py-3 hover:pl-4 rounded-xl transition-all group ${
                   isActive
-                    ? "bg-indigo-100/70 dark:bg-blue-800/20 text-primary dark:text-blue-400 shadow-sm pl-4"
+                    ? "bg-indigo-100/70 dark:bg-blue-800/20 text-primary dark:text-blue-400 dark:shadow-slate-700 shadow-sm pl-4"
                     : "text-textMuted hover:bg-surfaceHighlight hover:text-textMain"
                 }`}
               >
@@ -261,12 +261,12 @@ export default function AdminLayout() {
         <div className="p-4 pt-6 border-t border-border">
           <button
             onClick={handleLogoutClick}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 text-[15px] font-medium text-textMuted hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-red-800/30 dark:hover:text-red-400 rounded-xl transition-all point ${
+            className={`w-full flex items-center gap-3 px-3 py-2.5 text-[15px] font-medium text-textMuted hover:bg-rose-100/70 hover:text-rose-600 dark:hover:bg-red-800/30 dark:hover:text-red-400 rounded-xl transition-all point ${
               !sidebarCollapsed ? "justify-start" : "justify-center"
             }`}
           >
-            <LogOut size={18} />
-            {!sidebarCollapsed && <span>Log out</span>}
+            <LogOut size={20} />
+            {!sidebarCollapsed && <span>Logout</span>}
           </button>
         </div>
 

@@ -106,13 +106,14 @@ const Overview = ({ user }) => {
     if (typeof text !== "string") text = String(text ?? "");
 
     return text.split("\n").map((line, idx) => {
-      const parts = line.split(/(\*\*.*?\*\*)/g);
+      const parts = line.split(/(\*\*.*?\*\*|\*.*?\*)/g);
       return (
         <p key={idx} className="mb-2">
           {parts.map((part, i) =>
-            (part?.startsWith("**") || part?.startsWith("*")) &&
-            (part?.endsWith("**") || part?.endsWith("*")) ? (
+            part?.startsWith("**") && part?.endsWith("**") ? (
               <strong key={i}>{part.slice(2, -2)}</strong>
+            ) : part?.startsWith("*") && part?.endsWith("*") ? (
+              <i key={i}>{part.slice(1, -1)}</i>
             ) : (
               part
             )

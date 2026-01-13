@@ -994,10 +994,10 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
                               newFullName.length < 6 ||
                               isUpdatingFullName
                             }
-                            className={`flex-1 font-semibold py-2 rounded-lg transition-all flex items-center justify-center gap-2 cursor-pointer ${
-                              !newFullName || newFullName.length < 6
-                                ? "bg-primary dark:bg-blue-700 text-white hover:text-white/90 hover:bg-blue-700 dark:hover:bg-blue-700/80 disabled:opacity-50 disabled:cursor-not-allowed"
-                                : "bg-primary dark:bg-blue-700 text-white hover:text-white/90 hover:bg-blue-700 dark:hover:bg-blue-700/80"
+                            className={`flex-1 font-semibold py-2 rounded-lg transition-all flex items-center justify-center gap-2 cursor-pointer bg-primary dark:bg-blue-700 text-white hover:text-white/90 hover:bg-blue-700 dark:hover:bg-blue-700/80 ${
+                              !newFullName ||
+                              ((newFullName.length < 6 || isUpdatingFullName) &&
+                                "disabled:opacity-50 disabled:cursor-not-allowed")
                             }`}
                           >
                             {isUpdatingFullName ? (
@@ -1172,14 +1172,13 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
                               usernameError ||
                               isUpdatingUsername
                             }
-                            className={`flex-1 font-semibold py-2 rounded-lg transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                            className={`flex-1 font-semibold py-2 rounded-lg transition-all flex items-center justify-center gap-2 cursor-pointer bg-primary dark:bg-blue-700 text-white hover:text-white/90 hover:bg-blue-700 dark:hover:bg-blue-700/80 ${
                               !newUsername ||
                               newUsername.length < 6 ||
                               /\s/.test(newUsername) ||
                               /[A-Z]/.test(newUsername) ||
-                              usernameError
-                                ? "bg-primary dark:bg-blue-700 text-white hover:text-white/90 hover:bg-blue-700 dark:hover:bg-blue-700/80 disabled:opacity-50 disabled:cursor-not-allowed"
-                                : "bg-primary dark:bg-blue-700 text-white hover:text-white/90 hover:bg-blue-700 dark:hover:bg-blue-700/80"
+                              ((usernameError || isUpdatingUsername) &&
+                                "disabled:opacity-50 disabled:cursor-not-allowed")
                             }`}
                           >
                             {isUpdatingUsername ? (
@@ -2074,7 +2073,7 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
                     onClick={() => setActiveTab(tab.id)}
                     className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-left font-medium point hover:pl-5.5 ${
                       isActive
-                        ? "bg-primary/10 text-primary dark:text-blue-400 shadow-sm pl-5.5"
+                        ? "bg-primary/10 text-primary dark:text-blue-400 dark:shadow-slate-700 shadow-sm pl-5.5"
                         : "text-textMuted hover:bg-surfaceHighlight"
                     }`}
                   >
