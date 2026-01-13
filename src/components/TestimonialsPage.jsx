@@ -10,24 +10,21 @@ const TestimonialsPage = () => {
       role: "Pre-Med Student",
       rating: 5,
       text: "Qubli AI completely transformed how I study. The AI-generated quizzes are so relevant and the flashcards help me retain information way better. I've improved my grades significantly!",
-      image: "SC",
-      color: "bg-blue-500",
+      image: "/images/review-sarah.png",
     },
     {
-      name: "Marcus Johnson",
-      role: "College Junior",
+      name: "James Smith",
+      role: "College Student",
       rating: 5,
       text: "I improved my exam scores by 30% in just one month of using Qubli AI. The analytics showed exactly what I needed to focus on, and the study recommendations were spot-on.",
-      image: "MJ",
-      color: "bg-purple-500",
+      image: "/images/review-smith.png",
     },
     {
       name: "Dr. Emily Rodriguez",
       role: "High School Teacher",
       rating: 5,
       text: "As a teacher, I use Qubli AI to create assessments for my students. It saves me so much time and the AI suggestions are incredibly accurate. My students love the interactive format!",
-      image: "ER",
-      color: "bg-green-500",
+      image: "/images/review-emily.png",
     },
     {
       name: "James Lee",
@@ -35,7 +32,6 @@ const TestimonialsPage = () => {
       rating: 5,
       text: "The flashcard system with spaced repetition is incredible. I've tried many study apps, but Qubli AI is by far the most effective. The time I save allows me to focus on deeper learning.",
       image: "JL",
-      color: "bg-orange-500",
     },
     {
       name: "Priya Patel",
@@ -43,7 +39,6 @@ const TestimonialsPage = () => {
       rating: 5,
       text: "I used Qubli AI to prepare for the GMAT and scored 750! The AI-generated practice questions are incredibly close to the actual test format. Highly recommend!",
       image: "PP",
-      color: "bg-pink-500",
     },
     {
       name: "David Thompson",
@@ -51,7 +46,6 @@ const TestimonialsPage = () => {
       rating: 5,
       text: "The offline functionality is a game-changer. I can study anywhere without worrying about internet connection. Plus, the app is lightning-fast and never crashes.",
       image: "DT",
-      color: "bg-red-500",
     },
     {
       name: "Lisa Wang",
@@ -59,7 +53,6 @@ const TestimonialsPage = () => {
       rating: 5,
       text: "The detailed analytics help me understand my learning patterns. I can see which topics I'm strong in and where I need improvement. This data-driven approach changed my study strategy.",
       image: "LW",
-      color: "bg-indigo-500",
     },
     {
       name: "Ahmed Hassan",
@@ -67,7 +60,6 @@ const TestimonialsPage = () => {
       rating: 5,
       text: "Qubli AI's ability to generate quizzes on complex technical topics is exceptional. The questions test real understanding, not just memorization. Best study tool I've found!",
       image: "AH",
-      color: "bg-cyan-500",
     },
     {
       name: "Victoria Miller",
@@ -75,7 +67,6 @@ const TestimonialsPage = () => {
       rating: 5,
       text: "The customizable difficulty levels mean I can start easy and gradually increase the challenge. Perfect for building confidence and mastering difficult concepts progressively.",
       image: "VM",
-      color: "bg-teal-500",
     },
   ];
 
@@ -124,11 +115,12 @@ const TestimonialsPage = () => {
 
                 {/* User Info */}
                 <div className="flex items-center gap-4 pt-6 border-t border-border">
-                  <div
-                    className={`w-12 h-12 ${testimonial.color} rounded-full flex items-center justify-center text-white font-bold text-sm`}
-                  >
-                    {testimonial.image}
-                  </div>
+                  <img
+                    className="w-12 h-12 rounded-full"
+                    src={testimonial.image}
+                    alt={testimonial.name}
+                    loading="lazy"
+                  />
                   <div>
                     <div className="font-semibold text-textMain">
                       {testimonial.name}
