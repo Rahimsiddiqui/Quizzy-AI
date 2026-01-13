@@ -9,6 +9,7 @@ import {
   Check,
   Layers,
   Eye,
+  Loader2,
   ChevronDown,
   Sparkles,
   X,
