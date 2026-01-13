@@ -172,7 +172,7 @@ const AuthForm = ({ onLogin }) => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden animate-fade-in-up">
+    <main className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden animate-fade-in-up">
       {/* Decorative Background */}
       <div className="absolute top-[-10%] left-[-10%] w-125 h-125 bg-blue-100 dark:bg-blue-900 rounded-full blur-[100px] pointer-events-none opacity-60"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-125 h-125 bg-indigo-100 dark:bg-indigo-950 rounded-full blur-[100px] pointer-events-none opacity-60"></div>
@@ -412,7 +412,7 @@ const AuthForm = ({ onLogin }) => {
           </p>
         </div>
       </div>
-    </div>
+    </main>
   );
 };
 

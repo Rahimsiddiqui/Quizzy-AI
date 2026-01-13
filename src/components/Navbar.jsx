@@ -33,6 +33,7 @@ const Navbar = () => {
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           className="md:hidden p-3 hover:bg-surfaceHighlight rounded-[5px] transition-all duration-300 point"
+          aria-label={mobileMenuOpen ? "Close Menu" : "Open Menu"}
         >
           {mobileMenuOpen ? (
             <X className="w-6 h-6 transition-all duration-300" />

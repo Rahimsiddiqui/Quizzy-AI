@@ -361,8 +361,8 @@ const LandingPage = () => {
 
             {/* Product */}
             <div>
-              <h4 className="font-bold mb-4">Product</h4>
-              <ul className="space-y-2 text-textMuted text-sm">
+              <span className="font-bold text-[17px]">Product</span>
+              <ul className="space-y-2 mt-2.5 text-textMuted text-sm">
                 <li>
                   <Link
                     to="/features"
@@ -389,8 +389,8 @@ const LandingPage = () => {
 
             {/* Company */}
             <div>
-              <h4 className="font-bold mb-4">Company</h4>
-              <ul className="space-y-2 text-textMuted text-sm">
+              <span className="font-bold text-[17px]">Company</span>
+              <ul className="space-y-2 mt-2.5 text-textMuted text-sm">
                 <li>
                   <Link
                     to="/about"
@@ -417,8 +417,8 @@ const LandingPage = () => {
 
             {/* Legal */}
             <div>
-              <h4 className="font-bold mb-4">Legal</h4>
-              <ul className="space-y-2 text-textMuted text-sm">
+              <span className="font-bold text-[17px]">Legal</span>
+              <ul className="space-y-2 mt-2.5 text-textMuted text-sm">
                 <li>
                   <Link
                     to="/policies"
