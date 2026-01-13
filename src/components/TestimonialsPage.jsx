@@ -32,6 +32,7 @@ const TestimonialsPage = () => {
       rating: 5,
       text: "The flashcard system with spaced repetition is incredible. I've tried many study apps, but Qubli AI is by far the most effective. The time I save allows me to focus on deeper learning.",
       image: "JL",
+      bg: "bg-blue-500",
     },
     {
       name: "Priya Patel",
@@ -39,6 +40,7 @@ const TestimonialsPage = () => {
       rating: 5,
       text: "I used Qubli AI to prepare for the GMAT and scored 750! The AI-generated practice questions are incredibly close to the actual test format. Highly recommend!",
       image: "PP",
+      bg: "bg-green-500",
     },
     {
       name: "David Thompson",
@@ -46,6 +48,7 @@ const TestimonialsPage = () => {
       rating: 5,
       text: "The offline functionality is a game-changer. I can study anywhere without worrying about internet connection. Plus, the app is lightning-fast and never crashes.",
       image: "DT",
+      bg: "bg-yellow-500",
     },
     {
       name: "Lisa Wang",
@@ -53,6 +56,7 @@ const TestimonialsPage = () => {
       rating: 5,
       text: "The detailed analytics help me understand my learning patterns. I can see which topics I'm strong in and where I need improvement. This data-driven approach changed my study strategy.",
       image: "LW",
+      bg: "bg-red-500",
     },
     {
       name: "Ahmed Hassan",
@@ -60,6 +64,7 @@ const TestimonialsPage = () => {
       rating: 5,
       text: "Qubli AI's ability to generate quizzes on complex technical topics is exceptional. The questions test real understanding, not just memorization. Best study tool I've found!",
       image: "AH",
+      bg: "bg-purple-500",
     },
     {
       name: "Victoria Miller",
@@ -67,6 +72,7 @@ const TestimonialsPage = () => {
       rating: 5,
       text: "The customizable difficulty levels mean I can start easy and gradually increase the challenge. Perfect for building confidence and mastering difficult concepts progressively.",
       image: "VM",
+      bg: "bg-pink-500",
     },
   ];
 
@@ -115,12 +121,22 @@ const TestimonialsPage = () => {
 
                 {/* User Info */}
                 <div className="flex items-center gap-4 pt-6 border-t border-border">
-                  <img
-                    className="w-12 h-12 rounded-full"
-                    src={testimonial.image}
-                    alt={testimonial.name}
-                    loading="lazy"
-                  />
+                  {testimonial.bg ? (
+                    <div
+                      className={`w-12 h-12 rounded-full ${testimonial.bg} flex items-center justify-center`}
+                    >
+                      <span className="text-white text-lg font-bold">
+                        {testimonial.image}
+                      </span>
+                    </div>
+                  ) : (
+                    <img
+                      className="w-12 h-12 rounded-full"
+                      src={testimonial.image}
+                      alt={testimonial.name}
+                      loading="lazy"
+                    />
+                  )}
                   <div>
                     <div className="font-semibold text-textMain">
                       {testimonial.name}

@@ -229,9 +229,12 @@ const LandingPage = () => {
                 information way better."
               </p>
               <div className="flex items-center gap-3 pt-6 border-t border-border">
-                <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                  SC
-                </div>
+                <img
+                  className="w-12 h-12 rounded-full"
+                  src="/images/review-sarah.png"
+                  alt="Sarah Chen"
+                  loading="lazy"
+                />
                 <div>
                   <div className="font-semibold text-textMain">Sarah Chen</div>
                   <div className="text-sm text-textMuted">Pre-Med Student</div>
@@ -255,17 +258,18 @@ const LandingPage = () => {
               <p className="text-textMuted mb-6">
                 "I improved my exam scores by 30% in just one month of using
                 Qubli AI. The analytics showed exactly what I needed to focus
-                on."
+                on, and the study recommendations were spot-on."
               </p>
               <div className="flex items-center gap-3 pt-6 border-t border-border">
-                <div className="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                  MJ
-                </div>
+                <img
+                  className="w-12 h-12 rounded-full"
+                  src="/images/review-smith.png"
+                  alt="James Smith"
+                  loading="lazy"
+                />
                 <div>
-                  <div className="font-semibold text-textMain">
-                    Marcus Johnson
-                  </div>
-                  <div className="text-sm text-textMuted">College Junior</div>
+                  <div className="font-semibold text-textMain">James Smith</div>
+                  <div className="text-sm text-textMuted">College Student</div>
                 </div>
               </div>
             </div>
@@ -286,12 +290,15 @@ const LandingPage = () => {
               <p className="text-textMuted mb-6">
                 "As a teacher, I use Qubli AI to create assessments for my
                 students. It saves me so much time and the AI suggestions are
-                spot-on."
+                incredibly accurate. My students love the interactive format!"
               </p>
               <div className="flex items-center gap-3 pt-6 border-t border-border">
-                <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                  ER
-                </div>
+                <img
+                  className="w-12 h-12 rounded-full"
+                  src="/images/review-emily.png"
+                  alt="Doctor Emily Rodriguez"
+                  loading="lazy"
+                />
                 <div>
                   <div className="font-semibold text-textMain">
                     Dr. Emily Rodriguez
