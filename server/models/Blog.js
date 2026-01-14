@@ -23,7 +23,6 @@ const BlogSchema = new mongoose.Schema(
 
 // Index for getting latest published blogs efficiently
 BlogSchema.index({ isPublished: 1, publishedAt: -1 });
-BlogSchema.index({ slug: 1 });
 
 const Blog = mongoose.model("Blog", BlogSchema);
 
