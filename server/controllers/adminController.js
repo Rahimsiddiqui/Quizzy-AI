@@ -47,14 +47,28 @@ export const adminLogin = async (req, res) => {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    // Update lastLogin
-    admin.lastLogin = new Date();
+    // Generate Session
+    const session = {
+      deviceName: "Admin Portal",
+      userAgent: req.headers["user-agent"] || "Unknown",
+      ipAddress: req.ip || "Unknown",
+      lastActive: new Date(),
+      isCurrent: true,
+    };
+
+    admin.sessions.push(session);
     await admin.save();
 
+    const sessionId = admin.sessions[admin.sessions.length - 1]._id;
+
     // Generate JWT token
-    const token = jwt.sign({ id: admin._id, role: admin.role }, JWT_SECRET, {
-      expiresIn: "7d",
-    });
+    const token = jwt.sign(
+      { id: admin._id, role: admin.role, sessionId },
+      JWT_SECRET,
+      {
+        expiresIn: "7d",
+      }
+    );
 
     res.json({
       token,

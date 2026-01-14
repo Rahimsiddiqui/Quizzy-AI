@@ -255,6 +255,9 @@ export default function AdminBlogs() {
                   Author
                 </th>
                 <th className="px-6 py-4 text-[11px] font-bold text-textMuted uppercase tracking-[0.2em] text-center">
+                  Views
+                </th>
+                <th className="px-6 py-4 text-[11px] font-bold text-textMuted uppercase tracking-[0.2em] text-center">
                   Status
                 </th>
                 <th className="px-6 py-4 text-[11px] font-bold text-textMuted uppercase tracking-[0.2em] text-center">
@@ -280,6 +283,9 @@ export default function AdminBlogs() {
                       <div className="h-4 bg-surfaceHighlight rounded w-24"></div>
                     </td>
                     <td className="px-6 py-4">
+                      <div className="h-4 bg-surfaceHighlight rounded w-16 mx-auto"></div>
+                    </td>
+                    <td className="px-6 py-4">
                       <div className="h-6 bg-surfaceHighlight rounded-full w-20 mx-auto"></div>
                     </td>
                     <td className="px-6 py-4">
@@ -290,7 +296,7 @@ export default function AdminBlogs() {
               ) : paginatedBlogs.length === 0 ? (
                 <tr>
                   <td
-                    colSpan="4"
+                    colSpan="5"
                     className="px-6 py-20 text-center text-textMuted font-medium"
                   >
                     No blogs found.
@@ -330,6 +336,12 @@ export default function AdminBlogs() {
                       <span className="text-sm text-textMain font-medium">
                         {blog.author?.name || "Qubli Team"}
                       </span>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <div className="flex items-center justify-center gap-1 text-xs font-semibold text-textMuted bg-surfaceHighlight/50 px-2 py-1 rounded-lg border border-border/50">
+                        <Eye size={12} />
+                        {blog.views?.toLocaleString() || 0}
+                      </div>
                     </td>
                     <td className="px-6 py-4 text-center">
                       <span
