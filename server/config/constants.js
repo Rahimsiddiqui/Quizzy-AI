@@ -86,8 +86,8 @@ export const TIER_LIMITS = {
   [SubscriptionTier.Basic]: {
     monthlyGenerations: 35,
     monthlyFlashcardGenerations: 17,
-    monthlyPdfUploads: 20,
-    monthlyPdfExports: 20,
+    monthlyPdfUploads: 15,
+    monthlyPdfExports: 15,
     maxQuestions: 25,
     maxMarks: 60,
     flashcardLimit: 200,

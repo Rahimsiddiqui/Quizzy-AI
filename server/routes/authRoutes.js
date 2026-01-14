@@ -270,6 +270,80 @@ router.post("/change-fullname", protect, async (req, res) => {
   }
 });
 
+// Update profile picture
+router.post("/update-picture", protect, async (req, res) => {
+  const { picture } = req.body;
+
+  try {
+    const user = await User.findById(req.userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // Allow clearing the picture (set to null)
+    if (picture === null || picture === "") {
+      user.picture = null;
+      await user.save();
+      return res.status(200).json({
+        message: "Profile picture removed",
+        user: {
+          id: user._id,
+          name: user.name,
+          picture: null,
+        },
+      });
+    }
+
+    // Validate base64 image or URL
+    if (typeof picture !== "string") {
+      return res.status(400).json({ message: "Invalid picture format" });
+    }
+
+    // Check if it's a base64 image
+    if (picture.startsWith("data:image/")) {
+      // Validate size (max 2MB for base64)
+      const base64Size = (picture.length * 3) / 4;
+      const maxSize = 2 * 1024 * 1024; // 2MB
+      if (base64Size > maxSize) {
+        return res.status(400).json({
+          message: "Image too large. Maximum size is 2MB.",
+        });
+      }
+
+      // Validate image type
+      const validTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+      const mimeMatch = picture.match(/data:(image\/[a-z]+);base64,/);
+      if (!mimeMatch || !validTypes.includes(mimeMatch[1])) {
+        return res.status(400).json({
+          message: "Invalid image type. Use JPEG, PNG, GIF, or WebP.",
+        });
+      }
+    } else if (
+      picture.startsWith("http://") ||
+      picture.startsWith("https://")
+    ) {
+      // It's a URL - just validate it's a reasonable length
+      if (picture.length > 2048) {
+        return res.status(400).json({ message: "URL too long" });
+      }
+    } else {
+      return res.status(400).json({ message: "Invalid picture format" });
+    }
+
+    user.picture = picture;
+    await user.save();
+
+    res.status(200).json({
+      message: "Profile picture updated",
+      user: {
+        id: user._id,
+        name: user.name,
+        picture: user.picture,
+      },
+    });
+  } catch {
+    res.status(500).json({ message: "Server error updating picture" });
+  }
+});
+
 // Confirm password for sensitive operations
 router.post("/confirm-password", protect, async (req, res) => {
   const { password } = req.body;

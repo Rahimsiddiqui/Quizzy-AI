@@ -52,6 +52,9 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
   const [showFullNameEdit, setShowFullNameEdit] = useState(false);
   const [isUpdatingFullName, setIsUpdatingFullName] = useState(false);
   const [fullNameError, setFullNameError] = useState("");
+  // Profile picture editing state
+  const [isUpdatingPicture, setIsUpdatingPicture] = useState(false);
+  const [pictureError, setPictureError] = useState("");
   // Generate multiple sanitized username suggestions (dots, underscores, numeric suffixes)
   const suggestedVariants = useMemo(() => {
     const baseRaw = (user?.username || user?.name || "").toString();
@@ -386,6 +389,107 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
       setFullNameError("Error updating full name");
     } finally {
       setIsUpdatingFullName(false);
+    }
+  };
+
+  // Handle profile picture change
+  const handlePictureChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const validTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+    if (!validTypes.includes(file.type)) {
+      setPictureError("Invalid file type. Use JPEG, PNG, GIF, or WebP.");
+      toast.error("Invalid file type");
+      return;
+    }
+
+    // Validate file size (max 2MB)
+    const maxSize = 2 * 1024 * 1024;
+    if (file.size > maxSize) {
+      setPictureError("Image too large. Maximum size is 2MB.");
+      toast.error("Image too large. Maximum 2MB.");
+      return;
+    }
+
+    setPictureError("");
+    setIsUpdatingPicture(true);
+
+    try {
+      // Convert to base64
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const base64 = reader.result;
+        try {
+          const response = await fetch(
+            `${import.meta.env.VITE_API_URL}/api/auth/update-picture`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${StorageService.getToken()}`,
+              },
+              body: JSON.stringify({ picture: base64 }),
+            }
+          );
+
+          if (response.ok) {
+            toast.success("Profile picture updated!");
+            if (refreshUser) refreshUser();
+          } else {
+            const data = await response.json().catch(() => ({}));
+            setPictureError(data.message || "Failed to update picture");
+            toast.error(data.message || "Failed to update picture");
+          }
+        } catch {
+          setPictureError("Error updating picture");
+          toast.error("Error updating picture");
+        } finally {
+          setIsUpdatingPicture(false);
+        }
+      };
+      reader.onerror = () => {
+        setPictureError("Error reading file");
+        toast.error("Error reading file");
+        setIsUpdatingPicture(false);
+      };
+      reader.readAsDataURL(file);
+    } catch {
+      setPictureError("Error processing image");
+      toast.error("Error processing image");
+      setIsUpdatingPicture(false);
+    }
+  };
+
+  // Handle removing profile picture
+  const handleRemovePicture = async () => {
+    setIsUpdatingPicture(true);
+    setPictureError("");
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/auth/update-picture`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${StorageService.getToken()}`,
+          },
+          body: JSON.stringify({ picture: null }),
+        }
+      );
+
+      if (response.ok) {
+        toast.success("Profile picture removed");
+        if (refreshUser) refreshUser();
+      } else {
+        const data = await response.json().catch(() => ({}));
+        toast.error(data.message || "Failed to remove picture");
+      }
+    } catch {
+      toast.error("Error removing picture");
+    } finally {
+      setIsUpdatingPicture(false);
     }
   };
 
@@ -905,306 +1009,450 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
       case "account":
         return (
           <div className="space-y-6">
-            <div>
-              <h3 className="text-lg font-bold text-textMain mb-4">
-                Profile Info
-              </h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-textMuted mb-2">
-                    Full Name
-                  </label>
-                  <div className="flex items-center gap-2">
+            <div className="space-y-8">
+              {/* Profile Picture Section - Prominent & Centered */}
+              <div className="flex flex-col items-center pb-6 border-b border-border">
+                <div className="relative group">
+                  {/* Avatar with hover overlay */}
+                  <div className="w-28 h-28 rounded-full overflow-hidden bg-linear-to-br from-primary/20 to-blue-500/20 border-4 border-surface shadow-lg ring-4 ring-primary/10 dark:ring-blue-500/10 transition-all duration-300 group-hover:ring-primary/30 dark:group-hover:ring-blue-500/30">
+                    {user?.picture ? (
+                      <img
+                        src={user.picture}
+                        alt={user.name}
+                        className="w-full h-full object-cover"
+                        referrerPolicy="no-referrer"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-primary to-blue-600 text-white flex items-center justify-center font-bold text-4xl">
+                        {user?.name?.charAt(0).toUpperCase() || "U"}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Hover overlay with camera icon */}
+                  <label className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 cursor-pointer">
+                    <div className="flex flex-col items-center text-white">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="w-6 h-6"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                        />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
+                      </svg>
+                      <span className="text-xs mt-1 font-medium">Change</span>
+                    </div>
                     <input
-                      type="text"
-                      value={user?.name || ""}
-                      readOnly
-                      className="flex-1 px-4 py-2 rounded-lg bg-surfaceHighlight border border-border text-textMain focus:outline-none focus:ring-2 focus:ring-primary"
+                      type="file"
+                      accept="image/jpeg,image/png,image/gif,image/webp"
+                      onChange={handlePictureChange}
+                      disabled={isUpdatingPicture}
+                      className="hidden"
                     />
+                  </label>
+
+                  {/* Loading overlay */}
+                  {isUpdatingPicture && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-full">
+                      <Loader2 className="w-8 h-8 text-white animate-spin" />
+                    </div>
+                  )}
+                </div>
+
+                {/* User name and actions */}
+                <div className="mt-4 text-center">
+                  <h4 className="text-lg font-bold text-textMain">
+                    {user?.name || "User"}
+                  </h4>
+                  <p className="text-sm text-textMuted">
+                    @{user?.username || "username"}
+                  </p>
+                </div>
+
+                {/* Action buttons */}
+                <div className="flex gap-3 mt-4">
+                  <label
+                    className={`px-5 py-2.5 rounded-xl text-sm font-semibold cursor-pointer transition-all shadow-sm hover:shadow-md ${
+                      isUpdatingPicture
+                        ? "bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed"
+                        : "bg-primary text-white hover:bg-blue-700 active:scale-[0.98]"
+                    }`}
+                  >
+                    {isUpdatingPicture ? (
+                      <span className="flex items-center gap-2">
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Uploading...
+                      </span>
+                    ) : (
+                      "Upload Photo"
+                    )}
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/gif,image/webp"
+                      onChange={handlePictureChange}
+                      disabled={isUpdatingPicture}
+                      className="hidden"
+                    />
+                  </label>
+                  {user?.picture && (
                     <button
                       type="button"
-                      onClick={() => {
-                        setShowFullNameEdit(!showFullNameEdit);
-                        setNewFullName(user?.name || "");
-                        setFullNameError("");
-                      }}
-                      className="p-2 text-textMuted hover:text-primary dark:hover:text-blue-400 hover:bg-surfaceHighlight rounded-lg transition-all cursor-pointer shrink-0"
-                      title={showFullNameEdit ? "Close form" : "Edit full name"}
+                      onClick={handleRemovePicture}
+                      disabled={isUpdatingPicture}
+                      className="px-5 py-2.5 rounded-xl text-sm font-semibold text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-[0.98]"
                     >
-                      {showFullNameEdit ? (
-                        <X className="w-5 h-5" />
-                      ) : (
-                        <Edit3 className="w-5 h-5" />
-                      )}
+                      Remove
                     </button>
-                  </div>
-                  <AnimatePresence>
-                    {showFullNameEdit && (
-                      <motion.form
-                        onSubmit={handleFullNameChange}
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        transition={{ duration: 0.25 }}
-                        className="space-y-2 mt-4 overflow-hidden p-1"
+                  )}
+                </div>
+
+                <p className="text-xs text-textMuted mt-3">
+                  JPG, PNG, GIF or WebP • Max 2MB
+                </p>
+                {pictureError && (
+                  <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" />
+                    {pictureError}
+                  </p>
+                )}
+              </div>
+
+              {/* Profile Details Section */}
+              <div>
+                <h3 className="text-lg font-bold text-textMain mb-4 flex items-center gap-2">
+                  <User className="w-5 h-5 text-primary" />
+                  Profile Details
+                </h3>
+                <div className="space-y-5">
+                  {/* Full Name Field */}
+                  <div className="bg-surfaceHighlight/50 rounded-xl p-4 border border-border/50">
+                    <label className="block text-xs font-semibold text-textMuted uppercase tracking-wider mb-2">
+                      Full Name
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={user?.name || ""}
+                        readOnly
+                        className="flex-1 px-4 py-2.5 rounded-lg bg-surface border border-border text-textMain font-medium focus:outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowFullNameEdit(!showFullNameEdit);
+                          setNewFullName(user?.name || "");
+                          setFullNameError("");
+                        }}
+                        className="p-2.5 text-textMuted hover:text-primary dark:hover:text-blue-400 hover:bg-surface rounded-lg transition-all cursor-pointer shrink-0"
+                        title={
+                          showFullNameEdit ? "Close form" : "Edit full name"
+                        }
                       >
-                        <div className="relative group">
-                          <User className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
-                          <input
-                            type="text"
-                            value={newFullName}
-                            onChange={(e) => {
-                              setNewFullName(e.target.value);
-                              setFullNameError("");
-                            }}
-                            placeholder="Enter full name"
-                            autoFocus
-                            className={`w-full pl-12 pr-4 py-3 bg-surfaceHighlight border rounded-xl text-textMain focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all placeholder-gray-400 ${
-                              fullNameError
-                                ? "border-red-300 dark:border-red-400 bg-red-50/10"
-                                : newFullName && newFullName.length >= 6
-                                ? "border-green-300 dark:border-green-600 bg-green-50/10"
-                                : "border-border"
-                            }`}
-                          />
-                        </div>
-                        {newFullName && (
-                          <div className="text-xs font-medium space-y-1">
+                        {showFullNameEdit ? (
+                          <X className="w-5 h-5" />
+                        ) : (
+                          <Edit3 className="w-5 h-5" />
+                        )}
+                      </button>
+                    </div>
+                    <AnimatePresence>
+                      {showFullNameEdit && (
+                        <motion.form
+                          onSubmit={handleFullNameChange}
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.25 }}
+                          className="space-y-3 mt-4 overflow-hidden"
+                        >
+                          <div className="relative">
+                            <User className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
+                            <input
+                              type="text"
+                              value={newFullName}
+                              onChange={(e) => {
+                                setNewFullName(e.target.value);
+                                setFullNameError("");
+                              }}
+                              placeholder="Enter new full name"
+                              autoFocus
+                              className={`w-full pl-11 pr-4 py-3 bg-surface border rounded-xl text-textMain focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all ${
+                                fullNameError
+                                  ? "border-red-300 dark:border-red-500"
+                                  : newFullName && newFullName.length >= 6
+                                  ? "border-green-400 dark:border-green-600"
+                                  : "border-border"
+                              }`}
+                            />
+                          </div>
+                          {newFullName && (
                             <div
-                              className={`${
+                              className={`text-xs font-medium flex items-center gap-1 ${
                                 newFullName.length >= 6
-                                  ? "text-green-500 dark:text-green-400"
-                                  : "text-red-500 dark:text-red-400"
+                                  ? "text-green-500"
+                                  : "text-red-500"
                               }`}
                             >
-                              ✓ Min 6 characters
-                            </div>
-                          </div>
-                        )}
-                        {fullNameError && (
-                          <div className="text-xs text-red-500">
-                            {fullNameError}
-                          </div>
-                        )}
-                        <div className="flex gap-2 pt-2">
-                          <button
-                            type="submit"
-                            disabled={
-                              !newFullName ||
-                              newFullName.length < 6 ||
-                              isUpdatingFullName
-                            }
-                            className={`flex-1 font-semibold py-2 rounded-lg transition-all flex items-center justify-center gap-2 cursor-pointer bg-primary dark:bg-blue-700 text-white hover:text-white/90 hover:bg-blue-700 dark:hover:bg-blue-700/80 ${
-                              !newFullName ||
-                              ((newFullName.length < 6 || isUpdatingFullName) &&
-                                "disabled:opacity-50 disabled:cursor-not-allowed")
-                            }`}
-                          >
-                            {isUpdatingFullName ? (
-                              <>
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                                Updating...
-                              </>
-                            ) : (
-                              "Change Full Name"
-                            )}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setShowFullNameEdit(false);
-                              setNewFullName("");
-                              setFullNameError("");
-                            }}
-                            className="flex-1 font-semibold py-2 rounded-lg transition-all bg-gray-200 dark:bg-gray-600 text-textMain hover:bg-gray-300 dark:hover:bg-gray-600/80 point"
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      </motion.form>
-                    )}
-                  </AnimatePresence>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-textMuted mb-2">
-                    Username
-                  </label>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="text"
-                      value={user?.username || user?.name || ""}
-                      readOnly
-                      className="flex-1 px-4 py-2 rounded-lg bg-surfaceHighlight border border-border text-textMain focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowUsernameEdit(!showUsernameEdit);
-                        const pref = (user?.username || user?.name || "")
-                          .replace(/\s+/g, "")
-                          .toLowerCase();
-                        setNewUsername(pref);
-                        setUsernameError("");
-                      }}
-                      className="p-2 text-textMuted hover:text-primary dark:hover:text-blue-400 hover:bg-surfaceHighlight rounded-lg transition-all cursor-pointer shrink-0"
-                      title={showUsernameEdit ? "Close form" : "Edit username"}
-                    >
-                      {showUsernameEdit ? (
-                        <X className="w-5 h-5" />
-                      ) : (
-                        <Edit3 className="w-5 h-5" />
-                      )}
-                    </button>
-                  </div>
-                  <AnimatePresence>
-                    {showUsernameEdit && (
-                      <motion.form
-                        onSubmit={handleUsernameChange}
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        transition={{ duration: 0.3 }}
-                        className="space-y-2 mt-4 overflow-hidden p-1"
-                      >
-                        <div className="relative group">
-                          <User className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
-                          <input
-                            type="text"
-                            value={newUsername}
-                            onChange={(e) => {
-                              // Remove spaces and force lowercase to prevent invalid characters
-                              const clean = e.target.value
-                                .replace(/\s+/g, "")
-                                .toLowerCase();
-                              setNewUsername(clean);
-                              setUsernameError("");
-                            }}
-                            placeholder="Enter new username"
-                            autoFocus
-                            className={`w-full pl-12 pr-4 py-3 bg-surfaceHighlight border rounded-xl text-textMain focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all placeholder-gray-400 ${
-                              usernameError
-                                ? "border-red-300 dark:border-red-400 bg-red-50/10"
-                                : newUsername && newUsername.length >= 6
-                                ? "border-green-300 dark:border-green-600 bg-green-50/10"
-                                : "border-border"
-                            }`}
-                          />
-                          {/* Suggested sanitized username variants (3 per row) */}
-                          {showUsernameEdit && (
-                            <div className="mt-3">
-                              {checkingVariants ? (
-                                <div className="text-sm text-textMuted">
-                                  Checking suggestions...
-                                </div>
+                              {newFullName.length >= 6 ? (
+                                <Check className="w-3 h-3" />
                               ) : (
-                                <div className="grid grid-cols-3 gap-2">
-                                  {suggestedVariants.slice(0, 3).map((v) => (
-                                    <button
-                                      key={v}
-                                      type="button"
-                                      onClick={() => setNewUsername(v)}
-                                      className={`point px-2 py-1 text-sm rounded border overflow-hidden whitespace-nowrap truncate ${
-                                        newUsername === v
-                                          ? "border-primary bg-primary/10"
-                                          : "border-border bg-surface"
-                                      }`}
-                                    >
-                                      {v}
-                                    </button>
-                                  ))}
-                                </div>
+                                <X className="w-3 h-3" />
                               )}
+                              Min 6 characters
                             </div>
                           )}
-                          {newUsername &&
-                          newUsername.length >= 6 &&
-                          !/\s/.test(newUsername) &&
-                          !/[A-Z]/.test(newUsername) &&
-                          !usernameError ? (
-                            <Check className="absolute right-3 top-3.5 w-5 h-5 text-green-500 dark:text-green-400" />
-                          ) : newUsername &&
-                            (/\s/.test(newUsername) ||
-                              /[A-Z]/.test(newUsername) ||
-                              newUsername.length < 6 ||
-                              usernameError) ? (
-                            <X className="absolute right-3 top-3.5 w-5 h-5 text-red-500 dark:text-red-400" />
-                          ) : null}
-                        </div>
-                        {newUsername && (
-                          <div className="text-xs font-medium space-y-1">
-                            <div
-                              className={`${
-                                newUsername.length >= 6
-                                  ? "text-green-500 dark:text-green-400"
-                                  : "text-red-500 dark:text-red-400"
-                              }`}
-                            >
-                              ✓ Min 6 characters
+                          {fullNameError && (
+                            <div className="text-xs text-red-500 flex items-center gap-1">
+                              <AlertCircle className="w-3 h-3" />
+                              {fullNameError}
                             </div>
-                            <div
-                              className={`${
-                                !/\s/.test(newUsername)
-                                  ? "text-green-500 dark:text-green-400"
-                                  : "text-red-500 dark:text-red-400"
-                              }`}
+                          )}
+                          <div className="flex gap-2">
+                            <button
+                              type="submit"
+                              disabled={
+                                !newFullName ||
+                                newFullName.length < 6 ||
+                                isUpdatingFullName
+                              }
+                              className="flex-1 font-semibold py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 bg-primary text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                              ✓ No spaces allowed
-                            </div>
-                            <div
-                              className={`mb-1 ${
-                                !/[A-Z]/.test(newUsername)
-                                  ? "text-green-500 dark:text-green-400"
-                                  : "text-red-500 dark:text-red-400"
-                              }`}
+                              {isUpdatingFullName ? (
+                                <>
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                  Saving...
+                                </>
+                              ) : (
+                                "Save Changes"
+                              )}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setShowFullNameEdit(false);
+                                setNewFullName("");
+                                setFullNameError("");
+                              }}
+                              className="px-4 py-2.5 rounded-xl font-semibold bg-gray-100 dark:bg-gray-700 text-textMain hover:bg-gray-200 dark:hover:bg-gray-600 transition-all"
                             >
-                              ✓ No uppercase letters
-                            </div>
+                              Cancel
+                            </button>
                           </div>
+                        </motion.form>
+                      )}
+                    </AnimatePresence>
+                  </div>
+
+                  {/* Username Field */}
+                  <div className="bg-surfaceHighlight/50 rounded-xl p-4 border border-border/50">
+                    <label className="block text-xs font-semibold text-textMuted uppercase tracking-wider mb-2">
+                      Username
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 flex items-center">
+                        <span className="px-3 py-2.5 bg-gray-100 dark:bg-gray-800 text-textMuted rounded-l-lg border border-r-0 border-border">
+                          @
+                        </span>
+                        <input
+                          type="text"
+                          value={user?.username || user?.name || ""}
+                          readOnly
+                          className="flex-1 px-3 py-2.5 rounded-r-lg bg-surface border border-border text-textMain font-medium focus:outline-none"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowUsernameEdit(!showUsernameEdit);
+                          const pref = (user?.username || user?.name || "")
+                            .replace(/\s+/g, "")
+                            .toLowerCase();
+                          setNewUsername(pref);
+                          setUsernameError("");
+                        }}
+                        className="p-2.5 text-textMuted hover:text-primary dark:hover:text-blue-400 hover:bg-surface rounded-lg transition-all cursor-pointer shrink-0"
+                        title={
+                          showUsernameEdit ? "Close form" : "Edit username"
+                        }
+                      >
+                        {showUsernameEdit ? (
+                          <X className="w-5 h-5" />
+                        ) : (
+                          <Edit3 className="w-5 h-5" />
                         )}
-                        <div className="flex gap-2 pt-2">
-                          <button
-                            type="submit"
-                            disabled={
-                              !newUsername ||
-                              newUsername.length < 6 ||
-                              /\s/.test(newUsername) ||
-                              /[A-Z]/.test(newUsername) ||
-                              usernameError ||
-                              isUpdatingUsername
-                            }
-                            className={`flex-1 font-semibold py-2 rounded-lg transition-all flex items-center justify-center gap-2 cursor-pointer bg-primary dark:bg-blue-700 text-white hover:text-white/90 hover:bg-blue-700 dark:hover:bg-blue-700/80 ${
-                              !newUsername ||
-                              newUsername.length < 6 ||
-                              /\s/.test(newUsername) ||
-                              /[A-Z]/.test(newUsername) ||
-                              ((usernameError || isUpdatingUsername) &&
-                                "disabled:opacity-50 disabled:cursor-not-allowed")
-                            }`}
-                          >
-                            {isUpdatingUsername ? (
-                              <>
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                                Updating...
-                              </>
-                            ) : (
-                              "Change Username"
+                      </button>
+                    </div>
+                    <AnimatePresence>
+                      {showUsernameEdit && (
+                        <motion.form
+                          onSubmit={handleUsernameChange}
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.25 }}
+                          className="space-y-3 mt-4 overflow-hidden"
+                        >
+                          <div className="relative">
+                            <span className="absolute left-3 top-3 text-gray-400 font-medium">
+                              @
+                            </span>
+                            <input
+                              type="text"
+                              value={newUsername}
+                              onChange={(e) => {
+                                const clean = e.target.value
+                                  .replace(/\s+/g, "")
+                                  .toLowerCase();
+                                setNewUsername(clean);
+                                setUsernameError("");
+                              }}
+                              placeholder="newusername"
+                              autoFocus
+                              className={`w-full pl-8 pr-10 py-3 bg-surface border rounded-xl text-textMain focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all ${
+                                usernameError
+                                  ? "border-red-300 dark:border-red-500"
+                                  : newUsername &&
+                                    newUsername.length >= 6 &&
+                                    !/\s/.test(newUsername) &&
+                                    !/[A-Z]/.test(newUsername)
+                                  ? "border-green-400 dark:border-green-600"
+                                  : "border-border"
+                              }`}
+                            />
+                            {newUsername &&
+                              newUsername.length >= 6 &&
+                              !/\s/.test(newUsername) &&
+                              !/[A-Z]/.test(newUsername) &&
+                              !usernameError && (
+                                <Check className="absolute right-3 top-3.5 w-5 h-5 text-green-500" />
+                              )}
+                          </div>
+
+                          {/* Username suggestions */}
+                          {showUsernameEdit &&
+                            !checkingVariants &&
+                            suggestedVariants.length > 0 && (
+                              <div className="flex flex-wrap gap-2">
+                                {suggestedVariants.slice(0, 3).map((v) => (
+                                  <button
+                                    key={v}
+                                    type="button"
+                                    onClick={() => setNewUsername(v)}
+                                    className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-all cursor-pointer ${
+                                      newUsername === v
+                                        ? "border-primary bg-primary/10 text-primary"
+                                        : "border-border bg-surface text-textMuted hover:border-primary/50"
+                                    }`}
+                                  >
+                                    @{v}
+                                  </button>
+                                ))}
+                              </div>
                             )}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setShowUsernameEdit(false);
-                              setNewUsername("");
-                              setUsernameError("");
-                            }}
-                            className="flex-1 font-semibold py-2 rounded-lg transition-all bg-gray-200 dark:bg-gray-600 text-textMain hover:bg-gray-300 dark:hover:bg-gray-600/80 point"
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      </motion.form>
-                    )}
-                  </AnimatePresence>
+
+                          {newUsername && (
+                            <div className="flex flex-wrap gap-3 text-xs font-medium">
+                              <div
+                                className={`flex items-center gap-1 ${
+                                  newUsername.length >= 6
+                                    ? "text-green-500"
+                                    : "text-red-500"
+                                }`}
+                              >
+                                {newUsername.length >= 6 ? (
+                                  <Check className="w-3 h-3" />
+                                ) : (
+                                  <X className="w-3 h-3" />
+                                )}
+                                6+ chars
+                              </div>
+                              <div
+                                className={`flex items-center gap-1 ${
+                                  !/\s/.test(newUsername)
+                                    ? "text-green-500"
+                                    : "text-red-500"
+                                }`}
+                              >
+                                {!/\s/.test(newUsername) ? (
+                                  <Check className="w-3 h-3" />
+                                ) : (
+                                  <X className="w-3 h-3" />
+                                )}
+                                No spaces
+                              </div>
+                              <div
+                                className={`flex items-center gap-1 ${
+                                  !/[A-Z]/.test(newUsername)
+                                    ? "text-green-500"
+                                    : "text-red-500"
+                                }`}
+                              >
+                                {!/[A-Z]/.test(newUsername) ? (
+                                  <Check className="w-3 h-3" />
+                                ) : (
+                                  <X className="w-3 h-3" />
+                                )}
+                                Lowercase
+                              </div>
+                            </div>
+                          )}
+
+                          {usernameError && (
+                            <div className="text-xs text-red-500 flex items-center gap-1">
+                              <AlertCircle className="w-3 h-3" />
+                              {usernameError}
+                            </div>
+                          )}
+
+                          <div className="flex gap-2">
+                            <button
+                              type="submit"
+                              disabled={
+                                !newUsername ||
+                                newUsername.length < 6 ||
+                                /\s/.test(newUsername) ||
+                                /[A-Z]/.test(newUsername) ||
+                                usernameError ||
+                                isUpdatingUsername
+                              }
+                              className="flex-1 font-semibold py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 bg-primary text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {isUpdatingUsername ? (
+                                <>
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                  Saving...
+                                </>
+                              ) : (
+                                "Save Changes"
+                              )}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setShowUsernameEdit(false);
+                                setNewUsername("");
+                                setUsernameError("");
+                              }}
+                              className="px-4 py-2.5 rounded-xl font-semibold bg-gray-100 dark:bg-gray-700 text-textMain hover:bg-gray-200 dark:hover:bg-gray-600 transition-all"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </motion.form>
+                      )}
+                    </AnimatePresence>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1768,7 +2016,7 @@ const SettingsModal = ({ onClose, user, refreshUser }) => {
                             alt="2FA QR Code"
                             className="w-48 h-48"
                             loading="lazy"
-decoding="async"
+                            decoding="async"
                           />
                         </div>
                       )}
