@@ -100,9 +100,11 @@ export default function AdminUsers() {
     }
   };
 
-  // Single effect that handles all data fetching
+  // Single effect that handles all data fetching and auto-refresh
   useEffect(() => {
     fetchUsers();
+    const interval = setInterval(fetchUsers, 15000);
+    return () => clearInterval(interval);
   }, [
     pagination.page,
     pagination.limit,
@@ -137,7 +139,6 @@ export default function AdminUsers() {
   }, []);
 
   const handleReset = () => {
-    setLoading(true);
     setFilters({ search: "", role: "", status: "" });
     setDebouncedSearch(""); // Immediately clear debounced search to prevent double-fetch
     setPagination((p) => ({ ...p, page: 1, limit: 10 }));
@@ -288,7 +289,7 @@ export default function AdminUsers() {
     <div className="space-y-6 animate-fade-in-up">
       <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-4xl font-bold text-textMain tracking-tight mb-4">
+          <h2 className="text-4xl font-bold text-textMain dark:text-textMain/95 tracking-tight mb-4">
             Users Management
           </h2>
           <p className="text-sm text-textMuted mb-3">
@@ -309,7 +310,7 @@ export default function AdminUsers() {
             size={16}
           />
           <input
-            className="w-full pl-10 pr-4 py-2.5 shadow-md-custom bg-surfaceHighlight/30 border border-border rounded-xl text-sm text-textMain focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all font-medium"
+            className="w-full pl-10 pr-4 py-2.5 shadow-sm-custom bg-surfaceHighlight/30 border border-border rounded-xl text-sm text-textMain focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all font-medium"
             placeholder="Search by name or email..."
             value={filters.search}
             onChange={(e) => {
@@ -323,7 +324,7 @@ export default function AdminUsers() {
           <div className="relative role-dropdown">
             <button
               onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
-              className="flex items-center justify-between gap-3 px-4 py-2.5 bg-surfaceHighlight/30 border border-border rounded-xl text-sm font-semibold text-textMain dark:text-textMain/90 hover:bg-surfaceHighlight/50 transition-all point w-44 shadow-md-custom"
+              className="flex items-center justify-between gap-3 px-4 py-2.5 bg-surfaceHighlight/30 border border-border rounded-xl text-sm font-semibold text-textMain dark:text-textMain/90 hover:bg-surfaceHighlight/50 transition-all point w-44 shadow-sm-custom"
             >
               <div className="flex items-center gap-2">
                 {filters.role === "admin" ? (
@@ -397,7 +398,7 @@ export default function AdminUsers() {
           <div className="relative status-dropdown">
             <button
               onClick={() => setIsStatusDropdownOpen(!isStatusDropdownOpen)}
-              className="flex items-center justify-between gap-3 px-4 py-2.5 bg-surfaceHighlight/30 border border-border rounded-xl text-sm font-semibold text-textMain dark:text-textMain/90 hover:bg-surfaceHighlight/50 transition-all w-44 shadow-md-custom point"
+              className="flex items-center justify-between gap-3 px-4 py-2.5 bg-surfaceHighlight/30 border border-border rounded-xl text-sm font-semibold text-textMain dark:text-textMain/90 hover:bg-surfaceHighlight/50 transition-all w-44 shadow-sm-custom point"
             >
               <div className="flex items-center gap-2">
                 {filters.status === "banned" ? (
@@ -470,7 +471,7 @@ export default function AdminUsers() {
           {/* Reset Button */}
           <button
             onClick={handleReset}
-            className="flex items-center gap-2 px-4 py-2.5 bg-surfaceHighlight/30 border border-border rounded-xl text-sm font-bold text-textMuted hover:text-primary dark:hover:text-blue-500 hover:bg-primary/5 hover:border-primary/30 transition-all shadow-md-custom group point"
+            className="flex items-center gap-2 px-4 py-2.5 bg-surfaceHighlight/30 border border-border rounded-xl text-sm font-bold text-textMuted hover:text-primary dark:hover:text-blue-500 hover:bg-primary/5 hover:border-primary/30 transition-all shadow-sm-custom group point"
             title="Reset all filters"
           >
             <RotateCcw

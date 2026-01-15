@@ -61,6 +61,23 @@ export default function AdminQuizzes() {
       mounted.current = false;
     };
   }, []);
+
+  // Close dropdown on scroll or resize
+  useEffect(() => {
+    const handleScroll = () => {
+      if (openDropdown) setOpenDropdown(null);
+    };
+
+    if (openDropdown) {
+      window.addEventListener("scroll", handleScroll, true); // Capture phase for all scrollables
+      window.addEventListener("resize", handleScroll);
+    }
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll, true);
+      window.removeEventListener("resize", handleScroll);
+    };
+  }, [openDropdown]);
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm);
@@ -70,6 +87,8 @@ export default function AdminQuizzes() {
 
   useEffect(() => {
     fetchQuizzes();
+    const interval = setInterval(fetchQuizzes, 15000);
+    return () => clearInterval(interval);
   }, [selectedDifficulty, pagination.page, debouncedSearchTerm]);
 
   const fetchQuizzes = async () => {
@@ -110,7 +129,6 @@ export default function AdminQuizzes() {
   };
 
   const handleReset = () => {
-    setLoading(true);
     setSearchTerm("");
     setDebouncedSearchTerm(""); // Immediately clear debounced state
     setSelectedDifficulty(null);
@@ -157,7 +175,7 @@ export default function AdminQuizzes() {
                 setLoading(true);
                 setSearchTerm(e.target.value);
               }}
-              className="pl-10 pr-4 py-2 bg-surfaceHighlight/30 border border-border rounded-xl text-textMain text-sm focus:outline-none focus:ring-2 focus:ring-primary/80 w-full transition-all shadow-md-custom"
+              className="pl-10 pr-4 py-2 bg-surfaceHighlight/30 border border-border rounded-xl text-textMain text-sm focus:outline-none focus:ring-2 focus:ring-primary/80 w-full transition-all shadow-sm-custom"
             />
           </div>
 
@@ -165,7 +183,7 @@ export default function AdminQuizzes() {
             {/* Reset Button */}
             <button
               onClick={handleReset}
-              className="flex items-center gap-2 px-4 py-2.5 bg-surfaceHighlight/30 border border-border rounded-xl text-sm font-bold text-textMuted hover:text-primary hover:bg-primary/5 hover:border-primary/30 transition-all point shadow-md-custom group"
+              className="flex items-center gap-2 px-4 py-2.5 bg-surfaceHighlight/30 border border-border rounded-xl text-sm font-bold text-textMuted hover:text-primary hover:bg-primary/5 hover:border-primary/30 transition-all point shadow-sm-custom group"
               title="Reset all filters"
             >
               <RotateCcw
@@ -181,7 +199,7 @@ export default function AdminQuizzes() {
                 onClick={() =>
                   setShowDifficultyDropdown(!showDifficultyDropdown)
                 }
-                className="flex items-center justify-between gap-3 px-4 py-2.5 bg-surfaceHighlight/30 border border-border rounded-xl text-sm font-semibold text-textMuted hover:bg-surfaceHighlight/50 transition-all point min-w-[140px] w-full shadow-md-custom"
+                className="flex items-center justify-between gap-3 px-4 py-2.5 bg-surfaceHighlight/30 border border-border rounded-xl text-sm font-semibold text-textMuted hover:bg-surfaceHighlight/50 transition-all point min-w-[140px] w-full shadow-sm-custom"
               >
                 <div className="flex items-center gap-2">
                   {!selectedDifficulty ? (
@@ -343,7 +361,7 @@ export default function AdminQuizzes() {
                 </span>
               )}
             </div>
-            <p className="text-2xl font-bold text-textMain mt-4 mb-1">
+            <p className="text-2xl font-bold text-textMain dark:text-textMain/90 mt-4 mb-1">
               {stat.isLoading ? "..." : stat.val}
             </p>
             <p className="text-textMuted font-semibold text-sm">{stat.label}</p>
@@ -429,7 +447,7 @@ export default function AdminQuizzes() {
                   >
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary dark:text-blue-500 dark:bg-blue-800/30">
+                        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary dark:text-blue-500 dark:bg-blue-800/20">
                           <BookOpen size={18} />
                         </div>
                         <div className="max-w-50 sm:max-w-75">
@@ -447,10 +465,18 @@ export default function AdminQuizzes() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex justify-center items-center gap-2">
-                        <div className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 text-textMuted flex items-center justify-center text-[10px] font-bold">
-                          {quiz.creator?.charAt(0)}
-                        </div>
-                        <span className="text-sm text-textMain font-medium dark:text-textMain/90">
+                        {quiz.creatorPicture ? (
+                          <img
+                            src={quiz.creatorPicture}
+                            alt={quiz.creator}
+                            className="w-6 h-6 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 text-textMuted flex items-center justify-center text-[10px] font-bold">
+                            {quiz.creator?.charAt(0)}
+                          </div>
+                        )}
+                        <span className="text-sm text-textMain font-medium dark:text-textMain/95">
                           {quiz.creator}
                         </span>
                       </div>
@@ -501,7 +527,7 @@ export default function AdminQuizzes() {
                                 left: `${dropdownPos.left}px`,
                                 transform: "translateX(-100%)",
                               }}
-                              className="mt-2 w-48 bg-surface border border-border rounded-lg shadow-lg z-9999 overflow-hidden animate-slide-in-top dark:bg-slate-900"
+                              className="mt-2 w-48 bg-surface dark:bg-surface border border-border rounded-lg shadow-lg z-200 overflow-hidden animate-slide-in-top"
                               onClick={(e) => e.stopPropagation()}
                             >
                               <button
@@ -531,7 +557,7 @@ export default function AdminQuizzes() {
                                     );
                                   }
                                 }}
-                                className="w-full text-left px-4 py-2.5 text-sm text-textMain dark:text-textMain/90 hover:bg-surfaceHighlight/50 transition-colors flex items-center gap-2 first:rounded-t-lg point"
+                                className="w-full text-left px-4 py-2.5 text-sm text-textMain dark:text-textMain/95 hover:bg-surfaceHighlight/50 transition-colors flex items-center gap-2 first:rounded-t-lg point"
                               >
                                 {!quiz.isActive ? (
                                   <>

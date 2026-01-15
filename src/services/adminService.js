@@ -117,4 +117,9 @@ export const deleteQuiz = async (quizId) => {
   return res.data;
 };
 
+export const uploadImage = async (base64Image) => {
+  const res = await adminApi.post("/upload", { image: base64Image });
+  return res.data;
+};
+
 export default adminApi;

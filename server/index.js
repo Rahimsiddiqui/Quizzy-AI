@@ -13,6 +13,11 @@ import { createServer } from "http";
 import { Server as SocketIOServer } from "socket.io";
 import helmet from "helmet";
 import compression from "compression";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // 2. Models
 import User from "./models/User.js";
@@ -62,6 +67,9 @@ app.use(
   })
 );
 
+// Serve static files from uploads directory
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
 // 6. Routes
 import aiRoutes from "./routes/aiRoutes.js";
 import quizRoutes from "./routes/quizRoutes.js";
@@ -72,6 +80,7 @@ import supportRoutes from "./routes/supportRoutes.js";
 import twoFARoutes from "./routes/twoFARoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import blogRoutes from "./routes/blogRoutes.js";
+import uploadRoutes from "./routes/uploadRoutes.js";
 
 app.get("/api/users/me", protect, async (req, res) => {
   try {
@@ -527,6 +536,7 @@ app.use("/api/flashcards", flashcardRoutes);
 app.use("/api/support", supportRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/blogs", blogRoutes);
+app.use("/api/admin/upload", uploadRoutes);
 
 async function startServer() {
   try {

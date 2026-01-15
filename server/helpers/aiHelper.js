@@ -8,9 +8,9 @@ import { SubscriptionTier, QuestionType } from "../config/types.js";
 // --- Gemini Configuration ---
 const BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models";
 
-const PRO_MODEL = "gemini-3-pro-preview";
-const BASIC_MODEL = "gemini-2.5-flash";
-const FREE_MODEL = "gemini-2.5-flash-lite";
+const PRO_MODEL = "gemini-1.5-pro";
+const BASIC_MODEL = "gemini-1.5-flash";
+const FREE_MODEL = "gemini-1.5-flash";
 
 // Select API key based on user tier
 const selectApiKey = (user) => {
@@ -239,24 +239,33 @@ export const generateQuizHelper = async (clientData, user, sendProgress) => {
     typeof topic === "string" &&
     (topic.includes("attached document") || topic.includes("PDF"));
 
-  let prompt = `Generate a ${difficulty} level quiz about "${topic}".
+  let prompt = `Generate a ${difficulty} level quiz about "${topic}" designed for high-retention active recall.
 **Exam Style: ${styleLabel}**. ${styleInstruction}
 
 The quiz should have exactly ${questionCount} questions.
-The Total Marks for the entire quiz must equal exactly ${totalMarks}. Distribute these marks logically among the questions based on their complexity.
+The total Marks for the entire quiz must equal exactly ${totalMarks}. Distribute these marks based on question complexity.
 Include a mix of the following question types: ${typeString}.
+
+**LEARNING OBJECTIVES:**
+1. Focus on "High-Yield" concepts — the facts most likely to appear in an exam.
+2. Avoid trivial details; prioritize conceptual understanding and application of knowledge.
+3. For MCQs, ensure distractors (wrong answers) are plausible and address common misconceptions.
 
 ${
   isPdfMode
     ? "**CRITICAL: ALL questions MUST be based ONLY on the content of the attached document(s). Do NOT generate questions about topics not covered in the document. Every question must be answerable from the document content.**\n"
     : ""
 }
-- For each question, include a field "type" exactly as one of: MCQ, TrueFalse, ShortAnswer, Essay, FillInTheBlank.
-- For 'MCQ', provide 4 options. Do NOT provide option prefixes like 'A.' or 'B.'.
-- For 'TrueFalse', provide 2 options (True, False).
-- For Short/Long Answer, 'options' must be an empty array [].
-- Return the response as a single, valid JSON object.
-- Question marks must be whole numbers (integers).`;
+
+**JSON RESPONSE FORMAT:**
+- Return a single, valid JSON object with "title" and "questions" array.
+- For each question:
+  - "type": MCQ, TrueFalse, ShortAnswer, Essay, or FillInTheBlank.
+  - "text": The question string.
+  - "options": Array of strings (4 for MCQ, 2 for True/False, empty for others). No prefixes like A) or 1).
+  - "correctAnswer": The correct string.
+  - "explanation": A detailed 2-3 sentence explanation of WHY this is correct, focusing on the underlying concept.
+  - "marks": Integer.`;
 
   const parts = [{ text: prompt }];
 
@@ -557,6 +566,7 @@ ${
     }
 
     if (!data || !data.questions || !Array.isArray(data.questions)) {
+      console.error("Invalid AI Response Data:", JSON.stringify(data, null, 2));
       throw new Error("AI failed to provide a valid list of questions.");
     }
 
@@ -566,7 +576,7 @@ ${
     const questions = data.questions.map((q) => ({
       id: uuidv4(),
       type: detectQuestionType(q),
-      text: q.text,
+      text: q.text || q.question,
       options: Array.isArray(q.options) ? q.options : [],
       correctAnswer: q.correctAnswer,
       explanation: q.explanation || "Correct based on provided context.",
@@ -600,12 +610,26 @@ export const generatePerformanceReviewHelper = async (user, quizzes) => {
     return "Complete some quizzes to get an AI-powered performance review!";
 
   const summary = completedQuizzes
-    .map(
-      (q) =>
-        `- Topic: ${q.topic}, Score: ${q.score}%, Date: ${new Date(
-          q.createdAt
-        ).toLocaleDateString()}`
-    )
+    .map((q) => {
+      let behaviorInfo = "";
+      if (q.behavioralData) {
+        const avgTime =
+          Object.values(q.behavioralData).reduce(
+            (acc, b) => acc + (b.timeSpent || 0),
+            0
+          ) / (q.questions.length || 1);
+        const totalChanges = Object.values(q.behavioralData).reduce(
+          (acc, b) => acc + (b.changes || 0),
+          0
+        );
+        behaviorInfo = ` (Avg Time: ${Math.round(
+          avgTime
+        )}s/q, Changes: ${totalChanges})`;
+      }
+      return `- Topic: ${q.topic}, Score: ${q.score}%, Date: ${new Date(
+        q.createdAt
+      ).toLocaleDateString()}${behaviorInfo}`;
+    })
     .join("\n");
 
   const prompt = `You are an elite educational coach. Analyze this quiz history for ${user.name}:

@@ -15,7 +15,9 @@ import {
 import ReactMarkdown from "react-markdown";
 import Visibility from "@mui/icons-material/Visibility";
 import blogService from "../../services/blogService";
+import { uploadImage } from "../../services/adminService";
 import { toast } from "react-toastify";
+import { useRef } from "react";
 
 const BlogEditor = ({ blog, onClose, onSave }) => {
   const [formData, setFormData] = useState({
@@ -31,6 +33,7 @@ const BlogEditor = ({ blog, onClose, onSave }) => {
   const [previewMode, setPreviewMode] = useState(false);
   const [loading, setLoading] = useState(false);
   const [toc, setToc] = useState([]);
+  const fileInputRef = useRef(null);
 
   // TOC Extraction Logic
   useEffect(() => {
@@ -108,6 +111,35 @@ const BlogEditor = ({ blog, onClose, onSave }) => {
       .replace(/^-+|-+$/g, "");
     setFormData((prev) => ({ ...prev, slug: generatedSlug }));
     toast.info("Slug generated from title");
+    setFormData((prev) => ({ ...prev, slug: generatedSlug }));
+    toast.info("Slug generated from title");
+  };
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("File size too large (max 5MB)");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      try {
+        setLoading(true);
+        const base64 = reader.result;
+        const res = await uploadImage(base64);
+        setFormData((prev) => ({ ...prev, image: res.url }));
+        toast.success("Image uploaded successfully");
+      } catch (error) {
+        console.error("Upload error:", error);
+        toast.error("Failed to upload image");
+      } finally {
+        setLoading(false);
+      }
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleSubmit = async (e) => {
@@ -144,9 +176,9 @@ const BlogEditor = ({ blog, onClose, onSave }) => {
     <div className="fixed inset-0 z-9999 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm animate-fade-in">
       <div className="absolute inset-0" onClick={onClose} />
 
-      <div className="relative bg-white dark:bg-slate-950 w-full max-w-[1100px] h-full sm:h-[95vh] sm:rounded-[32px] shadow-2xl flex flex-col overflow-hidden border border-border/40 animate-scale-in">
+      <div className="relative bg-background w-full max-w-[1100px] h-full sm:h-[95vh] sm:rounded-[32px] shadow-2xl flex flex-col overflow-hidden border border-border/40 animate-scale-in">
         {/* Sticky Header */}
-        <div className="flex justify-between items-center px-6 py-4 border-b border-border bg-white/80 dark:bg-slate-950/80 backdrop-blur-md sticky top-0 z-50">
+        <div className="flex justify-between items-center px-6 py-4 border-b border-border bg-surfaceHighlight dark:bg-gray-800 backdrop-blur-md sticky top-0 z-50">
           <div className="flex items-center gap-4">
             <button
               onClick={onClose}
@@ -188,7 +220,7 @@ const BlogEditor = ({ blog, onClose, onSave }) => {
         <div className="flex-1 overflow-y-auto custom-scrollbar bg-slate-50/20 dark:bg-slate-900/10">
           <div className="max-w-[850px] mx-auto py-12 px-6 sm:px-12">
             {previewMode ? (
-              /* High-Fidelity Preview Mode */
+              /*  Preview Mode */
               <div className="animate-fade-in min-h-screen">
                 <div className="max-w-4xl mx-auto px-4 mb-12">
                   <div className="flex flex-wrap items-center gap-4 text-sm text-primary dark:text-blue-500 font-semibold mb-4">
@@ -314,7 +346,7 @@ const BlogEditor = ({ blog, onClose, onSave }) => {
                 </div>
               </div>
             ) : (
-              /* Editor Mode UI */
+              /* Editor Mode */
               <form
                 id="blog-form"
                 onSubmit={handleSubmit}
@@ -339,9 +371,11 @@ const BlogEditor = ({ blog, onClose, onSave }) => {
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
                           <button
                             type="button"
-                            onClick={() =>
-                              setFormData((p) => ({ ...p, image: "" }))
-                            }
+                            onClick={() => {
+                              setFormData((p) => ({ ...p, image: "" }));
+                              if (fileInputRef.current)
+                                fileInputRef.current.value = "";
+                            }}
                             className="bg-white/20 hover:bg-white/30 text-white px-5 py-2.5 rounded-full text-xs font-bold backdrop-blur-md transition-all border border-white/20 point"
                           >
                             Remove Photo
@@ -361,6 +395,19 @@ const BlogEditor = ({ blog, onClose, onSave }) => {
                         </p>
                       </div>
                     )}
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      className="hidden"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                    />
+                    {!formData.image && (
+                      <div
+                        className="absolute inset-0 cursor-pointer"
+                        onClick={() => fileInputRef.current?.click()}
+                      />
+                    )}
                   </div>
 
                   <div className="relative">
@@ -373,8 +420,15 @@ const BlogEditor = ({ blog, onClose, onSave }) => {
                       name="image"
                       value={formData.image}
                       onChange={handleChange}
-                      placeholder="Paste cover image URL..."
-                      className="w-full pl-12 pr-6 py-4 rounded-2xl bg-white dark:bg-slate-950 border border-border focus:ring-4 focus:ring-primary/5 focus:border-primary outline-none transition-all text-sm shadow-sm"
+                      disabled={!!formData.image}
+                      placeholder={
+                        formData.image
+                          ? "Remove image to paste URL"
+                          : "Paste cover image URL or upload above..."
+                      }
+                      className={`w-full pl-12 pr-6 py-4 rounded-2xl bg-surface border border-border focus:ring-4 focus:ring-primary/5 focus:border-primary outline-none transition-all text-sm shadow-sm-custom ${
+                        formData.image ? "opacity-50 cursor-not-allowed" : ""
+                      }`}
                     />
                   </div>
                 </section>
@@ -392,11 +446,11 @@ const BlogEditor = ({ blog, onClose, onSave }) => {
                     onBlur={!formData.slug ? handleSlugGen : null}
                     rows="1"
                     placeholder="Blog Title"
-                    className="w-full bg-transparent text-5xl sm:text-6xl font-bold text-textMain placeholder:text-slate-200 dark:placeholder:text-slate-800 outline-none resize-none leading-[1.15] tracking-tight overflow-y-auto"
+                    className="w-full bg-transparent text-5xl sm:text-6xl font-bold text-textMain dark:text-textMain/90 placeholder:text-slate-200 dark:placeholder:text-slate-600/60 outline-none resize-none leading-[1.15] tracking-tight overflow-y-auto"
                     required
                   />
 
-                  <div className="flex items-center gap-3 text-textMuted text-xs font-bold uppercase tracking-widest bg-slate-50 dark:bg-slate-900/40 w-fit px-4 py-2 rounded-full border border-border/50">
+                  <div className="flex items-center gap-3 text-textMuted text-xs font-bold uppercase tracking-widest bg-surface/80 w-fit px-4 py-2 rounded-full border border-border/50 shadow-sm-custom">
                     <Visibility
                       className="text-primary dark:text-blue-500"
                       sx={{ fontSize: 18 }}
@@ -410,18 +464,18 @@ const BlogEditor = ({ blog, onClose, onSave }) => {
                     onChange={handleChange}
                     rows="2"
                     placeholder="Short subtitle or summary..."
-                    className="w-full bg-transparent text-lg text-textMuted font-medium leading-relaxed outline-none resize-none border-l-4 border border-border py-3 pl-5 focus:border-primary transition-colors rounded-md"
+                    className="w-full bg-transparent text-lg text-textMuted font-medium leading-relaxed outline-none resize-none border-l-4 border border-border py-3 pl-5 focus:border-primary transition-colors rounded-md shadow-md-custom"
                     required
                   />
 
-                  <div className="h-px bg-slate-100 dark:bg-slate-800/50 w-full" />
+                  <div className="h-px bg-surface w-full" />
 
                   <textarea
                     name="content"
                     value={formData.content}
                     onChange={handleChange}
                     placeholder="Write your Blog content here..."
-                    className="w-full bg-transparent text-lg text-textMain/90 placeholder:text-slate-300 dark:placeholder:text-slate-700 outline-none resize-none min-h-[400px] leading-relaxed rounded-md border border-border py-3 pl-4"
+                    className="w-full bg-transparent text-lg text-textMain/90 placeholder:text-slate-300 dark:placeholder:text-slate-700 outline-none resize-none min-h-[400px] leading-relaxed rounded-md border border-border py-3 pl-4 shadow-md-custom"
                     required
                   />
                 </section>
@@ -434,12 +488,12 @@ const BlogEditor = ({ blog, onClose, onSave }) => {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Slug Card */}
-                    <div className="bg-white dark:bg-slate-900/40 p-6 rounded-3xl border border-border shadow-md-custom  group">
+                    <div className="bg-surface dark:bg-surface/70 p-6 rounded-3xl border border-border shadow-sm-custom group">
                       <div className="flex items-center gap-3 mb-4">
-                        <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-xl text-blue-500">
+                        <div className="p-2 bg-blue-50 dark:bg-blue-800/20 rounded-xl text-blue-500">
                           <LinkIcon size={16} />
                         </div>
-                        <span className="text-md font-bold text-textMain">
+                        <span className="text-md font-bold text-textMain dark:text-textMain/95">
                           Permalink
                         </span>
                       </div>
@@ -454,12 +508,12 @@ const BlogEditor = ({ blog, onClose, onSave }) => {
                     </div>
 
                     {/* Tags Card */}
-                    <div className="bg-white dark:bg-slate-900/40 p-6 rounded-3xl border border-border shadow-md-custom group">
+                    <div className="bg-surface dark:bg-surface/70 p-6 rounded-3xl border border-border shadow-sm-custom group">
                       <div className="flex items-center gap-3 mb-4">
-                        <div className="p-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl text-emerald-500">
+                        <div className="p-2 bg-emerald-50 dark:bg-emerald-800/20 rounded-xl text-emerald-500">
                           <Tag size={16} />
                         </div>
-                        <span className="text-md font-bold text-textMain">
+                        <span className="text-md font-bold text-textMain dark:text-textMain/95">
                           Classification
                         </span>
                       </div>
@@ -475,13 +529,13 @@ const BlogEditor = ({ blog, onClose, onSave }) => {
                   </div>
 
                   {/* Publish Settings */}
-                  <div className="bg-surfaceHighlight/40 dark:bg-slate-900/40 p-6 rounded-3xl border border-border flex flex-col sm:flex-row items-center justify-between gap-6 group hover:border-primary/30 transition-colors">
+                  <div className="bg-surface dark:bg-surface/70 p-6 rounded-3xl border border-border flex flex-col sm:flex-row items-center justify-between gap-6 group hover:border-primary/30 transition-colors">
                     <div className="flex items-center gap-5">
-                      <div className="w-12 h-12 bg-gray-200/60 dark:bg-slate-800 rounded-2xl flex items-center justify-center text-textMuted group-hover:text-primary transition-colors">
+                      <div className="w-12 h-12 bg-gray-200/60 dark:bg-slate-800 rounded-2xl flex items-center justify-center text-textMuted group-hover:text-primary dark:group-hover:text-blue-500 transition-colors">
                         <FileText size={20} />
                       </div>
                       <div>
-                        <h4 className="text-md font-bold text-textMain">
+                        <h4 className="text-md font-bold text-textMain dark:text-textMain/95">
                           Visibility
                         </h4>
                         <p className="text-sm text-textMuted">

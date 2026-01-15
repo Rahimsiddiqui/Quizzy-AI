@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import Visibility from "@mui/icons-material/Visibility";
 import { User, ArrowRight, Loader2 } from "lucide-react";
 import blogService from "../../services/blogService";
+import SEO from "./SEO";
 
 const BlogList = () => {
   const navigate = useNavigate();
@@ -28,6 +29,10 @@ const BlogList = () => {
 
   return (
     <div className="min-h-screen bg-background text-textMain animate-fade-in-up flex flex-col">
+      <SEO
+        title="AI Learning Blog"
+        description="Explore the latest insights on AI-powered study techniques, exam preparation tips, and Qubli AI feature updates."
+      />
       {/* Hero Section */}
       <section className="pt-32 pb-12 px-4 sm:px-6 lg:px-8 text-center relative">
         <div className="max-w-4xl mx-auto">

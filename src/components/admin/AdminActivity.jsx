@@ -92,6 +92,8 @@ export default function AdminActivity() {
 
   useEffect(() => {
     fetchActivities();
+    const interval = setInterval(fetchActivities, 15000);
+    return () => clearInterval(interval);
   }, []);
 
   // Close dropdown on click outside
@@ -111,7 +113,7 @@ export default function AdminActivity() {
   const handleReset = () => {
     setSearch("");
     setFilter("all");
-    setPagination(1);
+    setPagination((prev) => ({ ...prev, page: 1 }));
     toast.info("Filters reset to default");
   };
 

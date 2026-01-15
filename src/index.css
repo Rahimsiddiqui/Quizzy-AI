@@ -130,6 +130,18 @@
   }
 }
 
+@utility glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  @apply dark:bg-slate-900/60 dark:border-slate-700/50;
+}
+
+@utility premium-gradient {
+  background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
+}
+
 @keyframes blink {
   0%,
   100% {

@@ -209,7 +209,8 @@ const QuizResultsView = ({
                 {idx + 1}
               </span>
               <h3 className="font-medium text-textMain pt-0.75">
-                {cleanQuestionText(q.text)}
+                {cleanQuestionText(q.text || q.question) ||
+                  `Question ${idx + 1}`}
               </h3>
             </div>
             <div className="flex items-center justify-center gap-4">
@@ -445,7 +446,9 @@ const StudyFlashcards = ({
               Question
             </span>
             <div className="text-xl font-medium text-textMain overflow-y-auto max-h-full custom-scrollbar">
-              {parseBoldText(card.front)}
+              {parseBoldText(
+                card.front || card.question || `Question ${cardIndex + 1}`
+              )}
             </div>
           </div>
 
@@ -504,8 +507,11 @@ const QuizTaker = ({ user, onComplete, onLimitUpdate }) => {
   const [customStudyContext, setCustomStudyContext] = useState(null);
   const [initialAIPrompt, setInitialAIPrompt] = useState(null);
   const [isCreatingFlashcards, setIsCreatingFlashcards] = useState(false);
-  // Increment this key to force remounting the StudyFlashcards component when new cards are created
   const [flashcardsResetKey, setFlashcardsResetKey] = useState(0);
+
+  // Behavioral analysis state
+  const [questionStartTime, setQuestionStartTime] = useState(Date.now());
+  const [behavioralMetrics, setBehavioralMetrics] = useState({}); // { qid: { timeSpent: 0, changes: 0 } }
 
   // Export modal state
   const [showExportModal, setShowExportModal] = useState(false);
@@ -681,7 +687,32 @@ const QuizTaker = ({ user, onComplete, onLimitUpdate }) => {
   const handleAnswer = (val) => {
     if (status === "completed" || !quiz) return;
     const qid = quiz.questions[currentIdx].id || quiz.questions[currentIdx]._id;
+
+    // Track change count
+    setBehavioralMetrics((prev) => ({
+      ...prev,
+      [qid]: {
+        ...prev[qid],
+        changes: (prev[qid]?.changes || 0) + 1,
+      },
+    }));
+
     setAnswers((prev) => ({ ...prev, [qid]: val }));
+  };
+
+  const commitTimeSpent = () => {
+    const qid = quiz.questions[currentIdx].id || quiz.questions[currentIdx]._id;
+    const now = Date.now();
+    const duration = Math.round((now - questionStartTime) / 1000); // seconds
+
+    setBehavioralMetrics((prev) => ({
+      ...prev,
+      [qid]: {
+        ...prev[qid],
+        timeSpent: (prev[qid]?.timeSpent || 0) + duration,
+      },
+    }));
+    setQuestionStartTime(now);
   };
 
   const handleSubmit = async () => {
@@ -762,12 +793,15 @@ const QuizTaker = ({ user, onComplete, onLimitUpdate }) => {
           ? Math.round((totalMarksAwarded / totalMarksAvailable) * 100)
           : 0;
 
+      commitTimeSpent();
+
       const updatedQuiz = {
         ...quiz,
         score,
         completedAt: Date.now(),
         isFlashcardSet: quiz.isFlashcardSet || false,
         questions: gradedQuestions,
+        behavioralData: behavioralMetrics,
       };
 
       // Save and use server response if available
@@ -835,11 +869,18 @@ const QuizTaker = ({ user, onComplete, onLimitUpdate }) => {
     }
   };
 
+  const handlePrev = () => {
+    commitTimeSpent();
+    setCurrentIdx((prev) => Math.max(0, prev - 1));
+  };
+
   const handleNext = () => {
     if (!quiz) return;
     const currentQId =
       quiz.questions[currentIdx].id || quiz.questions[currentIdx]._id;
     if (!answers[currentQId] || answers[currentQId].trim() === "") return;
+
+    commitTimeSpent();
     setCurrentIdx((prev) => Math.min(quiz.questions.length - 1, prev + 1));
   };
 
@@ -1086,7 +1127,7 @@ const QuizTaker = ({ user, onComplete, onLimitUpdate }) => {
       qTextMain.style.color = "#1f2937";
       qTextMain.style.fontSize = "15px";
       qTextMain.style.lineHeight = "1.5";
-      qTextMain.textContent = cleanQuestionText(q.text);
+      qTextMain.textContent = cleanQuestionText(q.text || q.question);
 
       const qMarks = document.createElement("div");
       qMarks.style.background = "#fbbf24";
@@ -1629,7 +1670,7 @@ const QuizTaker = ({ user, onComplete, onLimitUpdate }) => {
           <div class="question-text">
             <span class="question-number">Q${
               idx + 1
-            }.</span> ${cleanQuestionText(q.text)}`;
+            }.</span> ${cleanQuestionText(q.text || q.question)}`;
 
       if (q.marks) {
         htmlContent += ` <span style="margin-right: 16px;">[${q.marks}]</span>`;
@@ -1884,7 +1925,9 @@ const QuizTaker = ({ user, onComplete, onLimitUpdate }) => {
           <div class="answer-header">
             <div class="answer-number">${idx + 1}</div>
             <div style="flex: 1;">
-              <div class="question-text">${cleanQuestionText(q.text)}</div>
+              <div class="question-text">${cleanQuestionText(
+                q.text || q.question
+              )}</div>
             </div>
           </div>
           <div class="answer-content">
@@ -1961,7 +2004,7 @@ const QuizTaker = ({ user, onComplete, onLimitUpdate }) => {
           id: `fc_${qid}`,
           userId: user._id,
           quizId: quizIdKey,
-          front: cleanQuestionText(q.text),
+          front: cleanQuestionText(q.text || q.question),
           back: `${q.correctAnswer}\n\n${
             q.explanation || "No explanation provided."
           }`,
@@ -2234,7 +2277,7 @@ const QuizTaker = ({ user, onComplete, onLimitUpdate }) => {
                     type: "quiz_review",
                     quizId: quiz._id || quiz.id,
                     topic: quiz.topic,
-                    questionText: question.text,
+                    questionText: question.text || question.question,
                     correctAnswer: question.correctAnswer,
                     explanation: question.explanation,
                     userAnswer: question.userAnswer,
@@ -2242,9 +2285,11 @@ const QuizTaker = ({ user, onComplete, onLimitUpdate }) => {
                   // Set predefined prompt for auto-submit
                   // Use the stored isCorrect property (set by AI grading for subjective questions)
                   const prompt = question.isCorrect
-                    ? `I got this question correct but I'd like to understand it deeper. Can you explain the concept behind: "${question.text}" and why the answer is "${question.correctAnswer}"?`
+                    ? `I got this question correct but I'd like to understand it deeper. Can you explain the concept behind: "${
+                        question.text || question.question
+                      }" and why the answer is "${question.correctAnswer}"?`
                     : `I got this wrong. The question was: "${
-                        question.text
+                        question.text || question.question
                       }". I answered "${
                         question.userAnswer || "nothing"
                       }" but the correct answer is "${
@@ -2289,7 +2334,8 @@ const QuizTaker = ({ user, onComplete, onLimitUpdate }) => {
                   </div>
 
                   <h2 className="text-xl md:text-2xl font-medium text-textMain mb-8 leading-relaxed">
-                    {cleanQuestionText(currentQ.text)}
+                    {cleanQuestionText(currentQ.text || currentQ.question) ||
+                      `Question ${currentIdx + 1}`}
                   </h2>
 
                   <div className="flex-1 space-y-3">
@@ -2332,9 +2378,7 @@ const QuizTaker = ({ user, onComplete, onLimitUpdate }) => {
 
                 <div className="flex flex-col xs:flex-row justify-between mt-8 pt-6 gap-4 border-t border-border">
                   <button
-                    onClick={() =>
-                      setCurrentIdx((prev) => Math.max(0, prev - 1))
-                    }
+                    onClick={handlePrev}
                     disabled={currentIdx === 0}
                     className="px-6 py-2 text-textMuted hover:text-textMain disabled:opacity-30 disabled:hover:text-textMuted cursor-pointer disabled:cursor-not-allowed"
                   >

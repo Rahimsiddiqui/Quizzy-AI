@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import { motion } from "framer-motion";
@@ -6,6 +6,7 @@ import Visibility from "@mui/icons-material/Visibility";
 import { ArrowLeft, Calendar, Share2, Loader2, List } from "lucide-react";
 import { toast } from "react-toastify";
 import blogService from "../../services/blogService";
+import SEO from "./SEO";
 
 const BlogPost = () => {
   const { id } = useParams();
@@ -87,6 +88,63 @@ const BlogPost = () => {
     );
   };
 
+  const blogSchema = useMemo(() => {
+    if (!blog) return null;
+    return {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      headline: blog.title,
+      description: blog.excerpt,
+      image: blog.image,
+      author: {
+        "@type": "Organization",
+        name: "Qubli AI",
+        url: "https://qubli-ai.vercel.app",
+      },
+      publisher: {
+        "@type": "Organization",
+        name: "Qubli AI",
+        logo: {
+          "@type": "ImageObject",
+          url: "https://qubli-ai.vercel.app/logo.png",
+        },
+      },
+      datePublished: blog.publishedAt,
+      dateModified: blog.updatedAt || blog.publishedAt,
+      mainEntityOfPage: {
+        "@type": "WebPage",
+        "@id": `https://qubli-ai.vercel.app/blogs/${id}`,
+      },
+    };
+  }, [blog, id]);
+
+  const breadcrumbSchema = useMemo(() => {
+    return {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: "Home",
+          item: "https://qubli-ai.vercel.app",
+        },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: "Blog",
+          item: "https://qubli-ai.vercel.app/blogs",
+        },
+        {
+          "@type": "ListItem",
+          position: 3,
+          name: blog?.title || "Post",
+          item: `https://qubli-ai.vercel.app/blogs/${id}`,
+        },
+      ],
+    };
+  }, [blog, id]);
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-background">
@@ -98,6 +156,10 @@ const BlogPost = () => {
   if (!blog) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background text-textMain">
+        <SEO
+          title="Post Not Found"
+          description="The blog post you're looking for doesn't exist."
+        />
         <h1 className="text-4xl xs:text-4xl sm:text-5xl font-bold mb-6 sm:mb-8">
           Blog Not Found
         </h1>
@@ -113,6 +175,13 @@ const BlogPost = () => {
 
   return (
     <>
+      <SEO
+        title={blog.title}
+        description={blog.excerpt}
+        image={blog.image}
+        type="article"
+        schema={[blogSchema, breadcrumbSchema]}
+      />
       <article className="min-h-screen pt-28 pb-0 bg-background dark:bg-gray-900 transition-colors duration-300">
         {/* Hero Section */}
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mb-12">

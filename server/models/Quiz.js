@@ -20,6 +20,8 @@ const QuizSchema = new mongoose.Schema(
     score: Number,
     timeSpentMinutes: { type: Number, default: 0 }, // Track time spent on quiz
     isActive: { type: Boolean, default: true }, // Track if quiz is enabled/disabled
+    isFlashcardSet: { type: Boolean, default: false }, // Track if flashcards are created for this quiz
+    behavioralData: { type: mongoose.Schema.Types.Mixed, default: {} }, // Detailed question-level tracking
     createdAt: { type: Number, default: Date.now },
   },
   { collection: "quizzes" }

@@ -58,6 +58,23 @@ export default function AdminBlogs() {
     fetchBlogs();
   }, []);
 
+  // Close dropdown on scroll or resize
+  useEffect(() => {
+    const handleScroll = () => {
+      if (openDropdown) setOpenDropdown(null);
+    };
+
+    if (openDropdown) {
+      window.addEventListener("scroll", handleScroll, true); // Capture phase for all scrollables
+      window.addEventListener("resize", handleScroll);
+    }
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll, true);
+      window.removeEventListener("resize", handleScroll);
+    };
+  }, [openDropdown]);
+
   // Filter and Pagination Logic
   const filteredBlogs = useMemo(() => {
     return blogs.filter((blog) => {
@@ -183,7 +200,7 @@ export default function AdminBlogs() {
                 setSearchTerm(e.target.value);
                 setPagination((p) => ({ ...p, page: 1 }));
               }}
-              className="pl-10 pr-4 py-2 bg-surfaceHighlight/30 border border-border rounded-xl text-textMain text-sm focus:outline-none focus:ring-2 focus:ring-primary/80 w-full transition-all shadow-md-custom"
+              className="pl-10 pr-4 py-2 bg-surfaceHighlight/30 border border-border rounded-xl text-textMain text-sm focus:outline-none focus:ring-2 focus:ring-primary/80 w-full transition-all shadow-sm-custom"
             />
           </div>
 
@@ -192,7 +209,7 @@ export default function AdminBlogs() {
             <div className="relative flex-1 xs:flex-none">
               <button
                 onClick={() => setShowStatusDropdown(!showStatusDropdown)}
-                className="flex items-center justify-between gap-3 px-4 py-2.5 bg-surfaceHighlight/30 border border-border rounded-xl text-sm font-semibold text-textMuted hover:bg-surfaceHighlight/50 transition-all point min-w-[140px] w-full shadow-md-custom"
+                className="flex items-center justify-between gap-3 px-4 py-2.5 bg-surfaceHighlight/30 border border-border rounded-xl text-sm font-semibold text-textMuted hover:bg-surfaceHighlight/50 transition-all point min-w-[140px] w-full shadow-sm-custom"
               >
                 <div className="flex items-center gap-2">
                   <Filter size={16} className="text-textMuted" />
@@ -349,7 +366,7 @@ export default function AdminBlogs() {
                 paginatedBlogs.map((blog) => (
                   <tr
                     key={blog._id}
-                    className="hover:bg-slate-50 dark:bg-surface/40 dark:hover:bg-surface/50 transition-all group cursor-pointer"
+                    className="hover:bg-slate-50 dark:bg-surface/50 dark:hover:bg-surface/60 transition-all group cursor-pointer"
                     onClick={() => handleEdit(blog)}
                   >
                     <td className="px-6 py-5">
@@ -382,7 +399,7 @@ export default function AdminBlogs() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-5 text-center min-w-40">
+                    <td className="px-6 py-5 text-center min-w-50 sm:min-w-60">
                       <div className="flex justify-center items-center gap-2">
                         <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary overflow-hidden">
                           {blog.author?.picture ? (

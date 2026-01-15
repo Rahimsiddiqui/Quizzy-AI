@@ -11,9 +11,19 @@ import {
   Filter,
   ChevronLeft,
   ChevronRight,
+  TrendingUp,
 } from "lucide-react";
 
 import { useNavigate } from "react-router-dom";
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 
 import StorageService from "../../services/storageService.js";
 import { generateAndSaveReview } from "../../services/geminiService.js";
@@ -136,6 +146,33 @@ const Overview = ({ user }) => {
     return text.length > maxLength ? text.slice(0, maxLength) + "..." : text;
   };
 
+  const chartData = useMemo(() => {
+    const last7Days = [...Array(7)]
+      .map((_, i) => {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        return d.toISOString().split("T")[0];
+      })
+      .reverse();
+
+    return last7Days.map((date) => {
+      const dayQuizzes = completedQuizzes.filter(
+        (q) => new Date(q.createdAt).toISOString().split("T")[0] === date
+      );
+      const avg = dayQuizzes.length
+        ? Math.round(
+            dayQuizzes.reduce((acc, q) => acc + (q.score || 0), 0) /
+              dayQuizzes.length
+          )
+        : 0;
+
+      return {
+        name: new Date(date).toLocaleDateString("en-US", { weekday: "short" }),
+        score: avg,
+      };
+    });
+  }, [completedQuizzes]);
+
   const navigate = useNavigate();
 
   const handleRowClick = (quizId) => {
@@ -161,6 +198,25 @@ const Overview = ({ user }) => {
         </p>
       );
     });
+  };
+
+  const CustomTooltip = ({ active, payload }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-surface p-3 border border-border rounded-xl shadow-xl">
+          <p className="text-xs font-bold text-textMuted uppercase mb-1">
+            {payload[0].payload.name}
+          </p>
+          <p className="text-lg font-bold text-primary">
+            {payload[0].value}%{" "}
+            <span className="text-xs font-normal text-textMuted ml-1">
+              Avg Score
+            </span>
+          </p>
+        </div>
+      );
+    }
+    return null;
   };
 
   return (
@@ -205,42 +261,105 @@ const Overview = ({ user }) => {
         />
       </div>
 
-      <div className="p-8 rounded-3xl border border-indigo-100 dark:border-indigo-700/40 shadow-lg-custom relative overflow-hidden group bg-linear-to-r from-[#e6e9f3] to-[#eef2ff] dark:bg-linear-to-r dark:from-[#1e293b] dark:to-[#0f172a]">
-        <div className="flex flex-col md:flex-row items-start gap-6 relative z-10">
-          <div className="p-4 bg-indigo-600 text-white rounded-2xl shadow-xl shadow-indigo-200 shrink-0 dark:shadow-indigo-900">
-            <Sparkles className="w-8 h-8" />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Weekly Progress Chart */}
+        <div className="lg:col-span-2 bg-surface p-6 rounded-3xl border border-border shadow-md-custom">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h3 className="text-lg font-bold text-textMain flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-primary" />
+                Weekly Progress
+              </h3>
+              <p className="text-sm text-textMuted">
+                Average score performance
+              </p>
+            </div>
+            <div className="text-xs font-bold text-primary bg-primary/10 px-3 py-1.5 rounded-full uppercase tracking-wider">
+              Last 7 Days
+            </div>
           </div>
-          <div className="flex-1">
-            <h2 className="text-xl font-bold text-textMain mb-3 flex items-center gap-2">
-              AI Performance Coach
-              {loading && (
-                <span className="text-xs font-normal text-indigo-600 dark:text-indigo-400 animate-pulse">
-                  Analyzing...
-                </span>
+          <div className="h-[250px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={chartData}>
+                <defs>
+                  <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
+                    <stop
+                      offset="5%"
+                      stopColor="var(--primary)"
+                      stopOpacity={0.3}
+                    />
+                    <stop
+                      offset="95%"
+                      stopColor="var(--primary)"
+                      stopOpacity={0}
+                    />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  vertical={false}
+                  stroke="var(--border)"
+                  opacity={0.5}
+                />
+                <XAxis
+                  dataKey="name"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: "var(--textMuted)", fontSize: 12 }}
+                  dy={10}
+                />
+                <YAxis hide={true} domain={[0, 100]} />
+                <Tooltip content={<CustomTooltip />} />
+                <Area
+                  type="monotone"
+                  dataKey="score"
+                  stroke="var(--primary)"
+                  strokeWidth={3}
+                  fillOpacity={1}
+                  fill="url(#colorScore)"
+                  animationDuration={1500}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* AI Performance Coach - Moved to side or bottom based on screen */}
+        <div className="bg-linear-to-br from-indigo-600 to-blue-700 dark:from-indigo-900 dark:to-blue-950 p-6 rounded-3xl shadow-xl relative overflow-hidden group">
+          <div className="absolute top-0 right-0 -m-4 opacity-10 group-hover:scale-110 transition-transform duration-700">
+            <Sparkles className="w-32 h-32 text-white" />
+          </div>
+
+          <div className="relative z-10 flex flex-col h-full">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-white/20 backdrop-blur-md rounded-xl text-white">
+                <Sparkles className="w-5 h-5" />
+              </div>
+              <h3 className="text-lg font-bold text-white">AI Coach</h3>
+            </div>
+
+            <div className="flex-1 text-white/90 text-sm leading-relaxed max-h-[160px] overflow-y-auto custom-scrollbar pr-1">
+              {loading ? (
+                <div className="space-y-2 opacity-50">
+                  <div className="h-3 bg-white/20 rounded w-full animate-pulse"></div>
+                  <div className="h-3 bg-white/20 rounded w-4/5 animate-pulse"></div>
+                  <div className="h-3 bg-white/20 rounded w-full animate-pulse"></div>
+                </div>
+              ) : completedQuizzes.length > 0 ? (
+                <div className="prose prose-sm prose-invert">
+                  {formatReviewText(aiReview)}
+                </div>
+              ) : (
+                <p>Complete a quiz to unlock AI-powered insights!</p>
               )}
-            </h2>
-            {loading ? (
-              <div
-                className="space-y-3 max-w-2xl opacity-50 pt-2"
-                aria-live="polite"
-                aria-label="Loading AI review"
-              >
-                <div className="h-4 bg-indigo-200 dark:bg-indigo-800 rounded w-full animate-pulse"></div>
-                <div className="h-4 bg-indigo-200 dark:bg-indigo-800 rounded w-11/12 animate-pulse"></div>
-                <div className="h-4 bg-indigo-200 dark:bg-indigo-800 rounded w-4/6 animate-pulse"></div>
-              </div>
-            ) : (
-              <div className="prose prose-indigo text-gray-700 dark:text-gray-300 text-lg leading-relaxed font-medium whitespace-pre-line">
-                {completedQuizzes.length > 0 ? (
-                  <>{formatReviewText(aiReview)}</>
-                ) : (
-                  <p>
-                    Complete at least one quiz to unlock your personalized AI
-                    assessment!
-                  </p>
-                )}
-              </div>
-            )}
+            </div>
+
+            <button
+              onClick={() => navigate("/generate")}
+              className="mt-6 w-full py-2.5 bg-white text-primary font-bold rounded-xl shadow-lg hover:bg-gray-50 transition-colors text-sm"
+            >
+              Start New Quiz
+            </button>
           </div>
         </div>
       </div>

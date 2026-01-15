@@ -27,14 +27,14 @@ export const FlashcardReview = () => {
     loadCards();
   }, []);
 
-  const loadCards = () => {
+  const loadCards = async () => {
     setIsLoading(true);
     try {
-      const allCards = StorageService.getFlashcards();
+      const allCards = await StorageService.getFlashcards();
       const now = Date.now();
       const due = allCards
-        .filter((c) => c.nextReview <= now)
-        .sort((a, b) => a.nextReview - b.nextReview);
+        .filter((c) => (c.nextReview || 0) <= now)
+        .sort((a, b) => (a.nextReview || 0) - (b.nextReview || 0));
 
       setCards(allCards);
       setDueCount(due.length);
@@ -44,8 +44,8 @@ export const FlashcardReview = () => {
         setCurrentCard(null);
       }
       setIsFlipped(false);
-    } catch {
-      // Could not load flashcards - user is notified
+    } catch (err) {
+      console.error("Load cards error:", err);
       toast.error("Could not load flashcards.");
     } finally {
       setIsLoading(false);
@@ -54,8 +54,8 @@ export const FlashcardReview = () => {
 
   // [DX_IMPROVEMENT]: Refactor handleRate to use a cleaner helper function for next review time calculation, improving logic separation.
   const calculateNextReview = (interval, easeFactor, rating) => {
-    let newInterval = interval;
-    let newEase = easeFactor;
+    let newInterval = interval || 0;
+    let newEase = easeFactor || 2.5;
 
     if (rating === 1) {
       newInterval = 1; // Immediate reset to 1 day
@@ -74,10 +74,9 @@ export const FlashcardReview = () => {
     return { newInterval, newEase, nextReview };
   };
 
-  const handleRate = (rating) => {
+  const handleRate = async (rating) => {
     if (!currentCard) return;
 
-    // [DX_IMPROVEMENT]: Call the refactored helper function.
     const { newInterval, newEase, nextReview } = calculateNextReview(
       currentCard.interval,
       currentCard.easeFactor,
@@ -86,19 +85,25 @@ export const FlashcardReview = () => {
 
     const updatedCard = {
       ...currentCard,
-      interval: newInterval, // Use newInterval
-      easeFactor: newEase, // Use newEase
+      interval: newInterval,
+      easeFactor: newEase,
       nextReview,
-      repetition: currentCard.repetition + 1,
+      repetition: (currentCard.repetition || 0) + 1,
+      lastReviewed: Date.now(),
     };
 
-    StorageService.updateFlashcard(updatedCard);
-    toast.success(
-      `Card rated: ${
-        RATING_BUTTONS.find((b) => b.rating === rating)?.label || "Updated"
-      }!`
-    );
-    loadCards();
+    try {
+      await StorageService.updateFlashcard(updatedCard);
+      toast.success(
+        `Card rated: ${
+          RATING_BUTTONS.find((b) => b.rating === rating)?.label || "Updated"
+        }!`
+      );
+      await loadCards();
+    } catch (err) {
+      console.error("Rate card error:", err);
+      toast.error("Failed to save progress.");
+    }
   };
 
   const getNextReviewDays = (interval, easeFactor, rating) => {

@@ -140,7 +140,7 @@ function AdminQuizDetail() {
         </div>
         <button
           onClick={handleDownloadQuiz}
-          className="flex items-center gap-2 px-4 py-2 bg-primary dark:bg-blue-800/70 text-white rounded-xl point font-medium hover:shadow-lg hover:shadow-primary/20 transition-all"
+          className="flex items-center gap-2 px-4 py-2 bg-primary dark:bg-blue-700 dark:hover:bg-blue-700/80 hover:bg-blue-700 text-white rounded-xl point font-medium hover:shadow-lg hover:shadow-primary/20 transition-all"
         >
           <Download size={18} />
           Download

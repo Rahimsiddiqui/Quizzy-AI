@@ -45,6 +45,9 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     fetchStats();
+    // Auto-refresh every 15 seconds
+    const interval = setInterval(fetchStats, 15000);
+    return () => clearInterval(interval);
   }, []);
 
   useAdminSocket((evt, payload) => {
@@ -170,17 +173,13 @@ export default function AdminDashboard() {
             Welcome back, here's what's happening with your app today.
           </p>
         </div>
-        <button
-          onClick={fetchStats}
-          disabled={loading}
-          className="flex items-center gap-2 px-4 py-2 bg-surface border border-border rounded-xl text-xs font-bold text-textMain shadow-md-custom hover:bg-surfaceHighlight disabled:opacity-50 transition-all point"
-        >
-          <RotateCcw
-            size={14}
-            className={`${loading ? "animate-spin" : ""} text-primary`}
-          />
-          {loading ? "Refreshing..." : "Refresh Data"}
-        </button>
+        <div className="flex items-center gap-2 px-4 py-2 bg-surface border border-border rounded-xl text-xs font-bold text-textMain shadow-md-custom hover:bg-surfaceHighlight transition-all cursor-default select-none">
+          <span className="relative flex h-2.5 w-2.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+          </span>
+          Live Updates
+        </div>
       </div>
 
       {/* Stats Grid */}

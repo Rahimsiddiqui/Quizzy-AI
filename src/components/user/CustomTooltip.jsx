@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 
 export default function CustomTooltip({ children, content, position = "top" }) {
   const [visible, setVisible] = useState(false);
@@ -13,7 +14,7 @@ export default function CustomTooltip({ children, content, position = "top" }) {
     if (e.key === "Escape") setVisible(false);
   };
 
-  useEffect(() => {
+  const updateCoords = useCallback(() => {
     if (!visible || !triggerRef.current || !tooltipRef.current) return;
 
     const triggerRect = triggerRef.current.getBoundingClientRect();
@@ -21,7 +22,6 @@ export default function CustomTooltip({ children, content, position = "top" }) {
 
     let top = 0;
     let left = 0;
-
     const offset = 8;
 
     switch (position) {
@@ -58,6 +58,18 @@ export default function CustomTooltip({ children, content, position = "top" }) {
     setCoords({ top: Math.round(top), left: Math.round(left) });
   }, [visible, position]);
 
+  useEffect(() => {
+    if (visible) {
+      updateCoords();
+      window.addEventListener("scroll", updateCoords, true);
+      window.addEventListener("resize", updateCoords);
+    }
+    return () => {
+      window.removeEventListener("scroll", updateCoords, true);
+      window.removeEventListener("resize", updateCoords);
+    };
+  }, [visible, updateCoords]);
+
   return (
     <div
       ref={triggerRef}
@@ -68,49 +80,51 @@ export default function CustomTooltip({ children, content, position = "top" }) {
     >
       {children}
 
-      {visible && (
-        <div
-          ref={tooltipRef}
-          role="tooltip"
-          className="fixed z-50 px-3 py-2 text-xs font-medium text-white rounded-lg pointer-events-none"
-          style={{
-            top: `${coords.top}px`,
-            left: `${coords.left}px`,
-            backgroundColor: "rgba(20, 20, 30, 0.95)",
-            backdropFilter: "blur(10px)",
-            border: "1px solid rgba(255, 255, 255, 0.1)",
-            boxShadow: "0 10px 40px rgba(0, 0, 0, 0.4)",
-            animation: "fadeInSlideUp 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)",
-          }}
-        >
-          {content}
-          {/* Arrow */}
+      {visible &&
+        createPortal(
           <div
-            className="absolute w-2 h-2 bg-black/80 rounded-[1px]"
+            ref={tooltipRef}
+            role="tooltip"
+            className="fixed z-[9999] px-3 py-2 text-xs font-medium text-white rounded-lg pointer-events-none"
             style={{
-              ...(position === "top" && {
-                bottom: "-4px",
-                left: "50%",
-                transform: "translateX(-50%) rotate(45deg)",
-              }),
-              ...(position === "bottom" && {
-                top: "-4px",
-                left: "50%",
-                transform: "translateX(-50%) rotate(45deg)",
-              }),
-              ...(position === "left" && {
-                right: "-4px",
-                top: "50%",
-                transform: "translateY(-50%) rotate(45deg)",
-              }),
-              ...(position === "right" && {
-                left: "-4px",
-                top: "50%",
-                transform: "translateY(-50%) rotate(45deg)",
-              }),
+              top: `${coords.top}px`,
+              left: `${coords.left}px`,
+              backgroundColor: "rgba(20, 20, 30, 0.95)",
+              backdropFilter: "blur(10px)",
+              border: "1px solid rgba(255, 255, 255, 0.1)",
+              boxShadow: "0 10px 40px rgba(0, 0, 0, 0.4)",
+              animation:
+                "fadeInSlideUp 0.15s cubic-bezier(0.34, 1.56, 0.64, 1)",
             }}
-          />
-          <style>{`
+          >
+            {content}
+            {/* Arrow */}
+            <div
+              className="absolute w-2 h-2 bg-black/80 rounded-[1px]"
+              style={{
+                ...(position === "top" && {
+                  bottom: "-4px",
+                  left: "50%",
+                  transform: "translateX(-50%) rotate(45deg)",
+                }),
+                ...(position === "bottom" && {
+                  top: "-4px",
+                  left: "50%",
+                  transform: "translateX(-50%) rotate(45deg)",
+                }),
+                ...(position === "left" && {
+                  right: "-4px",
+                  top: "50%",
+                  transform: "translateY(-50%) rotate(45deg)",
+                }),
+                ...(position === "right" && {
+                  left: "-4px",
+                  top: "50%",
+                  transform: "translateY(-50%) rotate(45deg)",
+                }),
+              }}
+            />
+            <style>{`
             @keyframes fadeInSlideUp {
               from {
                 opacity: 0;
@@ -122,8 +136,9 @@ export default function CustomTooltip({ children, content, position = "top" }) {
               }
             }
           `}</style>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
     </div>
   );
 }

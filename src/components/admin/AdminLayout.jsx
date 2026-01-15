@@ -5,6 +5,7 @@ import {
   Users,
   BookOpenCheck,
   FileText,
+  BookOpen,
   LogOut,
   Search,
   Activity,
@@ -319,7 +320,7 @@ export default function AdminLayout() {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onFocus={() => searchQuery.trim() && setShowResults(true)}
                 placeholder="Search users or quizzes..."
-                className="pl-10 pr-4 py-2 bg-surfaceHighlight/30 border border-border rounded-xl text-textMain text-sm focus:outline-none focus:ring-2 focus:ring-primary/80 w-64 lg:w-80 transition-all shadow-md-custom"
+                className="pl-10 pr-4 py-2 bg-surfaceHighlight/30 border border-border rounded-xl text-textMain text-sm focus:outline-none focus:ring-2 focus:ring-primary/80 w-64 lg:w-80 transition-all shadow-sm-custom"
               />
 
               {/* Search Results Dropdown */}

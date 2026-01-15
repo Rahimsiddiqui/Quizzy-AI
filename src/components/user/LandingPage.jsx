@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 
 import OptimizedImage from "./OptimizedImage";
+import SEO from "./SEO";
 
 const LandingPage = ({ auth }) => {
   const navigate = useNavigate();
@@ -26,6 +27,10 @@ const LandingPage = ({ auth }) => {
 
   return (
     <div className="min-h-screen bg-background text-textMain animate-fade-in-up">
+      <SEO
+        title="Ace Your Exams with AI-Powered Study Tools"
+        description="Qubli AI turns your notes and PDFs into instant quizzes and flashcards. Use active recall and spaced repetition to learn 10x faster."
+      />
       {/* Hero Section */}
       <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
@@ -91,23 +96,29 @@ const LandingPage = ({ auth }) => {
             className="grid min-[450px]:grid-cols-3 gap-4 sm:gap-8 animate-fade-in-up"
             style={{ animationDelay: "500ms" }}
           >
-            <div className="p-4 rounded-lg bg-surface border border-border hover:border-primary/50 hover:shadow-md hover:scale-102 transition-all">
-              <div className="text-2xl sm:text-3xl font-bold text-primary dark:text-blue-400">
+            <div className="p-6 rounded-2xl glass border border-white/20 hover:border-primary/50 hover:shadow-xl hover:scale-105 transition-all duration-300">
+              <div className="text-3xl sm:text-4xl font-bold text-primary dark:text-blue-400">
                 10K+
               </div>
-              <div className="text-sm text-textMuted">Active Users</div>
+              <div className="text-sm font-semibold text-textMuted uppercase tracking-wider mt-1">
+                Active Users
+              </div>
             </div>
-            <div className="p-4 rounded-lg bg-surface border border-border hover:border-primary/50 hover:shadow-md hover:scale-102 transition-all">
-              <div className="text-2xl sm:text-3xl font-bold text-primary dark:text-blue-400">
+            <div className="p-6 rounded-2xl glass border border-white/20 hover:border-primary/50 hover:shadow-xl hover:scale-105 transition-all duration-300">
+              <div className="text-3xl sm:text-4xl font-bold text-primary dark:text-blue-400">
                 100K+
               </div>
-              <div className="text-sm text-textMuted">Quizzes Created</div>
+              <div className="text-sm font-semibold text-textMuted uppercase tracking-wider mt-1">
+                Quizzes Created
+              </div>
             </div>
-            <div className="p-4 rounded-lg bg-surface border border-border hover:border-primary/50 hover:shadow-md hover:scale-102 transition-all">
-              <div className="text-2xl sm:text-3xl font-bold text-primary dark:text-blue-400">
+            <div className="p-6 rounded-2xl glass border border-white/20 hover:border-primary/50 hover:shadow-xl hover:scale-105 transition-all duration-300">
+              <div className="text-3xl sm:text-4xl font-bold text-primary dark:text-blue-400">
                 4.9/5
               </div>
-              <div className="text-sm text-textMuted">User Rating</div>
+              <div className="text-sm font-semibold text-textMuted uppercase tracking-wider mt-1">
+                User Rating
+              </div>
             </div>
           </div>
         </div>
