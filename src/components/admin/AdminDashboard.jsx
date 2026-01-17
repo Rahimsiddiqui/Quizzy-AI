@@ -173,7 +173,7 @@ export default function AdminDashboard() {
             Overview
           </h2>
           <p className="text-sm text-textMuted mb-5">
-            Welcome back, here's what's happening with your app today.
+            Welcome back, here's what's happening Qubli AI today.
           </p>
         </div>
         <div className="flex items-center gap-2 px-4 py-2 bg-surface border border-border rounded-xl text-xs font-bold text-textMain dark:text-textMain/95 shadow-md-custom transition-all cursor-default select-none">

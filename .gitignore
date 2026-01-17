@@ -4,6 +4,12 @@ node_modules/
 # Admin Seeder
 server/scripts
 
+# Agent Rules
+.agent/
+
+# App Rules
+uploads/
+
 # Environment files
 .env
 .env.local
