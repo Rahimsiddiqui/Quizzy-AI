@@ -82,8 +82,8 @@ const LandingPage = ({ auth }) => {
                   Start Learning Free <ArrowRight className="w-5 h-5" />
                 </button>
                 <button
-                  onClick={() => navigate("/auth")}
-                  className="px-8 py-4 w-[90%] md:w-[42%] mx-auto rounded-xl border border-border text-textMain font-bold text-md xl:text-lg hover:bg-surfaceHighlight transition-colors hover:border-primary/50 point"
+                  onClick={() => navigate("/demo")}
+                  className="px-8 py-4 w-[90%] md:w-[42%] mx-auto rounded-xl border border-border text-textMain dark:text-textMain/95 font-bold text-md xl:text-lg hover:bg-surfaceHighlight dark:hover:bg-surfaceHighlight/60 transition-colors hover:border-primary/50 dark:hover:border-blue-700 point"
                 >
                   View Demo
                 </button>
