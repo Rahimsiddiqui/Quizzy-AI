@@ -64,6 +64,7 @@
     "tailwindcss": "^4.1.18",
     "uuid": "^13.0.0",
     "vite": "^6.2.0",
+    "vite-plugin-css-injected-by-js": "^3.5.2",
     "youtube-transcript": "^1.2.1",
     "youtubei.js": "^16.0.1"
   },
@@ -74,8 +75,7 @@
     "eslint": "^9.39.2",
     "eslint-plugin-react": "^7.37.5",
     "globals": "^17.0.0",
-    "typescript": "~5.8.2",
-    "vite-plugin-css-injected-by-js": "^3.5.2"
+    "typescript": "~5.8.2"
   },
   "description": "Qubli AI is an AI-powered learning platform that transforms the way you study by generating personalized quizzes, flashcards, and study materials. It adapts to your progress, focusing on areas that need improvement, and helps maximize learning efficiency and knowledge retention for students, professionals, and lifelong learners.",
   "main": "postcss.config.js",
