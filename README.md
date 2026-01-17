@@ -49,7 +49,7 @@ What are you waiting for? [Start Now](https://qubli-ai.vercel.app)
 
 ## ⚡ Prerequisites
 
-- Node.js **18+**
+- Node.js **24+**
 - MongoDB Atlas account
 - OpenAI/Gemini API Key
 - Google/GitHub OAuth credentials
