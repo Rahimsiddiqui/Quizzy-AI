@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
+import { motion } from "framer-motion";
 import {
   Save,
   Eye,
@@ -17,7 +18,6 @@ import Visibility from "@mui/icons-material/Visibility";
 import blogService from "../../services/blogService";
 import { uploadImage } from "../../services/adminService";
 import { toast } from "react-toastify";
-import { useRef } from "react";
 
 const BlogEditor = ({ blog, onClose, onSave }) => {
   const [formData, setFormData] = useState({
@@ -33,30 +33,89 @@ const BlogEditor = ({ blog, onClose, onSave }) => {
   const [previewMode, setPreviewMode] = useState(false);
   const [loading, setLoading] = useState(false);
   const [toc, setToc] = useState([]);
+  const [activeId, setActiveId] = useState("");
   const fileInputRef = useRef(null);
 
   // TOC Extraction Logic
   useEffect(() => {
     if (previewMode && formData.content) {
-      const lines = formData.content.split("\n");
-      const headers = lines
-        .filter((line) => line.startsWith("#"))
-        .map((line) => {
-          const match = line.match(/^(#+)\s+(.*)$/);
-          if (!match) return null;
-          const level = match[1].length;
-          let text = match[2].replace(/[*_~`]/g, "");
+      const lines = formData.content.split(/\r?\n/);
+      const tocItems = [];
+      let currentHeaderLevel = 0;
+
+      for (const line of lines) {
+        const trimmedLine = line.trim();
+        
+        // Check if it's a header
+        const headerMatch = trimmedLine.match(/^(#+)\s*(.*)$/);
+        if (headerMatch) {
+          const level = headerMatch[1].length;
+          if (level > 6) continue;
+          
+          let text = headerMatch[2].trim().replace(/[*_~`]/g, "");
+          if (!text) continue;
+          
           const id = text
             .toLowerCase()
             .replace(/[^\w\s-]/g, "")
             .replace(/\s+/g, "-")
             .replace(/^-+|-+$/g, "");
-          return { level, text, id };
-        })
-        .filter(Boolean);
-      setToc(headers);
+          tocItems.push({ level, text, id, isClickable: true });
+          currentHeaderLevel = level;
+          continue;
+        }
+        
+        const bulletMatch = trimmedLine.match(/^[-*+]\s+(.+)$/);
+        if (bulletMatch && currentHeaderLevel > 0) {
+          let text = bulletMatch[1].trim();
+          const boldMatch = text.match(/^\*\*(.+?)\*\*/);
+          if (boldMatch) {
+            text = boldMatch[1].replace(/:$/, ""); // Remove trailing colon
+          } else {
+            text = text.replace(/[*_~`]/g, "").split(/[:.]/)[0].trim();
+          }
+          
+          if (text && text.length > 2 && text.length < 60) {
+            tocItems.push({ 
+              level: currentHeaderLevel + 1, 
+              text, 
+              id: null,
+              isClickable: false 
+            });
+          }
+        }
+      }
+      
+      setToc(tocItems);
     }
   }, [previewMode, formData.content]);
+
+  // Scroll Spy for Preview
+  useEffect(() => {
+    if (!previewMode || toc.length === 0) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visibleEntry = entries.find((entry) => entry.isIntersecting);
+        if (visibleEntry) {
+          setActiveId(visibleEntry.target.id);
+        }
+      },
+      {
+        rootMargin: "-80px 0% -70% 0%",
+        threshold: 0,
+      }
+    );
+
+    toc.forEach((heading) => {
+      if (heading.id && heading.isClickable) {
+        const element = document.getElementById(heading.id);
+        if (element) observer.observe(element);
+      }
+    });
+
+    return () => observer.disconnect();
+  }, [previewMode, toc]);
 
   // Heading sync helper
   const MarkdownHeading = ({ level, children, ...props }) => {
@@ -282,32 +341,48 @@ const BlogEditor = ({ blog, onClose, onSave }) => {
                         <h3 className="text-lg text-textMain dark:text-textMain/95 font-bold mb-4 flex items-center gap-2">
                           <List size={18} /> Table of Contents
                         </h3>
-                        <ul className="space-y-2 text-sm border-l-2 border-border pl-4">
+                        <ul className="space-y-1 text-sm border-l-2 border-border pl-0">
                           {toc.map((heading, idx) => (
                             <li
                               key={idx}
                               style={{
-                                paddingLeft: `${(heading.level - 1) * 12}px`,
+                                marginLeft: "-2px",
+                                paddingLeft: `${(heading.level - 1) * 12 + 16}px`,
                               }}
                             >
-                              <a
-                                href={`#${heading.id}`}
-                                className="text-textMuted hover:text-primary transition-colors block py-0.5 line-clamp-1"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  const el = document.getElementById(
-                                    heading.id,
-                                  );
-                                  if (el) {
-                                    el.scrollIntoView({
-                                      behavior: "smooth",
-                                      block: "start",
-                                    });
-                                  }
-                                }}
-                              >
-                                {heading.text}
-                              </a>
+                              {heading.isClickable ? (
+                                <a
+                                  href={`#${heading.id}`}
+                                  className={`transition-all duration-300 block py-1 line-clamp-1 relative ${
+                                    activeId === heading.id
+                                      ? "text-primary dark:text-blue-500 font-semibold"
+                                      : "text-textMuted hover:text-primary transition-colors"
+                                  }`}
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    const el = document.getElementById(heading.id);
+                                    if (el) {
+                                      el.scrollIntoView({
+                                        behavior: "smooth",
+                                        block: "start",
+                                      });
+                                      setActiveId(heading.id);
+                                    }
+                                  }}
+                                >
+                                  {activeId === heading.id && (
+                                    <motion.div 
+                                      layoutId="toc-preview-indicator"
+                                      className="absolute -left-4 top-1/2 -translate-y-1/2 w-1 h-4 bg-primary dark:bg-blue-500 rounded-full"
+                                    />
+                                  )}
+                                  {heading.text}
+                                </a>
+                              ) : (
+                                <span className="block py-0.5 text-xs text-textMuted/70 line-clamp-1 cursor-default">
+                                  {heading.text}
+                                </span>
+                              )}
                             </li>
                           ))}
                         </ul>
@@ -327,14 +402,23 @@ const BlogEditor = ({ blog, onClose, onSave }) => {
                     >
                       <ReactMarkdown
                         components={{
-                          h1: ({ ...props }) => (
+                          h1: ({ _node, ...props }) => (
                             <MarkdownHeading level={1} {...props} />
                           ),
-                          h2: ({ ...props }) => (
+                          h2: ({ _node, ...props }) => (
                             <MarkdownHeading level={2} {...props} />
                           ),
-                          h3: ({ ...props }) => (
+                          h3: ({ _node, ...props }) => (
                             <MarkdownHeading level={3} {...props} />
+                          ),
+                          h4: ({ _node, ...props }) => (
+                            <MarkdownHeading level={4} {...props} />
+                          ),
+                          h5: ({ _node, ...props }) => (
+                            <MarkdownHeading level={5} {...props} />
+                          ),
+                          h6: ({ _node, ...props }) => (
+                            <MarkdownHeading level={6} {...props} />
                           ),
                         }}
                       >
@@ -399,7 +483,7 @@ const BlogEditor = ({ blog, onClose, onSave }) => {
                       type="file"
                       ref={fileInputRef}
                       className="hidden"
-                      accept="image/*"
+                      accept="image/png,image/jpeg,image/webp,image/gif,image/avif"
                       onChange={handleImageUpload}
                     />
                     {!formData.image && (
@@ -418,16 +502,16 @@ const BlogEditor = ({ blog, onClose, onSave }) => {
                     <input
                       type="text"
                       name="image"
-                      value={formData.image}
+                      value={formData.image ? "" : formData.image}
                       onChange={handleChange}
                       disabled={!!formData.image}
                       placeholder={
                         formData.image
-                          ? "Remove image to paste URL"
+                          ? ""
                           : "Paste cover image URL or upload above..."
                       }
                       className={`w-full pl-12 pr-6 py-4 rounded-2xl bg-surface border border-border focus:ring-4 focus:ring-primary/5 focus:border-primary outline-none transition-all text-sm shadow-sm-custom ${
-                        formData.image ? "opacity-50 cursor-not-allowed" : ""
+                        formData.image ? "opacity-50 cursor-not-allowed bg-slate-100 dark:bg-slate-800" : ""
                       }`}
                     />
                   </div>

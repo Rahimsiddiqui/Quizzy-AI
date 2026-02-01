@@ -1,12 +1,34 @@
-export const Difficulty = { Easy: "Easy", Medium: "Medium", Hard: "Hard" };
-export const QuestionType = {
-  MCQ: "Multiple Choice",
-  TrueFalse: "True/False",
-  ShortAnswer: "Short Answer",
-  FillInTheBlank: "Fill in the Blank",
-  Essay: "Essay",
-};
-export const SubscriptionTier = { Free: "Free", Basic: "Basic", Pro: "Pro" };
+const difficultyLevels = ["Easy", "Medium", "Hard"];
+export const Difficulty = Object.fromEntries(difficultyLevels.map(level => [level, level])); 
+/* {
+   Easy: "Easy",
+   Medium: "Medium",
+   Hard: "Hard"
+} */
+
+const questionTypes = [
+  ["MCQ", "Multiple Choice"],
+  ["TrueFalse", "True/False"],
+  ["ShortAnswer", "Short Answer"],
+  ["FillInTheBlank", "Fill in the Blank"],
+  ["Essay", "Essay"]
+];
+export const QuestionType = Object.fromEntries(questionTypes); 
+/* {
+   MCQ: "Multiple Choice",
+   TrueFalse: "True/False",
+   ShortAnswer: "Short Answer",
+   FillInTheBlank: "Fill in the Blank",
+   Essay: "Essay"
+} */
+
+const subscriptionTiers = ["Free", "Basic", "Pro"];
+export const SubscriptionTier = Object.fromEntries(subscriptionTiers.map(tier => [tier, tier]));
+/* {
+   Free: "Free",
+   Basic: "Basic",
+   Pro: "Pro"
+} */
 
 // --- INTERFACES (Mapped to JSDoc typedefs) ---
 

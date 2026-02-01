@@ -11,7 +11,7 @@ export async function initiate2FA(userEmail) {
       length: 32,
     });
 
-    const qrCode = await QRCode.toDataURL(secret.otpauth_url);
+    const qrCode = QRCode.toDataURL(secret.otpauth_url);
 
     return {
       secret: secret.base32,
@@ -60,18 +60,30 @@ export function useBackupCode(backupCodes, code) {
   return false;
 }
 
-// Encrypt secret for storage (optional - for extra security)
+// Helper to ensure key is 32 bytes
+const getKey = (key) => crypto.createHash("sha256").update(key).digest();
+
+// Encrypt secret for storage (securely with IV)
 export function encryptSecret(secret, key) {
-  const cipher = crypto.createCipher("aes-256-cbc", key);
+  const iv = crypto.randomBytes(16);
+  const cipher = crypto.createCipheriv("aes-256-cbc", getKey(key), iv);
   let encrypted = cipher.update(secret, "utf8", "hex");
   encrypted += cipher.final("hex");
-  return encrypted;
+  // Return IV and encrypted data separated by colon
+  return iv.toString("hex") + ":" + encrypted;
 }
 
 // Decrypt secret for use
 export function decryptSecret(encryptedSecret, key) {
-  const decipher = crypto.createDecipher("aes-256-cbc", key);
-  let decrypted = decipher.update(encryptedSecret, "hex", "utf8");
+  const textParts = encryptedSecret.split(":");
+  if (textParts.length < 2) { 
+     throw new Error("Invalid encrypted secret format. Missing IV.");
+  }
+
+  const iv = Buffer.from(textParts.shift(), "hex");
+  const encryptedText = textParts.join(":");
+  const decipher = crypto.createDecipheriv("aes-256-cbc", getKey(key), iv);
+  let decrypted = decipher.update(encryptedText, "hex", "utf8");
   decrypted += decipher.final("utf8");
   return decrypted;
 }

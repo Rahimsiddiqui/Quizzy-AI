@@ -1,9 +1,8 @@
-import { useNavigate } from "react-router-dom";
 import { Zap, BookOpen, BarChart3, Brain } from "lucide-react";
+import ScrollAnimated from "./ScrollAnimated";
+import PublicPageLayout from "./PublicPageLayout";
 
 const FeaturesPage = () => {
-  const navigate = useNavigate();
-
   const features = [
     {
       icon: Brain,
@@ -60,23 +59,16 @@ const FeaturesPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background text-textMain dark:text-textMain/95 animate-fade-in-up">
-      {/* Hero Section */}
-      <section className="pt-40 py-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-6">
-            Powerful Features for <br />
-            <span className="text-primary dark:text-blue-500 bg-clip-text">
-              Smarter Learning
-            </span>
-          </h1>
-          <p className="text-lg sm:text-xl text-textMuted mb-8 max-w-2xl mx-auto">
-            Discover how Qubli AI's advanced features help you study more
-            effectively and ace your exams.
-          </p>
-        </div>
-      </section>
-
+    <PublicPageLayout
+      pageTitle="Features"
+      description="Discover how Qubli AI's advanced features help you study more effectively and ace your exams."
+      heroTitle="Powerful Features for"
+      heroHighlight="Smarter Learning"
+      heroSubtitle="Discover how Qubli AI's advanced features help you study more effectively and ace your exams."
+      showCta={true}
+      ctaTitle="Ready to Experience the Power of AI Learning?"
+      ctaSubtitle="Start using Qubli AI today and transform the way you study."
+    >
       {/* Features Section */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-surface">
         <div className="max-w-6xl mx-auto space-y-16">
@@ -85,9 +77,11 @@ const FeaturesPage = () => {
             const isOdd = index % 2 === 1;
 
             return (
-              <div
-                key={index}
+              <ScrollAnimated
+                animationClass={isOdd ? "animate-slide-in-right" : "animate-slide-in-left"}
                 className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center"
+                delay={200 * (index / 2)}
+                key={index}
               >
                 {/* Image */}
                 {isOdd ? (
@@ -105,18 +99,18 @@ const FeaturesPage = () => {
                 {/* Content */}
                 <div className={isOdd ? "md:order-2" : "md:order-1"}>
                   <div className="flex flex-col md:flex-row md:items-start gap-4">
-                    <div className="w-16 h-16 bg-primary/10 dark:bg-primary/20 rounded-2xl flex items-center justify-center shrink-0">
-                      <IconComponent className="w-8 h-8 text-primary dark:text-blue-400" />
+                    <div className="w-16 h-16 bg-primary/10 dark:bg-blue-800/25 rounded-2xl flex items-center justify-center shrink-0">
+                      <IconComponent className="w-8 h-8 text-primary dark:text-blue-500" />
                     </div>
                     <div className="w-full">
-                      <h2 className="text-3xl font-bold mb-4">
+                      <h2 className="text-3xl font-bold mb-4 text-textMain dark:text-textMain/95">
                         {feature.title}
                       </h2>
                       <p className="text-textMuted text-lg mb-6">
                         {feature.description}
                       </p>
                       <div className="space-y-3">
-                        <p className="font-semibold text-textMain mb-3">
+                        <p className="font-semibold text-textMain dark:text-textMain/95 mb-3">
                           Key Benefits:
                         </p>
                         <ul className="space-y-2">
@@ -141,36 +135,18 @@ const FeaturesPage = () => {
                     <img
                       src={feature.image}
                       alt={feature.title}
-                      className="w-full h-64 object-cover rounded-xl hover:scale-105 transition-transform duration-300"
+                      className="w-full h-64 object-cover rounded-xl hover:scale-103 transition-transform duration-300"
                       loading="lazy"
                       decoding="async"
                     />
                   </div>
                 ) : null}
-              </div>
+              </ScrollAnimated>
             );
           })}
         </div>
       </section>
-
-      {/* CTA Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-linear-to-br from-primary/10 to-blue-600/10 border-t border-b border-border">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-            Ready to Experience the Power of AI Learning?
-          </h2>
-          <p className="text-lg text-textMuted mb-8">
-            Start using Qubli AI today and transform the way you study.
-          </p>
-          <button
-            onClick={() => navigate("/auth")}
-            className="px-10 py-3 rounded-xl bg-primary dark:bg-blue-700 text-white dark:text-white/95 font-bold text-lg hover:bg-blue-700 dark:hover:bg-blue-700/80 transition-colors hover:shadow-sm hover:shadow-primary/30 point"
-          >
-            Get Started Free
-          </button>
-        </div>
-      </section>
-    </div>
+    </PublicPageLayout>
   );
 };
 

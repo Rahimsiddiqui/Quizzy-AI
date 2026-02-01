@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import {
-  ArrowRight,
   Brain,
   Zap,
   BookOpen,
@@ -11,6 +10,7 @@ import {
 } from "lucide-react";
 
 import OptimizedImage from "./OptimizedImage";
+import ScrollAnimated from "./ScrollAnimated";
 import SEO from "./SEO";
 
 const LandingPage = ({ auth }) => {
@@ -49,13 +49,13 @@ const LandingPage = ({ auth }) => {
             style={{ animationDelay: "200ms" }}
           >
             Master Any Topic with <br />
-            <span className="text-primary dark:text-blue-500 bg-clip-text">
+            <span className="text-primary bg-clip-text">
               Qubli AI
             </span>
           </h1>
 
           <p
-            className="text-lg sm:text-xl text-textMuted mb-8 max-w-2xl mx-auto leading-relaxed animate-fade-in-up"
+            className="text-lg sm:text-xl text-textMuted mb-9 max-w-2xl mx-auto leading-relaxed animate-fade-in-up"
             style={{ animationDelay: "300ms" }}
           >
             Generate intelligent quizzes, create flashcards, and ace your exams
@@ -69,21 +69,21 @@ const LandingPage = ({ auth }) => {
             {auth?.isAuthenticated ? (
               <button
                 onClick={() => navigate("/dashboard")}
-                className="px-8 py-4 w-[90%] md:w-[40%] mx-auto rounded-xl bg-primary dark:bg-blue-700 text-white hover:text-white/95 font-bold text-md xl:text-lg hover:bg-blue-700 transition-all hover:shadow-sm hover:shadow-primary/30 flex items-center justify-center gap-2 point dark:hover:bg-blue-700/90"
+                className="px-8 py-4 w-[90%] md:w-[40%] mx-auto rounded-xl bg-primary dark:bg-blue-700 text-white hover:text-white/95 font-bold text-md xl:text-lg hover:bg-blue-700 transition-all duration-200 hover:shadow-sm hover:shadow-primary/30 flex items-center justify-center gap-2 point dark:hover:bg-blue-700/90 group"
               >
-                Go to Dashboard <ArrowRight className="w-5 h-5" />
+                Go to Dashboard <span className="inline-block group-hover:translate-x-1 transition-transform duration-200">→</span>
               </button>
             ) : (
               <>
                 <button
                   onClick={() => navigate("/auth")}
-                  className="px-8 py-4 w-[90%] md:w-[45%] mx-auto rounded-xl bg-primary dark:bg-blue-700 text-white hover:text-white/95 font-bold text-md xl:text-lg hover:bg-blue-700 transition-all hover:shadow-md hover:shadow-primary/30 flex items-center justify-center gap-2 point dark:hover:bg-blue-700/90"
+                  className="px-8 py-4 w-[90%] md:w-[45%] mx-auto rounded-xl bg-primary dark:bg-blue-700 text-white hover:text-white/95 font-bold text-md xl:text-lg hover:bg-blue-700 transition-all hover:shadow-sm hover:shadow-primary/30 flex items-center justify-center gap-2 point dark:hover:bg-blue-700/90 group"
                 >
-                  Start Learning Free <ArrowRight className="w-5 h-5" />
+                  Start Learning Free <span className="inline-block group-hover:translate-x-1 transition-transform duration-200">→</span>
                 </button>
                 <button
                   onClick={() => navigate("/demo")}
-                  className="px-8 py-4 w-[90%] md:w-[42%] mx-auto rounded-xl border border-border text-textMain dark:text-textMain/95 font-bold text-md xl:text-lg hover:bg-surfaceHighlight dark:hover:bg-surfaceHighlight/60 transition-colors hover:border-primary/50 dark:hover:border-blue-700 point"
+                  className="px-8 py-4 w-[90%] md:w-[42%] mx-auto rounded-xl border border-border text-textMain/95 font-bold text-md xl:text-lg bg-surfaceHighlight/80 hover:bg-surfaceHighlight dark:bg-surfaceHighlight/30 dark:hover:bg-surfaceHighlight/50 transition-colors hover:border-primary/30 dark:hover:border-blue-600/80 point"
                 >
                   View Demo
                 </button>
@@ -96,30 +96,19 @@ const LandingPage = ({ auth }) => {
             className="grid min-[450px]:grid-cols-3 gap-4 sm:gap-8 animate-fade-in-up"
             style={{ animationDelay: "500ms" }}
           >
-            <div className="p-6 rounded-2xl bg-surface/80 glass border border-border hover:shadow-sm-custom hover:scale-104 transition-all duration-300">
-              <div className="text-3xl sm:text-4xl font-bold text-primary dark:text-blue-500">
-                10K+
+            {[{number: "10K+", label: "Active Users"},
+              {number: "100K+", label: "Quizzes Created"},
+              {number: "4.9/5", label: "User Rating"}
+              ].map((item) => (
+                <div key={item.label} className="p-6 rounded-2xl bg-surface/80 glass border border-border hover:shadow-sm-custom hover:scale-102 transition-all duration-300">
+                  <div className="text-3xl sm:text-4xl font-bold text-primary dark:text-blue-500">
+                {item.number}
               </div>
               <div className="text-sm font-semibold text-textMuted uppercase tracking-wider mt-2">
-                Active Users
+                {item.label}
               </div>
             </div>
-            <div className="p-6 rounded-2xl bg-surface/80 glass border border-border hover:shadow-sm-custom hover:scale-104 transition-all duration-300">
-              <div className="text-3xl sm:text-4xl font-bold text-primary dark:text-blue-500">
-                100K+
-              </div>
-              <div className="text-sm font-semibold text-textMuted uppercase tracking-wider mt-2">
-                Quizzes Created
-              </div>
-            </div>
-            <div className="p-6 rounded-2xl bg-surface/80 glass border border-border hover:shadow-sm-custom hover:scale-104 transition-all duration-300">
-              <div className="text-3xl sm:text-4xl font-bold text-primary dark:text-blue-500">
-                4.9/5
-              </div>
-              <div className="text-sm font-semibold text-textMuted uppercase tracking-wider mt-2">
-                User Rating
-              </div>
-            </div>
+          ))}
           </div>
         </div>
       </section>
@@ -127,18 +116,22 @@ const LandingPage = ({ auth }) => {
       {/* Features Section */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-surface">
         <div className="max-w-6xl mx-auto">
-          <h2
-            className="text-3xl sm:text-4xl md:text-5xl font-bold text-center mb-4 md:mb-5 animate-fade-in-up"
-            style={{ animationDelay: "100ms" }}
+          <ScrollAnimated
+            animationClass="animate-fade-in-up"
+            delay={100}
           >
-            Powerful Features
-          </h2>
-          <p
-            className="text-center text-textMuted text-base mb-16 max-w-2xl mx-auto animate-fade-in-up"
-            style={{ animationDelay: "200ms" }}
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-center mb-4 md:mb-5">
+              Powerful Features
+            </h2>
+          </ScrollAnimated>
+          <ScrollAnimated
+            animationClass="animate-fade-in-up"
+            delay={200}
           >
-            Everything you need to study smarter, not harder
-          </p>
+            <p className="text-center text-textMuted text-base mb-16 max-w-2xl mx-auto">
+              Everything you need to study smarter, not harder
+            </p>
+          </ScrollAnimated>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {[
@@ -167,28 +160,29 @@ const LandingPage = ({ auth }) => {
                   "Experience instant quiz generation and seamless performance across all devices and network speeds.",
               },
             ].map((feature, index) => (
-              <div
+              <ScrollAnimated
                 key={index}
-                className="p-8 bg-background dark:bg-background/75 rounded-2xl border border-border hover:border-primary/50 transition-all hover:shadow-lg hover:shadow-primary/10 hover:scale-101 animate-fade-in-up"
-                style={{ animationDelay: `${index * 100 + 300}ms` }}
+                animationClass={`animate-slide-in-${index % 2 === 0 ? 'left' : 'right'}`}
+                delay={(index / 2) * 100}
+                className="p-8 bg-background dark:bg-background/75 rounded-2xl border border-border hover:border-primary/50 transition-all hover:shadow-md hover:shadow-primary/10 hover:scale-101"
               >
-                <div className="w-12 h-12 bg-primary/10 dark:bg-blue-800/30 rounded-lg flex items-center justify-center mb-4">
+                <div className="w-12 h-12 bg-primary/10 dark:bg-blue-800/25 rounded-lg flex items-center justify-center mb-4">
                   <feature.icon className="w-6 h-6 text-primary dark:text-blue-500" />
                 </div>
                 <h3 className="text-lg font-bold mb-3 text-textMain dark:text-textMain/95">
                   {feature.title}
                 </h3>
                 <p className="text-textMuted">{feature.description}</p>
-              </div>
+              </ScrollAnimated>
             ))}
           </div>
 
           <div className="text-center mt-12">
             <Link
               to="/features"
-              className="text-lg font-semibold text-primary hover:text-blue-700 dark:text-blue-500 dark:hover:text-primary transition-colors"
+              className="text-lg font-semibold text-primary hover:text-blue-700 dark:text-blue-500 dark:hover:text-blue-500/80 transition-all group"
             >
-              Explore All Features →
+              Explore All Features <span className="inline-block group-hover:translate-x-1 transition-transform duration-200">→</span>
             </Link>
           </div>
         </div>
@@ -197,18 +191,22 @@ const LandingPage = ({ auth }) => {
       {/* Testimonials Section */}
       <section className="py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
-          <h2
-            className="text-3xl sm:text-4xl md:text-5xl font-bold text-center mb-4 md:mb-5 animate-fade-in-up"
-            style={{ animationDelay: "100ms" }}
+          <ScrollAnimated
+            animationClass="animate-fade-in-up"
+            delay={100}
           >
-            Loved by Students
-          </h2>
-          <p
-            className="text-center text-textMuted text-base mb-16 max-w-2xl mx-auto animate-fade-in-up"
-            style={{ animationDelay: "200ms" }}
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-center mb-4 md:mb-5">
+              Loved by Students
+            </h2>
+          </ScrollAnimated>
+          <ScrollAnimated
+            animationClass="animate-fade-in-up"
+            delay={200}
           >
-            See what our users have to say about their learning journey
-          </p>
+            <p className="text-center text-textMuted text-base mb-16 max-w-2xl mx-auto">
+              See what our users have to say about their learning journey
+            </p>
+          </ScrollAnimated>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {[
@@ -244,10 +242,12 @@ const LandingPage = ({ auth }) => {
                   "The flashcard system with spaced repetition is incredible. I've tried many study apps, but Qubli AI is by far the most effective. The time I save allows me to focus on deeper learning.",
               },
             ].map((testimonial, index) => (
-              <div
+              <ScrollAnimated
                 key={index}
-                className="p-8 bg-surface dark:bg-surface/80 rounded-xl border border-border hover:border-primary/30 transition-all hover:scale-101 duration-200 animate-fade-in-up"
-                style={{ animationDelay: `${index * 100 + 300}ms` }}
+                animationClass="animate-fade-in-up"
+                delay={(index / 2) * 100}
+                margin="-50px"
+                className="p-8 bg-surface dark:bg-surface/80 rounded-xl border border-border hover:border-primary/30 dark:hover-bg-blue-800/80 transition-all hover:scale-101 duration-200 hover:shadow-md hover:shadow-primary/10"
               >
                 <div className="flex gap-1 mb-4">
                   {[...Array(testimonial.rating)].map((_, i) => (
@@ -268,7 +268,7 @@ const LandingPage = ({ auth }) => {
                       />
                     </div>
                   ) : (
-                    <div className="w-12 h-12 rounded-full text-white bg-primary/90 dark:bg-blue-800/30 flex items-center justify-center text-xl font-bold uppercase">
+                    <div className="w-12 h-12 rounded-full text-white bg-primary/90 dark:bg-blue-800/50 flex items-center justify-center text-xl font-bold uppercase">
                       {testimonial.name.charAt(0)}
                     </div>
                   )}
@@ -279,16 +279,16 @@ const LandingPage = ({ auth }) => {
                     <p className="text-sm text-textMuted">{testimonial.role}</p>
                   </div>
                 </div>
-              </div>
+              </ScrollAnimated>
             ))}
           </div>
 
           <div className="text-center mt-12">
             <Link
               to="/testimonials"
-              className="text-lg font-semibold text-primary hover:text-blue-700 dark:text-blue-500 dark:hover:text-primary transition-colors"
+              className="text-lg font-semibold text-primary hover:text-blue-700 dark:text-blue-500 dark:hover:text-blue-500/80 transition-all group"
             >
-              Read More Testimonials →
+              Read More Testimonials <span className="inline-block group-hover:translate-x-1 transition-transform duration-200">→</span>
             </Link>
           </div>
         </div>
@@ -296,35 +296,37 @@ const LandingPage = ({ auth }) => {
 
       {/* CTA Section */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-linear-to-br from-primary/10 to-blue-600/10 border-t border-b border-border">
-        <div
-          className="max-w-4xl mx-auto text-center animate-fade-in-up"
-          style={{ animationDelay: "200ms" }}
+        <ScrollAnimated
+          animationClass="animate-fade-in-up"
+          delay={200}
+          margin="-50px"
+          className="max-w-4xl mx-auto text-center"
         >
           <h2 className="text-3xl sm:text-4xl font-bold mb-4">
             Ready to Ace Your Exams?
           </h2>
           <p className="text-lg text-textMuted mb-8">
-            Join thousands of students using Qubli AI to boost their learning
+            Join thousands of students who use Qubli AI to boost their learning.
           </p>
           {auth?.isAuthenticated ? (
             <button
               onClick={() => navigate("/dashboard")}
-              className="px-10 py-3 mx-auto rounded-xl bg-primary dark:bg-blue-700 text-white dark:text-white/95 font-bold text-md xl:text-lg hover:bg-blue-700 transition-all hover:shadow-sm hover:shadow-primary/30 flex items-center justify-center gap-2 point dark:hover:bg-blue-700/90"
+              className="px-10 py-3 mx-auto rounded-xl bg-primary dark:bg-blue-700 text-white hover:text-white/95 font-bold text-md xl:text-lg hover:bg-blue-700 transition-all hover:shadow-sm hover:shadow-primary/30 flex items-center justify-center gap-2 point dark:hover:bg-blue-700/90 group"
             >
-              Go to Dashboard <ArrowRight className="w-5 h-5" />
+              Go To Dashboard <span className="inline-block group-hover:translate-x-1 transition-transform duration-200">→</span>
             </button>
           ) : (
             <button
               onClick={() => navigate("/auth")}
-              className="px-10 py-3 mx-auto rounded-xl bg-primary dark:bg-blue-700 text-white hover:text-white/95 font-bold text-md xl:text-lg hover:bg-blue-700 transition-all hover:shadow-sm hover:shadow-primary/30 flex items-center justify-center gap-2 point dark:hover:bg-blue-700/90"
+              className="px-10 py-3 mx-auto rounded-xl bg-primary dark:bg-blue-700 text-white hover:text-white/95 font-bold text-md xl:text-lg hover:bg-blue-700 transition-all hover:shadow-sm hover:shadow-primary/30 flex items-center justify-center gap-2 point dark:hover:bg-blue-700/90 group"
             >
-              Get Started Free <ArrowRight className="w-5 h-5" />
+              Get Started Free <span className="inline-block group-hover:translate-x-1 transition-transform duration-200">→</span>
             </button>
           )}
           <p className="text-textMuted text-sm mt-4">
             No credit card required. Free forever for basic features.
           </p>
-        </div>
+        </ScrollAnimated>
       </section>
     </div>
   );

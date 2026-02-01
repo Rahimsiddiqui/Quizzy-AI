@@ -766,13 +766,13 @@ const QuizGenerator = ({ user, onGenerateSuccess }) => {
             </div>
           </div>
 
-          <div className="p-4 bg-surfaceHighlight rounded-xl border border-border shadow-md-custom">
+          <div className="p-4 bg-surfaceHighlight rounded-xl border border-border shadow-sm-custom">
             <div className="flex xs:flex-row flex-col xs:items-center xs:justify-between gap-4 items-center">
               <div className="xs:flex xs:items-center xs:gap-3 flex flex-col items-center gap-0">
                 <div
                   className={`p-3 rounded-lg shrink-0 transition-colors ${
                     generateFlashcards
-                      ? "bg-indigo-200/50 text-indigo-600 dark:bg-indigo-700/50 dark:text-indigo-400"
+                      ? "bg-indigo-200/50 text-indigo-600 dark:bg-indigo-800/60 dark:text-indigo-400"
                       : "bg-gray-200 text-gray-500 dark:bg-surface/40 dark:text-gray-300"
                   }`}
                 >
@@ -791,8 +791,8 @@ const QuizGenerator = ({ user, onGenerateSuccess }) => {
                 className={`text-xs font-bold px-3.5 py-1.5 xs:px-2.5 rounded border whitespace-nowrap ${
                   user?.tier === "Pro" ||
                   user?.limits?.flashcardGenerationsRemaining > 0
-                    ? "bg-blue-200/50 text-blue-500 border-blue-200 dark:bg-blue-800/20 dark:border-blue-500"
-                    : "bg-red-200/50 text-red-500 border-red-200 dark:bg-red-800/25dark:border-red-500"
+                    ? "bg-blue-200/50 text-blue-500 border-blue-200 dark:bg-blue-800/15 dark:border-blue-500"
+                    : "bg-red-200/50 text-red-500 border-red-200 dark:bg-red-800/25 dark:border-red-500"
                 }`}
               >
                 {user?.tier === "Pro"
@@ -820,7 +820,7 @@ const QuizGenerator = ({ user, onGenerateSuccess }) => {
           <button
             type="submit"
             disabled={loading || !selectedTypes?.length}
-            className="w-full py-4 bg-primary dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-700/85 text-white font-bold rounded-xl shadow-lg shadow-blue-600/20 disabled:opacity-70 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 text-lg cursor-pointer"
+            className="w-full py-4 bg-primary dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-700/85 text-white font-bold rounded-xl shadow-sm hover:shadow-md shadow-blue-600/20 disabled:opacity-70 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 text-lg cursor-pointer"
           >
             {loading ? (
               <>

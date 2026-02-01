@@ -31,6 +31,11 @@ const adminProtect = asyncHandler(async (req, res, next) => {
 
       req.adminId = decoded.id;
 
+      if (!decoded.sessionId) {
+        return res.status(401).json({ message: "Session ID missing in token" });
+      }
+      req.sessionId = decoded.sessionId;
+
       // Verify user is admin
       const user = await User.findById(req.adminId);
       if (!user) {
@@ -49,6 +54,15 @@ const adminProtect = asyncHandler(async (req, res, next) => {
           .json({ message: "Admin account is disabled or banned" });
       }
 
+      // Validate that the session is still active
+      if (
+        !user.sessions ||
+        !Array.isArray(user.sessions) ||
+        !user.sessions.some((s) => String(s._id) === String(req.sessionId))
+      ) {
+        return res.status(401).json({ message: "Session invalid or expired" });
+      }
+
       req.admin = user;
       next();
     } catch (error) {
@@ -65,7 +79,7 @@ const adminProtect = asyncHandler(async (req, res, next) => {
   }
 });
 
-// Optional: check if user is admin (for routes that can be accessed by both)
+// check if user is admin
 const isAdminRole = asyncHandler(async (req, res, next) => {
   const user = await User.findById(req.userId);
   if (!user || (user.role !== "admin" && user.role !== "moderator")) {

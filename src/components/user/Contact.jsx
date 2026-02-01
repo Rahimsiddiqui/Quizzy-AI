@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { CircularProgress } from "@mui/material";
 import { toast } from "react-toastify";
+import PublicPageLayout from "./PublicPageLayout";
 
 const Contact = () => {
   const [email, setEmail] = useState("");
@@ -32,24 +33,13 @@ const Contact = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background text-textMain dark:text-textMain/95 animate-fade-in-up">
-      {/* Hero Section */}
-      <section className="pt-40 py-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-6">
-            We’re Here to <br />
-            <span className="text-primary dark:text-blue-500 bg-clip-text">
-              Help
-            </span>
-          </h1>
-          <p className="text-lg sm:text-xl text-textMuted mb-8 max-w-2xl mx-auto">
-            Have questions, need assistance, or want to share feedback? Reach
-            out to us, and we’ll get back to you promptly to make your Qubli AI
-            experience seamless.
-          </p>
-        </div>
-      </section>
-
+    <PublicPageLayout
+      pageTitle="Contact Us"
+      description="Have questions, need assistance, or want to share feedback? Reach out to us."
+      heroTitle="We're Here to"
+      heroHighlight="Help"
+      heroSubtitle="Have questions, need assistance, or want to share feedback? Reach out to us, and we'll get back to you promptly to make your Qubli AI experience seamless."
+    >
       {/* Contact Section */}
       <section className="py-24 px-4 sm:px-6 lg:px-8 bg-surface relative overflow-hidden">
         <div className="max-w-3xl mx-auto relative z-10">
@@ -127,7 +117,7 @@ const Contact = () => {
           </form>
         </div>
       </section>
-    </div>
+    </PublicPageLayout>
   );
 };
 

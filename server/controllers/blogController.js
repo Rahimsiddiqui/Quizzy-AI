@@ -18,7 +18,7 @@ export const getAllBlogs = asyncHandler(async (_, res) => {
 // @route   GET /api/blogs/:slug
 // @access  Public
 export const getBlogBySlug = asyncHandler(async (req, res) => {
-  const blog = await Blog.findOne({ slug: req.params.slug }).populate(
+  let blog = await Blog.findOne({ slug: req.params.slug }).populate(
     "author",
     "name picture"
   );
@@ -37,9 +37,11 @@ export const getBlogBySlug = asyncHandler(async (req, res) => {
     }, {}) || {};
 
   if (!cookies[cookieName]) {
-    // Increment views if cookie doesn't exist
+    // Atomic increment
+    await Blog.findByIdAndUpdate(blog._id, { $inc: { views: 1 } });
+    
+    // Update local object to reflect change in response
     blog.views += 1;
-    await blog.save({ validateBeforeSave: false });
 
     // Set cookie for 1 hour
     res.setHeader(
@@ -73,7 +75,7 @@ export const createBlog = asyncHandler(async (req, res) => {
     tags,
     isPublished,
     publishedAt: isPublished ? Date.now() : null,
-    author: req.userId, // From protect middleware
+    author: req.userId,
   });
 
   const createdBlog = await blog.save();
@@ -90,6 +92,14 @@ export const updateBlog = asyncHandler(async (req, res) => {
 
   if (!blog) {
     return res.status(404).json({ message: "Blog not found" });
+  }
+
+  // Check for slug collision if slug is being updated
+  if (slug && slug !== blog.slug) {
+    const slugExists = await Blog.findOne({ slug });
+    if (slugExists) {
+      return res.status(400).json({ message: "Blog with this slug already exists" });
+    }
   }
 
   blog.title = title || blog.title;

@@ -1,25 +1,36 @@
 import nodemailer from "nodemailer";
+import crypto from "crypto";
 
-// Generate a 6-digit random code
+// Singleton transporter instance
+let transporter = null;
+
+const createTransporter = () => {
+  if (transporter) return transporter;
+
+  transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST || "smtp.gmail.com",
+    port: process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT) : 587,
+    secure: process.env.SMTP_SECURE === "true", // true for 465, false for other ports
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASSWORD,
+    },
+    connectionTimeout: 10000, // 10 seconds
+    socketTimeout: 10000,
+  });
+
+  return transporter;
+};
+
+// Generate a 6-digit random code securely
 export const generateVerificationCode = () => {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+  return crypto.randomInt(100000, 1000000).toString();
 };
 
 // Send verification email
 export const sendVerificationEmail = async (email, code) => {
   try {
-    // Create transporter with explicit host settings for Gmail
-    const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 587, // Use TLS instead of SSL
-      secure: false, // Use TLS
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASSWORD,
-      },
-      connectionTimeout: 10000, // 10 seconds
-      socketTimeout: 10000,
-    });
+    const transport = createTransporter();
 
     const htmlContent = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -43,8 +54,8 @@ export const sendVerificationEmail = async (email, code) => {
       </div>
     `;
 
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
+    await transport.sendMail({
+      from: `"Qubli AI" <${process.env.EMAIL_USER}>`,
       to: email,
       subject: "Qubli AI - Verify Your Email",
       html: htmlContent,
@@ -52,6 +63,7 @@ export const sendVerificationEmail = async (email, code) => {
 
     return true;
   } catch (error) {
+    console.error("Email send error:", error);
     throw new Error(`Failed to send verification email: ${error.message}`);
   }
 };

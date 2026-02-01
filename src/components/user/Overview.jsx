@@ -123,7 +123,8 @@ const Overview = ({ user }) => {
           try {
             const reviewText = await generateAndSaveReview(user, quizList);
             setAiReview(reviewText ?? "");
-          } catch {
+          } catch (reviewErr) {
+            console.error("AI Review Generation Error:", reviewErr);
             setAiReview("Could not generate initial review at this time.");
           }
         }

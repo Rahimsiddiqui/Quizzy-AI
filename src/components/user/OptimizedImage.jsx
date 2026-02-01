@@ -48,6 +48,7 @@ const OptimizedImage = ({
           isLoaded ? "opacity-100" : "opacity-0"
         }`}
         loading="lazy"
+        decoding="async"
         {...props}
       />
     </div>

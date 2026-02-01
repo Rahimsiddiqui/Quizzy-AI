@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import PublicPageLayout from "./PublicPageLayout";
 
 const Policies = () => {
   const policiesData = [
@@ -175,24 +176,13 @@ const Policies = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background text-textMain dark:text-textMain/95 animate-fade-in-up">
-      {/* Hero Section */}
-      <section className="pt-40 py-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-6">
-            Policies & <br />
-            <span className="text-primary dark:text-blue-500 bg-clip-text">
-              Guidelines
-            </span>
-          </h1>
-          <p className="text-lg sm:text-xl text-textMuted mb-8 max-w-2xl mx-auto">
-            At Qubli AI, we strive for transparency and fairness. Learn about
-            our refund process, payment terms, and policies to ensure a smooth
-            experience for all users.
-          </p>
-        </div>
-      </section>
-
+    <PublicPageLayout
+      pageTitle="Policies & Guidelines"
+      description="Learn about Qubli AI's refund policy, billing terms, usage guidelines, and data privacy practices."
+      heroTitle="Policies &"
+      heroHighlight="Guidelines"
+      heroSubtitle="At Qubli AI, we strive for transparency and fairness. Learn about our refund process, payment terms, and policies to ensure a smooth experience for all users."
+    >
       {/* Policies Section */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-surface">
         <div className="max-w-4xl mx-auto space-y-12">
@@ -253,7 +243,7 @@ const Policies = () => {
           </p>
         </div>
       </section>
-    </div>
+    </PublicPageLayout>
   );
 };
 

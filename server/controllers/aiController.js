@@ -6,6 +6,11 @@ import {
   chatWithAIHelper,
   gradeAnswerHelper,
 } from "../helpers/aiHelper.js";
+import {
+  setupSSE,
+  streamResponse,
+  handleStreamError,
+} from "../helpers/utils.js";
 
 export const generateQuizEndpoint = async (req, res) => {
   try {
@@ -25,35 +30,14 @@ export const generateQuizEndpoint = async (req, res) => {
 
     // Function to send progress updates
     const sendProgress = (stage, percentage, questionsGenerated = null) => {
-      try {
-        res.write(
-          `data: ${JSON.stringify({
-            type: "progress",
-            stage,
-            percentage,
-            questionsGenerated,
-          })}\n\n`,
-        );
-      } catch (err) {
-        console.error("Error writing progress:", err);
-      }
+      streamResponse(res, "progress", { stage, percentage, questionsGenerated });
     };
 
-    // Set up SSE headers
-    res.setHeader("Content-Type", "text/event-stream");
-    res.setHeader("Cache-Control", "no-cache");
-    res.setHeader("Connection", "keep-alive");
-    res.setHeader("Access-Control-Allow-Origin", "*");
+    setupSSE(res);
 
     const quizData = await generateQuizHelper(req.body, user, sendProgress);
 
-    // Send final result
-    res.write(
-      `data: ${JSON.stringify({
-        type: "complete",
-        data: quizData,
-      })}\n\n`,
-    );
+    streamResponse(res, "complete", { data: quizData });
 
     // Only decrement limits for non-admin users
     if (user.role !== "admin") {
@@ -64,21 +48,12 @@ export const generateQuizEndpoint = async (req, res) => {
     res.end();
   } catch (error) {
     console.error("Quiz generation error:", error);
-    try {
-      res.write(
-        `data: ${JSON.stringify({
-          type: "error",
-          message: error.message || "Internal server error",
-        })}\n\n`,
-      );
-    } catch (err) {
-      console.error("Error writing error response:", err);
-    }
-    res.end();
+    handleStreamError(res, error);
   }
 };
 
 export const generateReviewEndpoint = asyncHandler(async (req, res) => {
+  console.log(`[AI Review] Request received for User: ${req.userId}`);
   const user = await User.findById(req.userId);
   const { quizzes } = req.body;
 
@@ -125,56 +100,25 @@ export const generateDemoEndpoint = async (req, res) => {
       examStyleId: "standard",
     };
 
-    // Function to send progress updates (optional for demo, but good UX)
+    // Function to send progress updates
     const sendProgress = (stage, percentage, questionsGenerated = null) => {
-      try {
-        res.write(
-          `data: ${JSON.stringify({
-            type: "progress",
-            stage,
-            percentage,
-            questionsGenerated,
-          })}\n\n`,
-        );
-      } catch (err) {
-        console.error("Error writing progress:", err);
-      }
+      streamResponse(res, "progress", { stage, percentage, questionsGenerated });
     };
 
-    // Set up SSE headers
-    res.setHeader("Content-Type", "text/event-stream");
-    res.setHeader("Cache-Control", "no-cache");
-    res.setHeader("Connection", "keep-alive");
-    res.setHeader("Access-Control-Allow-Origin", "*");
+    setupSSE(res);
 
     const quizData = await generateQuizHelper(
       demoPayload,
       demoUser,
-      sendProgress,
+      sendProgress
     );
 
-    // Send final result
-    res.write(
-      `data: ${JSON.stringify({
-        type: "complete",
-        data: quizData,
-      })}\n\n`,
-    );
+    streamResponse(res, "complete", { data: quizData });
 
     res.end();
   } catch (error) {
     console.error("Demo generation error:", error);
-    try {
-      res.write(
-        `data: ${JSON.stringify({
-          type: "error",
-          message: error.message || "Internal server error",
-        })}\n\n`,
-      );
-    } catch (err) {
-      console.error("Error writing error response:", err);
-    }
-    res.end();
+    handleStreamError(res, error);
   }
 };
 

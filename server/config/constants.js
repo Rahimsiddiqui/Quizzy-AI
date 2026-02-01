@@ -1,13 +1,11 @@
 import { SubscriptionTier } from "./types.js";
 
-export const APP_NAME = "Qubli AI";
-
 // Options available for selection
-export const QUESTION_COUNTS = [3, 5, 7, 10, 15, 20, 25, 30, 35, 40, 45];
-export const MARK_COUNTS = [
-  5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95,
-  100,
-];
+export const QUESTION_COUNTS = [3, ...Array.from({ length: 8 }, (_, i) => (i + 1) * 5)]; 
+/* [3, 5, 10, 15, 20, 25, 30, 35, 40, 45] */
+
+export const MARK_COUNTS = Array.from({ length: 20 }, (_, i) => (i + 1) * 5);
+/* [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100] */
 
 /**
  * @typedef {Object} ExamStyle
@@ -16,49 +14,34 @@ export const MARK_COUNTS = [
  * @property {SubscriptionTier} tier
  * @property {string} description
  */
-export const EXAM_STYLES = [
-  {
-    id: "standard",
-    label: "Standard / Generic",
-    tier: SubscriptionTier.Free,
-    description: "General knowledge quiz format suitable for quick practice.",
-  },
-  {
-    id: "class_test",
-    label: "Class / Unit Test",
-    tier: SubscriptionTier.Basic,
-    description:
-      "School-level assessment focus on specific chapter definitions and concepts.",
-  },
-  {
-    id: "sindh_board",
-    label: "Sindh Board (Matric/Inter)",
-    tier: SubscriptionTier.Basic,
-    description: "Follows Sindh Board curriculum style and textbook phrasing.",
-  },
-  {
-    id: "caie_o",
-    label: "CAIE O Level / IGCSE",
-    tier: SubscriptionTier.Basic,
-    description:
-      "Cambridge style questions using command words (State, Define, Explain).",
-  },
-  {
-    id: "caie_a",
-    label: "CAIE A Level",
-    tier: SubscriptionTier.Pro,
-    description:
-      "Advanced Cambridge level analysis, evaluation, and structured essays.",
-  },
-  {
-    id: "sat",
-    label: "SAT / Entrance Exam",
-    tier: SubscriptionTier.Pro,
-    description:
-      "Aptitude test style focusing on logic, reading comprehension, and math.",
-  },
-];
+function createExamStyle(id, label, tierKey, description) {
+  return {
+    id,
+    label,
+    tier: SubscriptionTier[tierKey],
+    description,
+  };
+}
 
+export const EXAM_STYLES = [
+  // Standard
+  createExamStyle("standard", "Standard / Generic", "Free", "General knowledge quiz format suitable for quick practice."),
+
+  // Class Test
+  createExamStyle("class_test", "Class / Unit Test", "Basic", "School-level assessment focus on specific chapter definitions and concepts."),
+
+  // Sindh Board
+  createExamStyle("sindh_board", "Sindh Board (Matric/Inter)", "Basic", "Follows Sindh Board curriculum style and textbook phrasing."),
+
+  // CAIE O Levels
+  createExamStyle("caie_o", "CAIE O Level / IGCSE", "Basic", "Cambridge style questions using command words (State, Define, Explain)."),
+
+  // CAIE A Levels
+  createExamStyle("caie_a", "CAIE A Level", "Pro", "Advanced Cambridge level analysis, evaluation, and structured essays."),
+
+  // SAT Exams
+  createExamStyle("sat", "SAT / Entrance Exam", "Pro", "Aptitude test style focusing on logic, reading comprehension, and math."),
+];
 /**
  * @typedef {Object} TierLimits
  * @property {number} monthlyGenerations - Monthly limit for new quiz generations.

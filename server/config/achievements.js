@@ -251,49 +251,28 @@ export const ACHIEVEMENTS = {
 };
 
 /**
- * EXP required per level (cumulative)
- * Level 1 = 0, Level 2 = 100, Level 3 = 300, etc.
+ * Calculate EXP required for a specific level
+ * Formula: 50 * level * (level - 1)
+ * Matches the original hardcoded values: L1=0, L2=100, L3=300... L25=30000
+ * @param {number} level - Level to calculate threshold for
+ * @returns {number} Required EXP
  */
-export const LEVEL_THRESHOLDS = {
-  1: 0,
-  2: 100,
-  3: 300,
-  4: 600,
-  5: 1000,
-  6: 1500,
-  7: 2100,
-  8: 2800,
-  9: 3600,
-  10: 4500,
-  11: 5500,
-  12: 6600,
-  13: 7800,
-  14: 9100,
-  15: 10500,
-  16: 12000,
-  17: 13600,
-  18: 15300,
-  19: 17100,
-  20: 19000,
-  21: 21000,
-  22: 23100,
-  23: 25300,
-  24: 27600,
-  25: 30000,
+export const getLevelThreshold = (level) => {
+  if (level <= 1) return 0;
+  return 50 * level * (level - 1);
 };
 
 /**
  * Calculate current level from total EXP
+ * Inverse of threshold formula: L = (1 + sqrt(1 + 0.08 * EXP)) / 2
  * @param {number} totalExp - Total EXP earned
  * @returns {number} Current level
  */
 export const calculateLevel = (totalExp) => {
-  for (let level = 25; level >= 1; level--) {
-    if (totalExp >= LEVEL_THRESHOLDS[level]) {
-      return level;
-    }
-  }
-  return 1;
+  if (totalExp < 0) return 1;
+  // Using the quadratic formula solution for: 50L^2 - 50L - totalExp = 0
+  const level = Math.floor((1 + Math.sqrt(1 + 0.08 * totalExp)) / 2);
+  return Math.max(1, level);
 };
 
 /**
@@ -305,8 +284,8 @@ export const calculateLevelProgress = (totalExp) => {
   const currentLevel = calculateLevel(totalExp);
   const nextLevel = currentLevel + 1;
 
-  const currentLevelExp = LEVEL_THRESHOLDS[currentLevel] || 0;
-  const nextLevelExp = LEVEL_THRESHOLDS[nextLevel] || LEVEL_THRESHOLDS[25];
+  const currentLevelExp = getLevelThreshold(currentLevel);
+  const nextLevelExp = getLevelThreshold(nextLevel);
 
   const expInCurrentLevel = totalExp - currentLevelExp;
   const expNeededForNextLevel = nextLevelExp - currentLevelExp;
@@ -343,7 +322,7 @@ export const EXP_REWARDS = {
 
 export default {
   ACHIEVEMENTS,
-  LEVEL_THRESHOLDS,
+  getLevelThreshold,
   calculateLevel,
   calculateLevelProgress,
   EXP_REWARDS,

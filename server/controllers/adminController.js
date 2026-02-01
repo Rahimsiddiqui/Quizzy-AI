@@ -4,6 +4,17 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import asyncHandler from "express-async-handler";
 import mongoose from "mongoose";
+import dns from "dns";
+import { createSession } from "../helpers/sessionHelper.js";
+import { escapeRegex } from "../helpers/utils.js";
+
+// Fix for MongoDB Atlas connection issues locally (querySrv ECONNREFUSED)
+dns.setDefaultResultOrder("ipv4first");
+try {
+  dns.setServers(["8.8.8.8", "1.1.1.1"]);
+} catch {
+  console.warn("Could not set custom DNS servers, using system defaults.");
+}
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -44,19 +55,11 @@ export const adminLogin = asyncHandler(async (req, res) => {
     return res.status(401).json({ message: "Invalid credentials" });
   }
 
-  // Generate Session
-  const session = {
-    deviceName: "Admin Portal",
-    userAgent: req.headers["user-agent"] || "Unknown",
-    ipAddress: req.ip || "Unknown",
-    lastActive: new Date(),
-    isCurrent: true,
-  };
-
-  admin.sessions.push(session);
+  // Generate Session using helper (caps at 10 sessions)
+  const session = createSession(req, admin);
   await admin.save();
 
-  const sessionId = admin.sessions[admin.sessions.length - 1]._id;
+  const sessionId = session._id;
 
   // Generate JWT token
   const token = jwt.sign(
@@ -96,69 +99,78 @@ const getStorageUsedStats = async () => {
 
 // Get Dashboard Stats
 export const getDashboardStats = asyncHandler(async (req, res) => {
-  // Count all users (both regular users and admins)
-  const totalUsers = await User.countDocuments({
-    role: { $in: ["user", "admin"] },
-  });
-  const totalQuizzes = await Quiz.countDocuments();
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  sevenDaysAgo.setHours(0, 0, 0, 0);
 
-  // Get new users today (both regular users and admins)
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const newUsersToday = await User.countDocuments({
-    createdAt: { $gte: today },
-    role: { $in: ["user", "admin"] },
-  });
 
-  // Calculate total quiz attempts
-  const totalAttempts = totalQuizzes; // Each doc is an attempt per existing logic
+  // Execute independent queries in parallel
+  const [
+    totalUsers,
+    totalQuizzes,
+    newUsersToday,
+    attemptsAggregation,
+    averageScoresPerQuiz,
+    storageStats,
+  ] = await Promise.all([
+    User.countDocuments({ role: { $in: ["user", "admin"] } }),
+    Quiz.countDocuments(),
+    User.countDocuments({
+      createdAt: { $gte: today },
+      role: { $in: ["user", "admin"] },
+    }),
+    Quiz.aggregate([
+      { $match: { createdAt: { $gte: sevenDaysAgo } } },
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]),
+    Quiz.aggregate([
+      { $match: { score: { $exists: true } } },
+      {
+        $group: {
+          _id: "$title",
+          avgScore: { $avg: "$score" },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { avgScore: -1 } },
+      { $limit: 10 },
+      {
+        $project: {
+          quiz: { $substr: ["$_id", 0, 15] },
+          average: { $round: ["$avgScore", 0] },
+          _id: 0,
+        },
+      },
+    ]),
+    getStorageUsedStats(),
+  ]);
 
-  // Get quiz attempts per day (last 7 days)
+  // Calculate total quiz attempts (Each doc is an attempt per existing logic)
+  const totalAttempts = totalQuizzes;
+
+  // Build complete 7-day array with all days present
+  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const attemptsMap = new Map(attemptsAggregation.map((a) => [a._id, a.count]));
   const quizAttemptsPerDay = [];
+
   for (let i = 6; i >= 0; i--) {
     const date = new Date();
     date.setDate(date.getDate() - i);
-    date.setHours(0, 0, 0, 0);
-    const nextDate = new Date(date);
-    nextDate.setDate(nextDate.getDate() + 1);
-
-    const count = await Quiz.countDocuments({
-      createdAt: { $gte: date, $lt: nextDate },
-    });
-
-    const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const dateStr = date.toISOString().split("T")[0];
     quizAttemptsPerDay.push({
       day: dayNames[date.getDay()],
-      date: date.toISOString().split("T")[0],
-      attempts: count,
+      date: dateStr,
+      attempts: attemptsMap.get(dateStr) || 0,
     });
   }
-
-  // Calculate average score per quiz
-  const quizzes = await Quiz.find({}, "title score").lean();
-  const averageScoresPerQuiz = [];
-  const quizGroups = {};
-
-  quizzes.forEach((quiz) => {
-    if (!quizGroups[quiz.title]) {
-      quizGroups[quiz.title] = [];
-    }
-    if (quiz.score !== undefined) {
-      quizGroups[quiz.title].push(quiz.score);
-    }
-  });
-
-  Object.entries(quizGroups).forEach(([title, scores]) => {
-    if (scores.length > 0) {
-      const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
-      averageScoresPerQuiz.push({
-        quiz: title.substring(0, 15),
-        average: Math.round(avg),
-      });
-    }
-  });
-
-  const storageStats = await getStorageUsedStats();
 
   const statsData = {
     stats: {
@@ -205,10 +217,11 @@ export const getUsers = asyncHandler(async (req, res) => {
 
   // Apply search filter
   if (search) {
+    const escapedSearch = escapeRegex(search);
     conditions.push({
       $or: [
-        { name: { $regex: search, $options: "i" } },
-        { email: { $regex: search, $options: "i" } },
+        { name: { $regex: escapedSearch, $options: "i" } },
+        { email: { $regex: escapedSearch, $options: "i" } },
       ],
     });
   }
@@ -224,32 +237,59 @@ export const getUsers = asyncHandler(async (req, res) => {
   const filter =
     conditions.length > 1 ? { $and: conditions } : conditions[0] || {};
 
-  const users = await User.find(filter)
-    .select("_id name email role active banned createdAt lastLogin picture")
-    .skip(skip)
-    .limit(limit)
-    .sort({ createdAt: -1 })
-    .lean();
+  const [result] = await User.aggregate([
+    { $match: filter },
+    { $sort: { createdAt: -1 } },
+    {
+      $facet: {
+        metadata: [{ $count: "total" }],
+        data: [
+          { $skip: skip },
+          { $limit: limit },
+          {
+            $lookup: {
+              from: "quizzes", // Collection name derived from Quiz model
+              localField: "_id",
+              foreignField: "userId",
+              as: "userQuizzes",
+            },
+          },
+          {
+            $project: {
+              _id: 1,
+              name: 1,
+              email: 1,
+              role: 1,
+              active: 1,
+              banned: 1,
+              createdAt: 1,
+              lastLogin: 1,
+              picture: 1,
+              quizzesTaken: { $size: "$userQuizzes" },
+              averageScore: {
+                $round: [
+                  {
+                    $avg: {
+                      $filter: {
+                        input: "$userQuizzes",
+                        as: "quiz",
+                        cond: { $ne: ["$$quiz.score", null] },
+                      },
+                      in: "$$this.score",
+                    },
+                  },
+                  0, // Round to 0 decimal places
+                ],
+              },
+            },
+          },
+        ],
+      },
+    },
+  ]);
 
-  const total = await User.countDocuments(filter);
-
-  // Get stats for each user
-  const usersWithStats = await Promise.all(
-    users.map(async (user) => {
-      const quizzes = await Quiz.find({ userId: user._id }, "score").lean();
-      const scores = quizzes.map((q) => q.score).filter((s) => s !== undefined);
-      const avgScore =
-        scores.length > 0
-          ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
-          : 0;
-
-      return {
-        ...user,
-        quizzesTaken: quizzes.length,
-        averageScore: avgScore,
-      };
-    })
-  );
+  const usersWithStats = result.data || [];
+  const total = result.metadata[0]?.total || 0;
 
   res.json({
     users: usersWithStats,
@@ -350,7 +390,7 @@ export const toggleUserActive = asyncHandler(async (req, res) => {
     adminId: req.adminId,
   });
 
-  // If disabling, INVALIDATE ALL SESSIONS immediately
+  // If disabling, invalidate all sessions immediately
   if (!user.active) {
     user.sessions = [];
   }
@@ -479,7 +519,7 @@ export const getQuizResults = asyncHandler(async (req, res) => {
 
   const filter = { score: { $ne: null } }; // Only completed quizzes have scores
   if (quizFilter) {
-    filter.title = { $regex: quizFilter, $options: "i" };
+    filter.title = { $regex: escapeRegex(quizFilter), $options: "i" };
   }
 
   const quizzes = await Quiz.find(filter)
@@ -537,9 +577,10 @@ export const getQuizzes = asyncHandler(async (req, res) => {
     filterQuery.isActive = isActive;
   }
   if (search) {
+    const escapedSearch = escapeRegex(search);
     filterQuery.$or = [
-      { title: { $regex: search, $options: "i" } },
-      { topic: { $regex: search, $options: "i" } },
+      { title: { $regex: escapedSearch, $options: "i" } },
+      { topic: { $regex: escapedSearch, $options: "i" } },
     ];
   }
 
@@ -552,31 +593,59 @@ export const getQuizzes = asyncHandler(async (req, res) => {
 
   const total = await Quiz.countDocuments(filterQuery);
 
-  // Calculate average score from all quizzes (Optimized: only fetch score)
-  const allQuizzes = await Quiz.find({}, "score difficulty").lean();
-  const avgScore =
-    allQuizzes.length > 0
-      ? (
-          allQuizzes.reduce((sum, quiz) => sum + (quiz.score || 0), 0) /
-          allQuizzes.length
-        ).toFixed(1)
-      : 0;
+  // Calculate aggregate stats for all quizzes in a single query
+  const [globalStats] = await Quiz.aggregate([
+    {
+      $group: {
+        _id: null,
+        totalQuizzes: { $sum: 1 },
+        totalScore: { $sum: { $ifNull: ["$score", 0] } },
+        passedQuizzes: { $sum: { $cond: [{ $gte: ["$score", 60] }, 1, 0] } },
+        difficultySum: {
+          $sum: {
+            $switch: {
+              branches: [
+                { case: { $eq: ["$difficulty", "Easy"] }, then: 1 },
+                { case: { $eq: ["$difficulty", "Hard"] }, then: 3 },
+              ],
+              default: 2, // Medium
+            },
+          },
+        },
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        avgScore: {
+          $cond: [
+            { $gt: ["$totalQuizzes", 0] },
+            { $round: [{ $divide: ["$totalScore", "$totalQuizzes"] }, 1] }, // Round to 1 decimal place
+            0,
+          ],
+        },
+        completionRate: {
+          $cond: [
+            { $gt: ["$totalQuizzes", 0] },
+            { $round: [{ $multiply: [{ $divide: ["$passedQuizzes", "$totalQuizzes"] }, 100] }] },
+            0,
+          ],
+        },
+        avgDifficultyValue: {
+          $cond: [{ $gt: ["$totalQuizzes", 0] }, { $divide: ["$difficultySum", "$totalQuizzes"] }, 0],
+        },
+      },
+    },
+  ]);
 
-  // Calculate completion rate (quizzes with score >= 60)
-  const passedQuizzes = allQuizzes.filter((quiz) => (quiz.score || 0) >= 60);
-  const completionRate =
-    allQuizzes.length > 0
-      ? Math.round((passedQuizzes.length / allQuizzes.length) * 100)
-      : 0;
-
-  // Calculate average difficulty
+  let avgScore = 0;
+  let completionRate = 0;
   let avgDifficulty = "Medium";
-  if (allQuizzes.length > 0) {
-    const difficultyMap = { Easy: 1, Medium: 2, Hard: 3 };
-    const avgDiffValue =
-      allQuizzes.reduce((sum, quiz) => {
-        return sum + (difficultyMap[quiz.difficulty] || 2);
-      }, 0) / allQuizzes.length;
+
+  if (globalStats) {
+    avgScore = globalStats.avgScore;
+    completionRate = globalStats.completionRate;
+    const avgDiffValue = globalStats.avgDifficultyValue;
 
     if (avgDiffValue < 1.5) avgDifficulty = "Easy";
     else if (avgDiffValue < 2.5) avgDifficulty = "Medium";

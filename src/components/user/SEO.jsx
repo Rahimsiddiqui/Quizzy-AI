@@ -18,7 +18,7 @@ const SEO = ({
   type = "website",
   schema,
 }) => {
-  const fullTitle = `Qubli AI - ${title}`;
+  const fullTitle = `Qubli AI | ${title}`;
   const siteUrl = "https://qubli-ai.vercel.app";
   const fullImage = image.startsWith("http") ? image : `${siteUrl}${image}`;
 

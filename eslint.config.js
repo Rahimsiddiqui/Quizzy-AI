@@ -3,6 +3,10 @@ import react from "eslint-plugin-react";
 import globals from "globals";
 
 export default [
+  {
+    ignores: ["dist/", "node_modules/", "uploads/"],
+  },
+
   // BASE
   js.configs.recommended,
 

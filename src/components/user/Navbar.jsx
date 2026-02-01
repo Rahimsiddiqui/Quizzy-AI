@@ -18,7 +18,7 @@ const Navbar = ({ auth }) => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
         <button
           onClick={handleLogoClick}
-          className="flex items-center gap-3 font-bold text-[1.4rem] text-primary dark:text-blue-500 hover:opacity-90 transition-opacity point"
+          className="flex items-center gap-2.5 font-bold text-[1.4rem] text-primary dark:text-blue-500 hover:opacity-90 transition-opacity point"
         >
           <img
             src="/icons/favicon-main.avif"
@@ -58,7 +58,7 @@ const Navbar = ({ auth }) => {
           <Link
             to="/blogs"
             className={`transition-colors duration-200 ${
-              isActive("/blogs") || isActive("/blogs/") // match sub-routes loosely if needed, or just exact
+              isActive("/blogs")
                 ? "text-primary dark:text-blue-500 font-semibold"
                 : "text-textMuted hover:text-textMain dark:hover:text-textMain/95"
             }`}
@@ -79,7 +79,7 @@ const Navbar = ({ auth }) => {
           {auth?.isAuthenticated ? (
             <button
               onClick={() => navigate("/dashboard")}
-              className="px-7.5 py-2 rounded-lg bg-primary text-white hover:text-white/95 font-semibold hover:bg-blue-700 transition-colors dark:bg-blue-700 dark:hover:bg-blue-700/90 shadow-lg shadow-primary/20 point"
+              className="px-7.5 py-2 rounded-lg bg-primary text-white hover:text-white/95 font-semibold hover:bg-blue-700 transition-colors dark:bg-blue-700 dark:hover:bg-blue-700/90 hover:shadow-sm shadow-primary/20 point"
             >
               Dashboard
             </button>

@@ -11,99 +11,111 @@ import Review from "../models/Review.js";
 export const mergeDuplicateUsers = async () => {
   console.log("Starting user merge process...");
 
-  const users = await User.find({});
-  const emailMap = new Map();
-
-  // Group users by normalized email
-  users.forEach((user) => {
-    const email = user.email.toLowerCase().trim();
-    if (!emailMap.has(email)) {
-      emailMap.set(email, []);
-    }
-    emailMap.get(email).push(user);
-  });
+  const duplicates = await User.aggregate([
+    {
+      $group: {
+        _id: { $toLower: "$email" },
+        count: { $sum: 1 },
+        ids: { $push: "$_id" },
+      },
+    },
+    {
+      $match: {
+        count: { $gt: 1 },
+      },
+    },
+  ]);
 
   let mergedCount = 0;
 
-  for (const [email, userGroup] of emailMap.entries()) {
-    if (userGroup.length > 1) {
-      console.log(`Found ${userGroup.length} accounts for email: ${email}`);
+  for (const group of duplicates) {
+    const email = group._id;
+    const userIds = group.ids;
 
-      // Sort users to pick a primary one
-      // Criteria: 1. Has password set, 2. Oldest created
-      userGroup.sort((a, b) => {
-        if (a.passwordIsUserSet && !b.passwordIsUserSet) return -1;
-        if (!a.passwordIsUserSet && b.passwordIsUserSet) return 1;
-        return a.createdAt - b.createdAt;
-      });
+    // Skip valid single accounts
+    if (userIds.length <= 1) continue;
 
-      const primary = userGroup[0];
-      const duplicates = userGroup.slice(1);
+    console.log(`Found ${userIds.length} accounts for email: ${email}`);
 
-      console.log(`Primary account ID: ${primary._id}`);
+    const users = await User.find({ _id: { $in: userIds } });
 
-      for (const duplicate of duplicates) {
-        console.log(
-          `Merging duplicate account ID: ${duplicate._id} into primary`
-        );
+    // Sort users to pick a primary one
+    // Criteria: 1. Has password set, 2. Oldest created
+    users.sort((a, b) => {
+      if (a.passwordIsUserSet && !b.passwordIsUserSet) return -1;
+      if (!a.passwordIsUserSet && b.passwordIsUserSet) return 1;
+      return a.createdAt - b.createdAt;
+    });
 
-        // Transfer Quizzes
-        await Quiz.updateMany(
-          { userId: duplicate._id },
-          { $set: { userId: primary._id } }
-        );
+    const primary = users[0];
+    const duplicatesToMerge = users.slice(1);
 
-        // Transfer Flashcards
-        await Flashcard.updateMany(
-          { userId: duplicate._id },
-          { $set: { userId: primary._id } }
-        );
+    console.log(`Primary account ID: ${primary._id}`);
 
-        // Transfer Reviews
-        await Review.updateMany(
-          { userId: duplicate._id },
-          { $set: { userId: primary._id } }
-        );
+    for (const duplicate of duplicatesToMerge) {
+      console.log(
+        `Merging duplicate account ID: ${duplicate._id} into primary`
+      );
 
-        // Merge connectedAccounts if primary doesn't have them
-        if (duplicate.connectedAccounts) {
-          const primaryAccounts = primary.connectedAccounts || new Map();
-          const dupAccounts =
-            duplicate.connectedAccounts instanceof Map
-              ? duplicate.connectedAccounts
-              : new Map(Object.entries(duplicate.connectedAccounts));
+      // Transfer Quizzes
+      await Quiz.updateMany(
+        { userId: duplicate._id },
+        { $set: { userId: primary._id } }
+      );
 
-          for (const [provider, data] of dupAccounts.entries()) {
-            if (!primaryAccounts.has(provider)) {
-              primaryAccounts.set(provider, data);
-            }
+      // Transfer Flashcards
+      await Flashcard.updateMany(
+        { userId: duplicate._id },
+        { $set: { userId: primary._id } }
+      );
+
+      // Transfer Reviews
+      await Review.updateMany(
+        { userId: duplicate._id },
+        { $set: { userId: primary._id } }
+      );
+
+      // Merge connectedAccounts if primary doesn't have them
+      if (duplicate.connectedAccounts) {
+        const primaryAccounts = primary.connectedAccounts || new Map();
+        const dupAccounts =
+          duplicate.connectedAccounts instanceof Map
+            ? duplicate.connectedAccounts
+            : new Map(Object.entries(duplicate.connectedAccounts));
+
+        for (const [provider, data] of dupAccounts.entries()) {
+          if (!primaryAccounts.has(provider)) {
+            primaryAccounts.set(provider, data);
           }
-          primary.connectedAccounts = primaryAccounts;
         }
-
-        // Merge stats (simple sum for now)
-        if (duplicate.stats) {
-          primary.stats.quizzesTaken =
-            (primary.stats.quizzesTaken || 0) +
-            (duplicate.stats.quizzesTaken || 0);
-          // For averageScore, we just keep the primary's or take a weighted average if we were fancy
-        }
-
-        // Merge other gamification fields
-        primary.exp = (primary.exp || 0) + (duplicate.exp || 0);
-        primary.totalExpEarned =
-          (primary.totalExpEarned || 0) + (duplicate.totalExpEarned || 0);
-        primary.quizzesCreated =
-          (primary.quizzesCreated || 0) + (duplicate.quizzesCreated || 0);
-        primary.flashcardsCreated =
-          (primary.flashcardsCreated || 0) + (duplicate.flashcardsCreated || 0);
-
-        // Delete the duplicate user
-        await User.findByIdAndDelete(duplicate._id);
-        mergedCount++;
+        primary.connectedAccounts = primaryAccounts;
       }
 
-      await primary.save();
+      // Merge stats 
+      if (duplicate.stats) {
+        primary.stats = primary.stats || {};
+        primary.stats.quizzesTaken =
+          (primary.stats.quizzesTaken || 0) +
+          (duplicate.stats.quizzesTaken || 0);
+      }
+
+      // Merge other gamification fields
+      primary.exp = (primary.exp || 0) + (duplicate.exp || 0);
+      primary.totalExpEarned =
+        (primary.totalExpEarned || 0) + (duplicate.totalExpEarned || 0);
+      primary.quizzesCreated =
+        (primary.quizzesCreated || 0) + (duplicate.quizzesCreated || 0);
+      primary.flashcardsCreated =
+        (primary.flashcardsCreated || 0) + (duplicate.flashcardsCreated || 0);
+    }
+
+    // Save primary before deleting duplicates
+    await primary.save();
+
+    // safe to delete duplicates
+    for (const duplicate of duplicatesToMerge) {
+      await User.findByIdAndDelete(duplicate._id);
+      mergedCount++;
     }
   }
 

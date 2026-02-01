@@ -1,3 +1,5 @@
+import PublicPageLayout from "./PublicPageLayout";
+
 const Terms = () => {
   const terms = [
     {
@@ -8,7 +10,7 @@ const Terms = () => {
     {
       title: "User Accounts",
       description:
-        "To access certain features of Qubli AI, users may need to create an account. Users are fully responsible for maintaining the confidentiality and security of their account credentials, including usernames and passwords. All activity performed under a user’s account is the sole responsibility of the account holder. Users should immediately notify Qubli AI of any unauthorized use or security breach associated with their account to minimize potential risks.",
+        "To access certain features of Qubli AI, users may need to create an account. Users are fully responsible for maintaining the confidentiality and security of their account credentials, including usernames and passwords. All activity performed under a user's account is the sole responsibility of the account holder. Users should immediately notify Qubli AI of any unauthorized use or security breach associated with their account to minimize potential risks.",
     },
     {
       title: "Acceptable Use",
@@ -23,7 +25,7 @@ const Terms = () => {
     {
       title: "Intellectual Property",
       description:
-        "All intellectual property related to Qubli AI, including software, design, logos, branding, and core systems, remains the property of Qubli AI. Users retain ownership of the content they submit, such as quiz questions or study materials, but grant Qubli AI a limited license to use, display, and distribute user-generated content for platform functionality and improvement purposes. Users may not copy, modify, or distribute Qubli AI’s proprietary code or branding without explicit permission.",
+        "All intellectual property related to Qubli AI, including software, design, logos, branding, and core systems, remains the property of Qubli AI. Users retain ownership of the content they submit, such as quiz questions or study materials, but grant Qubli AI a limited license to use, display, and distribute user-generated content for platform functionality and improvement purposes. Users may not copy, modify, or distribute Qubli AI's proprietary code or branding without explicit permission.",
     },
     {
       title: "Data & Privacy",
@@ -63,24 +65,13 @@ const Terms = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background text-textMain dark:text-textMain/95 animate-fade-in-up">
-      {/* Hero Section */}
-      <section className="pt-40 py-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-6">
-            Terms of
-            <span className="text-primary dark:text-blue-500 bg-clip-text">
-              {" "}
-              Service
-            </span>
-          </h1>
-          <p className="text-lg sm:text-xl text-textMuted mb-8 max-w-2xl mx-auto">
-            Learn how to use Qubli AI safely and responsibly. We’re here to make
-            your practice easy and effective.
-          </p>
-        </div>
-      </section>
-
+    <PublicPageLayout
+      pageTitle="Terms of Service"
+      description="Learn how to use Qubli AI safely and responsibly. Review our terms of service, user accounts, acceptable use, and more."
+      heroTitle="Terms of"
+      heroHighlight="Service"
+      heroSubtitle="Learn how to use Qubli AI safely and responsibly. We're here to make your practice easy and effective."
+    >
       {/* Terms Section */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-surface">
         <div className="max-w-4xl mx-auto space-y-3">
@@ -101,7 +92,7 @@ const Terms = () => {
           </p>
         </div>
       </section>
-    </div>
+    </PublicPageLayout>
   );
 };
 

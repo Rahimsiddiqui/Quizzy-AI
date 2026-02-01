@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import PublicPageLayout from "./PublicPageLayout";
 
 const About = () => {
   const aboutData = {
@@ -94,22 +95,13 @@ const About = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background text-textMain dark:text-textMain/95 animate-fade-in-up">
-      {/* Hero Section */}
-      <section className="pt-40 py-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-6">
-            About <br />
-            <span className="text-primary dark:text-blue-500 bg-clip-text">
-              Qubli AI
-            </span>
-          </h1>
-          <p className="text-lg sm:text-xl text-textMuted mb-8 max-w-2xl mx-auto">
-            {aboutData.intro}
-          </p>
-        </div>
-      </section>
-
+    <PublicPageLayout
+      pageTitle="About Us"
+      description="Learn about Qubli AI - the AI-powered study tool that helps learners study smarter with quizzes and flashcards."
+      heroTitle="About"
+      heroHighlight="Qubli AI"
+      heroSubtitle={aboutData.intro}
+    >
       {/* About Content Section */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-surface dark:bg-surface/90">
         <div className="max-w-4xl mx-auto space-y-12">
@@ -184,7 +176,7 @@ const About = () => {
           </p>
         </div>
       </section>
-    </div>
+    </PublicPageLayout>
   );
 };
 

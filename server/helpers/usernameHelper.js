@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import User from "../models/User.js";
 
 /**
@@ -7,39 +8,40 @@ import User from "../models/User.js";
  */
 export const generateUniqueUsername = async (fullName) => {
   // 1. Normalize name: lowercase, remove non-alphanumeric
-  let baseName = fullName.toLowerCase().replace(/[^a-z0-9]/g, "");
+  let baseName = (fullName || "user").toLowerCase().replace(/[^a-z0-9]/g, "");
 
   // 2. Ensure base availability
-  // If name is too short or empty (e.g. just unicode chars removed), use "user"
   if (baseName.length < 3) {
     baseName = "user" + baseName;
   }
 
-  // Cap base length to prevent overly long usernames (leave room for suffix)
+  // Cap base length to prevent overly long usernames
   if (baseName.length > 20) {
     baseName = baseName.substring(0, 20);
   }
 
   let username;
   let isUnique = false;
+  let attempts = 0;
+  const maxRetries = 10;
 
   // 3. Loop until unique
-  while (!isUnique) {
-    // Generate 4-digit random suffix
-    const suffix = Math.floor(1000 + Math.random() * 9000); // 1000 to 9999
+  while (!isUnique && attempts < maxRetries) {
+    const suffix = crypto.randomInt(100000, 1000000);
     username = `${baseName}${suffix}`;
-
-    // Ensure strict regex compliance (min 6 chars, no spaces/uppercase - already handled by cleaning)
-    if (username.length < 6) {
-      // Pad with more random numbers if too short
-      username = `${baseName}${Math.floor(100000 + Math.random() * 900000)}`;
-    }
 
     // Check availability
     const existingUser = await User.findOne({ username });
     if (!existingUser) {
       isUnique = true;
     }
+    attempts++;
+  }
+
+  // Fallback if still not unique after max retries (highly unlikely with 6 digits)
+  if (!isUnique) {
+    const shortBase = baseName.substring(0, 15);
+    username = `${shortBase}${Date.now()}`;
   }
 
   return username;

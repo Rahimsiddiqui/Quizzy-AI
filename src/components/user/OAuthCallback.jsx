@@ -22,8 +22,9 @@ const OAuthCallback = () => {
           return;
         }
 
+        const apiUrl = import.meta.env.VITE_API_URL || '';
         const response = await fetch(
-          `${import.meta.env.VITE_API_URL}/api/auth/oauth/callback`,
+          `${apiUrl}/api/auth/oauth/callback`,
           {
             method: "POST",
             headers: {
@@ -77,7 +78,7 @@ const OAuthCallback = () => {
     <main className="flex items-center justify-center min-h-screen">
       <div className="text-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-        <p className="text-gray-600">Processing login...</p>
+        <p className="text-textMuted">Processing login...</p>
       </div>
     </main>
   );

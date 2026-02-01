@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, lazy, Suspense } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -14,8 +14,8 @@ import {
 import { AnimatePresence } from "framer-motion";
 import PropTypes from "prop-types";
 import SidebarContext from "../../context/SidebarContext.js";
-const SettingsModal = lazy(() => import("./SettingsModal.jsx"));
-const ConfirmLogoutModal = lazy(() => import("./ConfirmLogoutModal.jsx"));
+import SettingsModal from "./SettingsModal.jsx";
+import ConfirmLogoutModal from "./ConfirmLogoutModal.jsx";
 
 const getProgressWidth = (remaining, max) => {
   if (max === Infinity) return "0%";
@@ -349,10 +349,10 @@ const Layout = ({ children, user, onLogout, refreshUser }) => {
                         : "opacity-100"
                     } ${
                       user.tier === "Free"
-                        ? "bg-blue-600 dark:bg-blue-700 shadow-lg shadow-blue-500/40 dark:shadow-blue-500/30 hover:bg-blue-700 dark:hover:bg-blue-700/80"
+                        ? "bg-blue-600 dark:bg-blue-700 shadow-blue-500/40 dark:shadow-blue-500/30 hover:bg-blue-700 dark:hover:bg-blue-700/80"
                         : user.tier === "Basic"
-                          ? "bg-linear-to-r from-amber-500 to-orange-500 dark:from-amber-600 dark:to-orange-600 hover:from-amber-600/90 hover:to-orange-600 dark:hover:from-amber-700 dark:hover:to-orange-700 shadow-lg shadow-amber-500/50 dark:shadow-amber-600/30"
-                          : "bg-blue-600 dark:bg-blue-700 shadow-lg shadow-blue-500/40 dark:shadow-blue-500/30 hover:bg-blue-700 dark:hover:bg-blue-700/80"
+                          ? "bg-linear-to-r from-amber-500 to-orange-500 dark:from-amber-600 dark:to-orange-600 hover:from-amber-600/90 hover:to-orange-600 dark:hover:from-amber-700 dark:hover:to-orange-700 shadow-amber-500/50 dark:shadow-amber-600/30"
+                          : "bg-blue-600 dark:bg-blue-700 shadow-blue-500/40 dark:shadow-blue-500/30 hover:bg-blue-700 dark:hover:bg-blue-700/80"
                     }`}
                   >
                     {user.tier !== "Pro" ? (
@@ -528,30 +528,28 @@ const Layout = ({ children, user, onLogout, refreshUser }) => {
         </div>
       </main>
 
-      <Suspense fallback={null}>
-        {/* Settings Modal */}
-        <AnimatePresence>
-          {showSettings && (
-            <SettingsModal
-              onClose={() => setShowSettings(false)}
-              user={user}
-              refreshUser={refreshUser}
-            />
-          )}
-        </AnimatePresence>
+      {/* Settings Modal */}
+      <AnimatePresence>
+        {showSettings && (
+          <SettingsModal
+            onClose={() => setShowSettings(false)}
+            user={user}
+            refreshUser={refreshUser}
+          />
+        )}
+      </AnimatePresence>
 
-        {/* Logout Modal - Always rendered, controls its own visibility */}
-        <ConfirmLogoutModal
-          open={logoutModalOpen}
-          onClose={() => setLogoutModalOpen(false)}
-          onConfirm={handleConfirmLogout}
-          isProcessing={isLoggingOut}
-          title="Logout"
-          description="Are you sure you want to logout from this device?"
-          confirmLabel="Logout"
-          cancelLabel="Cancel"
-        />
-      </Suspense>
+      {/* Logout Modal - Always rendered, controls its own visibility */}
+      <ConfirmLogoutModal
+        open={logoutModalOpen}
+        onClose={() => setLogoutModalOpen(false)}
+        onConfirm={handleConfirmLogout}
+        isProcessing={isLoggingOut}
+        title="Logout"
+        description="Are you sure you want to logout from this device?"
+        confirmLabel="Logout"
+        cancelLabel="Cancel"
+      />
     </div>
   );
 };

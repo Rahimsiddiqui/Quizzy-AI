@@ -1,5 +1,6 @@
 import axios from "axios";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import { generateUniqueUsername } from "./usernameHelper.js";
 
 /**
@@ -29,19 +30,32 @@ export const exchangeCodeForToken = async (provider, code, redirectUri) => {
   }
 
   try {
-    const config = {
-      client_id: clientIds[provider],
-      client_secret: clientSecrets[provider],
-      code,
-      redirect_uri: redirectUri,
-      grant_type: "authorization_code",
-    };
+    const params = new URLSearchParams();
+    params.append("client_id", clientIds[provider]);
+    params.append("client_secret", clientSecrets[provider]);
+    params.append("code", code);
+    params.append("redirect_uri", redirectUri);
+    params.append("grant_type", "authorization_code");
 
-    const response = await axios.post(tokenEndpoints[provider], config, {
-      headers: {
-        Accept: "application/json",
-      },
-    });
+    console.log(`Exchanging code for token with ${provider}...`);
+    
+    // Google prefers application/x-www-form-urlencoded
+    const response = await axios.post(tokenEndpoints[provider], 
+      provider === 'google' ? params : {
+        client_id: clientIds[provider],
+        client_secret: clientSecrets[provider],
+        code,
+        redirect_uri: redirectUri,
+        grant_type: "authorization_code",
+      }, 
+      {
+        headers: {
+          Accept: "application/json",
+          ...(provider === 'google' && { "Content-Type": "application/x-www-form-urlencoded" })
+        },
+        timeout: 10000,
+      }
+    );
 
     if (response.data.error) {
       throw new Error(response.data.error_description || response.data.error);
@@ -62,7 +76,7 @@ export const exchangeCodeForToken = async (provider, code, redirectUri) => {
  */
 export const getOAuthUserInfo = async (provider, accessToken) => {
   const userInfoEndpoints = {
-    google: "https://www.googleapis.com/oauth2/v2/userinfo",
+    google: "https://openidconnect.googleapis.com/v1/userinfo",
     github: "https://api.github.com/user",
   };
 
@@ -72,6 +86,7 @@ export const getOAuthUserInfo = async (provider, accessToken) => {
         Authorization: `Bearer ${accessToken}`,
         Accept: "application/json",
       },
+      timeout: 10000, // 10 second timeout
     });
 
     let data = response.data;
@@ -87,6 +102,7 @@ export const getOAuthUserInfo = async (provider, accessToken) => {
               Authorization: `Bearer ${accessToken}`,
               Accept: "application/json",
             },
+            timeout: 10000, // 10 second timeout
           }
         );
         const primaryEmail = emailResponse.data.find((e) => e.primary);
@@ -105,7 +121,7 @@ export const getOAuthUserInfo = async (provider, accessToken) => {
         (data.given_name || "") + " " + (data.family_name || ""),
       picture: data.picture || data.avatar_url,
       provider,
-      providerId: data.id || data.sub,
+      providerId: data.sub || data.id,
     };
   } catch (error) {
     throw new Error(
@@ -121,14 +137,16 @@ export const getOAuthUserInfo = async (provider, accessToken) => {
  */
 export const linkOAuthAccount = async (user, provider, providerId, email) => {
   if (!user.connectedAccounts) {
-    user.connectedAccounts = {};
+    user.connectedAccounts = new Map();
+  } else if (!(user.connectedAccounts instanceof Map)) {
+    user.connectedAccounts = new Map(Object.entries(user.connectedAccounts));
   }
 
-  user.connectedAccounts[provider] = {
+  user.connectedAccounts.set(provider, {
     id: providerId,
     email,
     connectedAt: new Date(),
-  };
+  });
 
   return await user.save();
 };
@@ -151,8 +169,8 @@ export const findOrCreateOAuthUser = async (User, oauthData) => {
     return user;
   }
 
-  // Generate a random secure password so users can also login with email/password
-  const randomPassword = Math.random().toString(36).slice(-12) + "Aa1";
+  // Generate a cryptographically secure random password
+  const randomPassword = crypto.randomBytes(16).toString("hex") + "Aa1";
   const hashedPassword = await bcrypt.hash(randomPassword, 10);
 
   // Generate random unique username
@@ -161,24 +179,27 @@ export const findOrCreateOAuthUser = async (User, oauthData) => {
   // Create new user from OAuth data
   user = new User({
     name: oauthData.name,
-    username, // Set generated username
+    username,
     email: normalizedEmail,
     picture: oauthData.picture,
     password: hashedPassword,
-    passwordIsUserSet: false, // Mark as OAuth-generated password
+    passwordIsUserSet: false,
     isVerified: true,
     tier: "Free",
     limits: {
       generationsRemaining: 7,
       pdfUploadsRemaining: 3,
     },
-    connectedAccounts: {
-      [oauthData.provider]: {
-        id: oauthData.providerId,
-        email: normalizedEmail,
-        connectedAt: new Date(),
-      },
-    },
+    connectedAccounts: new Map([
+      [
+        oauthData.provider,
+        {
+          id: oauthData.providerId,
+          email: normalizedEmail,
+          connectedAt: new Date(),
+        },
+      ],
+    ]),
   });
 
   await user.save();

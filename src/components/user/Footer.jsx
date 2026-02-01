@@ -15,7 +15,7 @@ const Footer = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 mb-8 text-center md:text-left">
           {/* Brand */}
           <div>
-            <div className="flex items-center gap-2 font-bold text-lg text-primary dark:text-blue-400 mb-4 justify-center md:justify-start">
+            <div className="flex items-center gap-2 font-bold text-lg text-primary dark:text-blue-500 mb-4 justify-center md:justify-start">
               <img
                 src="/icons/favicon-main.avif"
                 className="w-10 h-10"
@@ -112,28 +112,28 @@ const Footer = () => {
             <div className="flex gap-6">
               <a
                 href="https://x.com/Qubli_AI"
-                className="text-textMuted hover:text-primary dark:hover:text-blue-500 transition-colors"
+                className="text-textMuted hover:text-primary transition-colors"
                 aria-label="Twitter"
               >
                 <Twitter className="w-5 h-5" />
               </a>
               <a
                 href="https://github.com/Qubli-AI"
-                className="text-textMuted hover:text-primary dark:hover:text-blue-500 transition-colors"
+                className="text-textMuted hover:text-primary transition-colors"
                 aria-label="Github"
               >
                 <Github className="w-5 h-5" />
               </a>
               <a
                 href="https://linkedin.com/in/qubli-ai"
-                className="text-textMuted hover:text-primary dark:hover:text-blue-500 transition-colors"
+                className="text-textMuted hover:text-primary transition-colors"
                 aria-label="LinkedIn"
               >
                 <Linkedin className="w-5 h-5" />
               </a>
               <a
                 href="mailto:qubli.ai.app@gmail.com"
-                className="text-textMuted hover:text-primary dark:hover:text-blue-500 transition-colors"
+                className="text-textMuted hover:text-primary transition-colors"
                 aria-label="Email"
               >
                 <Mail className="w-5 h-5" />

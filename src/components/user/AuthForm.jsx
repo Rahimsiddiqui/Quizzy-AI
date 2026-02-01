@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
+import crypto from "crypto";
 
 import {
   ArrowRight,
@@ -14,6 +15,7 @@ import {
 
 import { useNavigate } from "react-router-dom";
 import StorageService from "../../services/storageService";
+import SEO from "./SEO";
 
 const GoogleIcon = () => (
   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
@@ -137,12 +139,17 @@ const AuthForm = ({ onLogin }) => {
 
       // Build OAuth URL
       const redirectUri = `${window.location.origin}/oauth/callback`;
+      // Use window.crypto for browser compatibility while keeping the import
+      const state = window.crypto?.randomUUID 
+        ? window.crypto.randomUUID() 
+        : Math.random().toString(36).substring(2, 15);
+
       const params = new URLSearchParams({
         client_id: config.clientId,
         redirect_uri: redirectUri,
         response_type: "code",
         scope: config.scopes.join(" "),
-        state: Math.random().toString(36).substring(7),
+        state: state,
       });
 
       // Store mode (login vs register) and provider in localStorage for callback handler
@@ -173,6 +180,11 @@ const AuthForm = ({ onLogin }) => {
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden animate-fade-in-up">
+      {isLogin ? (
+        <SEO title="Login" description="Login to your account" />
+      ) : (
+        <SEO title="Register" description="Create your account" />
+      )}
       {/* Decorative Background */}
       <div className="absolute top-[-10%] left-[-10%] w-125 h-125 bg-blue-100 dark:bg-blue-900 rounded-full blur-[100px] pointer-events-none opacity-60"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-125 h-125 bg-indigo-100 dark:bg-indigo-950 rounded-full blur-[100px] pointer-events-none opacity-60"></div>
@@ -181,7 +193,7 @@ const AuthForm = ({ onLogin }) => {
         <div className="text-center mb-6">
           <img
             src="/icons/favicon-main.avif"
-            className="w-18 h-18 xs:w-20 xs:h-20 mb-4 mx-auto"
+            className="w-18 h-18 xs:w-20 xs:h-20 mb-3 mx-auto"
             alt="Brand Icon"
             loading="lazy"
             decoding="async"
@@ -376,7 +388,7 @@ const AuthForm = ({ onLogin }) => {
                 type="button"
                 onClick={() => handleOAuthConnect("Google")}
                 disabled={loading}
-                className="w-full flex items-center justify-center gap-2 bg-surfaceHighlight hover:bg-surface border border-border text-textMain font-medium py-2.5 rounded-xl transition-all transform hover:scale-[1.01] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 cursor-pointer"
+                className="w-full flex items-center justify-center gap-2 bg-surfaceHighlight hover:bg-surface dark:hover:bg-surface/10 border border-border text-textMain font-medium py-2.5 rounded-xl transition-all transform hover:scale-101 active:scale-98 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 cursor-pointer"
               >
                 <GoogleIcon />
                 <span className="text-sm">Google</span>
@@ -386,7 +398,7 @@ const AuthForm = ({ onLogin }) => {
                 type="button"
                 onClick={() => handleOAuthConnect("GitHub")}
                 disabled={loading}
-                className="w-full flex items-center justify-center gap-2 bg-surfaceHighlight hover:bg-surface border border-border text-textMain font-medium py-2.5 rounded-xl transition-all transform hover:scale-[1.01] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 cursor-pointer"
+                className="w-full flex items-center justify-center gap-2 bg-surfaceHighlight hover:bg-surface dark:hover:bg-surface/10 border border-border text-textMain font-medium py-2.5 rounded-xl transition-all transform hover:scale-101 active:scale-98 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 cursor-pointer"
               >
                 <Github className="w-4 h-4" />
                 <span className="text-sm">GitHub</span>

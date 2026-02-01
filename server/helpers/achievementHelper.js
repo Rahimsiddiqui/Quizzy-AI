@@ -45,7 +45,7 @@ const awardExp = async (user, expAmount, actionData = {}) => {
     ...actionData,
   };
 
-  const newAchievements = await checkAndUnlockAchievements(user, userData);
+  const newAchievements = checkAndUnlockAchievements(user, userData);
 
   return {
     expAwarded: expAmount,
@@ -226,28 +226,35 @@ const calculateAverageScore = (user, newScore, totalMarks) => {
  * @returns {boolean} Whether reset occurred
  */
 const checkExpReset = (user) => {
-  const lastReset = user.leaderboardLastReset || new Date();
+  const lastReset = user.leaderboardLastReset ? new Date(user.leaderboardLastReset) : new Date(0); // Epoch if null
   const now = new Date();
 
   let weeklyReset = false;
   let monthlyReset = false;
 
-  // Weekly reset (every Monday)
-  if (
-    lastReset.getDay() !== 1 ||
-    now.getTime() - lastReset.getTime() >= 7 * 24 * 60 * 60 * 1000
-  ) {
+  // Calculate start of current week (Monday 00:00:00)
+  const startOfWeek = new Date(now);
+  const day = startOfWeek.getDay(); // 0 (Sun) - 6 (Sat)
+  const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1); // Adjust to Monday
+  startOfWeek.setDate(diff);
+  startOfWeek.setHours(0, 0, 0, 0);
+
+  // Calculate start of current month (1st 00:00:00)
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  // Check Weekly Reset
+  if (lastReset < startOfWeek) {
     user.weeklyExp = 0;
     weeklyReset = true;
   }
 
-  // Monthly reset (first day of month)
-  if (
-    lastReset.getMonth() !== now.getMonth() ||
-    lastReset.getFullYear() !== now.getFullYear()
-  ) {
+  // Check Monthly Reset
+  if (lastReset < startOfMonth) {
     user.monthlyExp = 0;
     monthlyReset = true;
+  }
+
+  if (weeklyReset || monthlyReset) {
     user.leaderboardLastReset = now;
   }
 

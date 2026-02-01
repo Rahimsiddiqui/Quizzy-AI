@@ -2,8 +2,6 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 
 import {
-  Check,
-  ArrowRight,
   ArrowLeft,
   Printer,
   Layers,
@@ -1736,11 +1734,13 @@ const QuizTaker = ({ user, onComplete, onLimitUpdate }) => {
       htmlContent += `</div>`;
     });
 
+    const year = new Date().getFullYear();
+
     htmlContent += `
           </div>
 
           <footer>
-            <p>© Qubli AI | All rights reserved</p>
+            <p>©${year} Qubli AI | All rights reserved</p>
             <p>This document is confidential</p>
           </footer>
         </body>
@@ -2405,7 +2405,7 @@ const QuizTaker = ({ user, onComplete, onLimitUpdate }) => {
                         </>
                       ) : (
                         <>
-                          Submit Quiz <Check className="w-5 h-5" />
+                          Submit Quiz <span className="inline-block">✓</span>
                         </>
                       )}
                     </button>
@@ -2413,9 +2413,9 @@ const QuizTaker = ({ user, onComplete, onLimitUpdate }) => {
                     <button
                       onClick={handleNext}
                       disabled={!hasAnsweredCurrent}
-                      className="px-8 py-3 bg-primary hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-700/80 text-white dark:text-white/95 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors hover:shadow-sm shadow-blue-600/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none cursor-pointer"
+                      className="px-8 py-3 bg-primary hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-700/80 text-white dark:text-white/95 rounded-xl font-bold flex items-center justify-center gap-1.75 transition-colors hover:shadow-sm shadow-blue-600/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none cursor-pointer group"
                     >
-                      Next Question <ArrowRight className="w-5 h-5" />
+                      Next Question <span className={`inline-block group-hover:translate-x-${hasAnsweredCurrent ? "0.75" : "0"} transition-transform duration-200`}>→</span>
                     </button>
                   )}
                 </div>

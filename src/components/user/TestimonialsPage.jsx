@@ -1,153 +1,135 @@
-import { useNavigate } from "react-router-dom";
 import { Star } from "lucide-react";
+import ScrollAnimated from "./ScrollAnimated";
+import OptimizedImage from "./OptimizedImage";
+import PublicPageLayout from "./PublicPageLayout";
 
 const TestimonialsPage = () => {
-  const navigate = useNavigate();
-
   const testimonials = [
     {
       name: "Sarah Chen",
       role: "Pre-Med Student",
       rating: 5,
-      text: "Qubli AI completely transformed how I study. The AI-generated quizzes are so relevant and the flashcards help me retain information way better. I've improved my grades significantly!",
+      review: "Qubli AI completely transformed how I study. The AI-generated quizzes are so relevant and the flashcards help me retain information way better. I've improved my grades significantly!",
       image: "/images/review-sarah.png",
     },
     {
       name: "James Smith",
       role: "College Student",
       rating: 5,
-      text: "I improved my exam scores by 30% in just one month of using Qubli AI. The analytics showed exactly what I needed to focus on, and the study recommendations were spot-on.",
+      review: "I improved my exam scores by 30% in just one month of using Qubli AI. The analytics showed exactly what I needed to focus on, and the study recommendations were spot-on.",
       image: "/images/review-smith.png",
     },
     {
       name: "Dr. Emily Rodriguez",
       role: "High School Teacher",
       rating: 5,
-      text: "As a teacher, I use Qubli AI to create assessments for my students. It saves me so much time and the AI suggestions are incredibly accurate. My students love the interactive format!",
+      review: "As a teacher, I use Qubli AI to create assessments for my students. It saves me so much time and the AI suggestions are incredibly accurate. My students love the interactive format!",
       image: "/images/review-emily.avif",
     },
     {
       name: "James Lee",
       role: "MBA Student",
       rating: 5,
-      text: "The flashcard system with spaced repetition is incredible. I've tried many study apps, but Qubli AI is by far the most effective. The time I save allows me to focus on deeper learning.",
+      review: "The flashcard system with spaced repetition is incredible. I've tried many study apps, but Qubli AI is by far the most effective. The time I save allows me to focus on deeper learning.",
       image: "JL",
-      bg: "bg-blue-500",
+      bg: "bg-primary",
     },
     {
       name: "Priya Patel",
       role: "GMAT Test Taker",
       rating: 5,
-      text: "I used Qubli AI to prepare for the GMAT and scored 750! The AI-generated practice questions are incredibly close to the actual test format. Highly recommend!",
+      review: "I used Qubli AI to prepare for the GMAT and scored 750! The AI-generated practice questions are incredibly close to the actual test format. Highly recommend!",
       image: "PP",
-      bg: "bg-green-500",
+      bg: "bg-green-600",
     },
     {
       name: "David Thompson",
       role: "College Sophomore",
       rating: 5,
-      text: "The offline functionality is a game-changer. I can study anywhere without worrying about internet connection. Plus, the app is lightning-fast and never crashes.",
+      review: "The offline functionality is a game-changer. I can study anywhere without worrying about internet connection. Plus, the app is lightning-fast and never crashes.",
       image: "DT",
-      bg: "bg-yellow-500",
+      bg: "bg-amber-600",
     },
     {
       name: "Lisa Wang",
       role: "Medical Student",
       rating: 5,
-      text: "The detailed analytics help me understand my learning patterns. I can see which topics I'm strong in and where I need improvement. This data-driven approach changed my study strategy.",
+      review: "The detailed analytics help me understand my learning patterns. I can see which topics I'm strong in and where I need improvement. This data-driven approach changed my study strategy.",
       image: "LW",
-      bg: "bg-red-500",
+      bg: "bg-violet-600",
     },
     {
       name: "Ahmed Hassan",
       role: "Engineering Student",
       rating: 5,
-      text: "Qubli AI's ability to generate quizzes on complex technical topics is exceptional. The questions test real understanding, not just memorization. Best study tool I've found!",
+      review: "Qubli AI's ability to generate quizzes on complex technical topics is exceptional. The questions test real understanding, not just memorization. Best study tool I've found!",
       image: "AH",
-      bg: "bg-purple-500",
+      bg: "bg-purple-600",
     },
     {
       name: "Victoria Miller",
       role: "Law School Student",
       rating: 5,
-      text: "The customizable difficulty levels mean I can start easy and gradually increase the challenge. Perfect for building confidence and mastering difficult concepts progressively.",
+      review: "The customizable difficulty levels mean I can start easy and gradually increase the challenge. Perfect for building confidence and mastering difficult concepts progressively.",
       image: "VM",
-      bg: "bg-pink-500",
+      bg: "bg-pink-600",
     },
   ];
 
   return (
-    <div className="min-h-screen bg-background text-textMain dark:text-textMain/95 animate-fade-in-up">
-      {/* Hero Section */}
-      <section className="pt-40 py-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6">
-            Loved by <br />
-            <span className="text-primary dark:text-blue-500 bg-clip-text">
-              Students Worldwide
-            </span>
-          </h1>
-          <p className="text-lg sm:text-xl text-textMuted mb-8 max-w-2xl mx-auto">
-            Join thousands of students who've transformed their learning with
-            Qubli AI. Read their success stories below.
-          </p>
-        </div>
-      </section>
-
+    <PublicPageLayout
+      pageTitle="Testimonials"
+      description="Join thousands of students who've transformed their learning with Qubli AI. Read their success stories."
+      heroTitle="Loved by"
+      heroHighlight="Students Worldwide"
+      heroSubtitle="Join thousands of students who've transformed their learning with Qubli AI. Read their success stories below."
+      showCta={true}
+      ctaTitle="Ready to Join Our Community?"
+      ctaSubtitle="Start your learning journey with Qubli AI today."
+    >
       {/* Testimonials Grid */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-surface">
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {testimonials.map((testimonial, index) => (
-              <div
+              <ScrollAnimated
                 key={index}
-                className="p-8 bg-background dark:bg-background/75 rounded-2xl border border-border hover:border-primary/30 transition-all hover:shadow-lg hover:scale-102 animate-fade-in-up"
-                style={{ animationDelay: `${(index % 3) * 100}ms` }}
+                animationClass="animate-fade-in-up"
+                delay={(index / 2) * 100}
+                margin="-50px"
+                className="p-8 bg-surfaceHighlight/80 dark:bg-surfaceHighlight/50 rounded-xl border border-border hover:border-primary/30 dark:hover-bg-blue-800/80 transition-all hover:scale-101 duration-200 hover:shadow-md hover:shadow-primary/10"
               >
-                {/* Stars */}
                 <div className="flex gap-1 mb-4">
                   {[...Array(testimonial.rating)].map((_, i) => (
                     <Star
                       key={i}
-                      className="w-5 h-5 fill-yellow-400 text-yellow-400"
+                      className="w-5 h-5 fill-yellow-500 text-yellow-500"
                     />
                   ))}
                 </div>
-
-                {/* Testimonial Text */}
-                <p className="text-textMuted mb-6 text-lg leading-relaxed">
-                  "{testimonial.text}"
-                </p>
-
-                {/* User Info */}
-                <div className="flex items-center gap-4 pt-6 border-t border-border">
-                  {testimonial.bg ? (
-                    <div
-                      className={`w-12 h-12 rounded-full ${testimonial.bg} flex items-center justify-center`}
-                    >
-                      <span className="text-white text-lg font-bold">
-                        {testimonial.image}
-                      </span>
+                <p className="text-textMuted mb-6">{testimonial.review}</p>
+                <div className="flex items-center gap-3 pt-6 border-t border-border">
+                  {!testimonial.bg ? (
+                    <div className="w-12 h-12">
+                      <OptimizedImage
+                        className="w-12 h-12 rounded-full"
+                        src={testimonial.image}
+                        alt={testimonial.name}
+                      />
                     </div>
                   ) : (
-                    <img
-                      className="w-12 h-12 rounded-full"
-                      src={testimonial.image}
-                      alt={testimonial.name}
-                      loading="lazy"
-                      decoding="async"
-                    />
+                    <div className={`w-12 h-12 rounded-full text-white ${testimonial.bg} flex items-center justify-center text-xl font-bold uppercase`}>
+                      {testimonial.name.charAt(0)}
+                    </div>
                   )}
                   <div>
-                    <div className="font-semibold text-textMain">
+                    <span className="font-semibold text-textMain dark:text-textMain/95">
                       {testimonial.name}
-                    </div>
-                    <div className="text-sm text-textMuted">
-                      {testimonial.role}
-                    </div>
+                    </span>
+                    <p className="text-sm text-textMuted">{testimonial.role}</p>
                   </div>
                 </div>
-              </div>
+              </ScrollAnimated>
             ))}
           </div>
         </div>
@@ -155,54 +137,32 @@ const TestimonialsPage = () => {
 
       {/* Stats Section */}
       <section className="py-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
-            <div className="p-6 rounded-2xl bg-surface/80 glass border border-border hover:shadow-sm-custom hover:scale-104 transition-all duration-300">
-              <div className="text-4xl font-bold text-primary dark:text-blue-500 mb-2">
-                10K+
+        <ScrollAnimated
+          animationClass="animate-fade-in-up"
+          delay={200}
+          margin="-50px"
+          className="grid min-[500px]:grid-cols-3 text-center gap-4 sm:gap-18 max-w-5xl mx-auto"
+        >
+          {[
+            { number: "10K+", label: "Active Users" },
+            { number: "100K+", label: "Quizzes Created" },
+            { number: "4.9/5", label: "User Rating" },
+          ].map((item, index) => (
+            <div
+              key={index}
+              className="p-6 py-8 rounded-2xl max-w-xs bg-surface/80 glass border border-border hover:shadow-sm-custom hover:scale-102 transition-all duration-300"
+            >
+              <div className="text-3xl sm:text-4xl font-bold text-primary dark:text-blue-500">
+                {item.number}
               </div>
-              <div className="text-sm font-semibold text-textMuted uppercase tracking-wider mt-3">
-                Happy Students
-              </div>
-            </div>
-            <div className="p-6 rounded-2xl bg-surface/80 glass border border-border hover:shadow-sm-custom hover:scale-104 transition-all duration-300">
-              <div className="text-4xl font-bold text-primary dark:text-blue-500 mb-2">
-                4.9/5
-              </div>
-              <div className="text-sm font-semibold text-textMuted uppercase tracking-wider mt-3">
-                Average Rating
-              </div>
-            </div>
-            <div className="p-6 rounded-2xl bg-surface/80 glass border border-border hover:shadow-sm-custom hover:scale-104 transition-all duration-300">
-              <div className="text-4xl font-bold text-primary dark:text-blue-500 mb-2">
-                100K+
-              </div>
-              <div className="text-sm font-semibold text-textMuted uppercase tracking-wider mt-3">
-                Quizzes Created
+              <div className="text-sm font-semibold text-textMuted uppercase tracking-wider mt-2">
+                {item.label}
               </div>
             </div>
-          </div>
-        </div>
+          ))}
+        </ScrollAnimated>
       </section>
-
-      {/* CTA Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-linear-to-br from-primary/10 to-blue-600/10 border-t border-b border-border">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-            Ready to Join Our Community?
-          </h2>
-          <p className="text-lg text-textMuted mb-8">
-            Start your learning journey with Qubli AI today.
-          </p>
-          <button
-            onClick={() => navigate("/auth")}
-            className="px-10 py-3 rounded-xl bg-primary dark:bg-blue-700 text-white hover:text-white/95 font-bold text-lg hover:bg-blue-700 dark:hover:bg-blue-700/80 transition-colors hover:shadow-sm hover:shadow-primary/30 point"
-          >
-            Get Started Free
-          </button>
-        </div>
-      </section>
-    </div>
+    </PublicPageLayout>
   );
 };
 

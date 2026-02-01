@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.VITE_API_URL || "";
 const REQUEST_TIMEOUT = 30000; // 30 second timeout
 const REQUEST_CACHE = new Map(); // Simple in-memory cache for GET requests
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes cache for GET requests

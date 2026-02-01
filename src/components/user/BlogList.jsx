@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { m as motion } from "framer-motion";
-import { User, ArrowRight, Loader2 } from "lucide-react";
+import { User, Loader2, Eye } from "lucide-react";
 import blogService from "../../services/blogService";
-import SEO from "./SEO";
+import PublicPageLayout from "./PublicPageLayout";
 
 const BlogList = () => {
   const navigate = useNavigate();
@@ -27,45 +27,13 @@ const BlogList = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background text-textMain dark:text-textMain/95 animate-fade-in-up flex flex-col">
-      <SEO
-        title="AI Learning Blog"
-        description="Explore the latest insights on AI-powered study techniques, exam preparation tips, and Qubli AI feature updates."
-      />
-      {/* Hero Section */}
-      <section className="pt-32 pb-12 px-4 sm:px-6 lg:px-8 text-center relative">
-        <div className="max-w-4xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary dark:text-blue-500 dark:bg-blue-800/20 font-medium text-sm mb-6"
-          >
-            The Qubli AI Blog
-          </motion.div>
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-6"
-          >
-            Latest Insights
-            <br />
-            <span className="text-primary dark:text-blue-500 bg-clip-text">
-              & Updates
-            </span>
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="text-lg sm:text-xl text-textMuted mb-8 max-w-2xl mx-auto"
-          >
-            Explore the latest trends in AI learning, study tips, and
-            educational technology.
-          </motion.p>
-        </div>
-      </section>
-
+    <PublicPageLayout
+      pageTitle="Latest Blogs"
+      description="Explore the latest insights on AI-powered study techniques, exam preparation tips, and Qubli AI feature updates."
+      heroTitle="Latest Insights"
+      heroHighlight="& Updates"
+      heroSubtitle="Explore the latest trends in AI learning, study tips, and educational technology."
+    >
       {/* Blog Grid */}
       <section className="grow py-12 px-4 sm:px-6 lg:px-8 bg-surface/50">
         <div className="max-w-7xl mx-auto">
@@ -98,8 +66,8 @@ const BlogList = () => {
                       className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
                     />
                     {blog.tags && blog.tags.length > 0 && (
-                      <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-sm px-3 py-1 rounded-full border border-white/10">
-                        <span className="text-xs font-semibold text-white tracking-wide">
+                      <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-sm px-3 pt-0.5 py-1 rounded-full border border-white/10">
+                        <span className="text-xs font-semibold text-center text-white tracking-wide">
                           {blog.tags[0]}
                         </span>
                       </div>
@@ -132,9 +100,9 @@ const BlogList = () => {
 
                     <button
                       onClick={() => navigate(`/blogs/${blog.slug}`)}
-                      className="flex items-center gap-2 text-primary dark:text-blue-500 font-semibold text-sm group-hover:gap-3 transition-all"
+                      className="flex items-center gap-1 text-primary dark:text-blue-500 font-semibold text-sm transition-all group"
                     >
-                      Read Article <ArrowRight size={16} />
+                      Read Article <span className="inline-block group-hover:translate-x-0.5 transition-transform duration-200">→</span>
                     </button>
                   </div>
                 </motion.div>
@@ -143,7 +111,7 @@ const BlogList = () => {
           )}
         </div>
       </section>
-    </div>
+    </PublicPageLayout>
   );
 };
 

@@ -1,5 +1,5 @@
-import { generateAndSaveReview } from "../../src/services/geminiService.js";
-import StorageService from "../../src/services/storageService.js";
+import { generateAndSaveReview } from "../services/geminiService.js";
+import StorageService from "../services/storageService.js";
 
 const handleQuizCompletion = async (completedQuiz, user, navigate) => {
   try {

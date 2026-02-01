@@ -921,7 +921,7 @@ const Dashboard = ({ user }) => {
                     No quizzes yet.{" "}
                     <Link
                       to="/generate"
-                      className="text-primary dark:text-blue-500 hover:underline"
+                      className="text-primary dark:text-blue-400 hover:underline"
                     >
                       Create one!
                     </Link>

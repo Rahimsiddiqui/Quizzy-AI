@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Check, ArrowRight, ChevronDown, Star, Zap, Crown } from "lucide-react";
+import PublicPageLayout from "./PublicPageLayout";
 
 const Pricing = () => {
   const [expandedFaq, setExpandedFaq] = useState(null);
@@ -147,34 +148,18 @@ const Pricing = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background text-textMain dark:text-textMain/95 animate-fade-in-up">
-      {/* SEO Section */}
-      <section>
-        <title>Pricing | Qubli AI - Flexible Study Plans</title>
-        <meta
-          name="description"
-          content="Choose the perfect plan for your learning. From Free Starter to Pro Mastermind."
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
-        />
-      </section>
-
-      {/* Hero Section */}
-      <section className="pt-40 py-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-6">
-            Simple, Transparent <br />
-            <span className="text-primary dark:text-blue-500 bg-clip-text">
-              Pricing
-            </span>
-          </h1>
-          <p className="text-lg sm:text-xl text-textMuted mb-8 max-w-2xl mx-auto">
-            {pricingData.intro}
-          </p>
-        </div>
-      </section>
+    <PublicPageLayout
+      pageTitle="Pricing Plans"
+      description="Choose the perfect plan for your learning. From Free Starter to Pro Mastermind."
+      heroTitle="Simple, Transparent"
+      heroHighlight="Pricing"
+      heroSubtitle={pricingData.intro}
+    >
+      {/* Schema for FAQ */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+      />
 
       {/* Pricing Cards Section */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-surface">
@@ -386,7 +371,7 @@ const Pricing = () => {
           Last updated: Dec 25, 2025
         </p>
       </section>
-    </div>
+    </PublicPageLayout>
   );
 };
 

@@ -40,8 +40,9 @@ async function retryGeminiRequest(fn, retries = 5, baseDelay = 1000) {
       lastError = err;
       const status = err.response?.status || err.status;
 
-      // Retry only on overload (503), rate-limit (429), or internal errors (500)
-      if (status === 503 || status === 429 || status === 500) {
+      // Retry only on overload (503), rate-limit (429), or internal errors (5xx)
+      // Do NOT retry on 400 (Bad Request), 401 (Unauthorized), 403 (Forbidden), or 404 (Not Found)
+      if (status === 503 || status === 429 || (status >= 500 && status < 600) || !status) {
         // Use exponential backoff with jitter
         const exponentialDelay = baseDelay * Math.pow(2, i);
         const jitter = Math.random() * 1000;
@@ -53,7 +54,6 @@ async function retryGeminiRequest(fn, retries = 5, baseDelay = 1000) {
         );
         await new Promise((res) => setTimeout(res, waitTime));
       } else if (i === retries - 1) {
-        // Last attempt failed
         throw err;
       } else {
         // For other errors, we still attempt a standard retry as transient network issues occur
@@ -108,7 +108,7 @@ const mapStringTypeToEnum = (typeStr) => {
 
   if (normalized.includes("fill")) return QuestionType.FillInTheBlank;
 
-  return QuestionType.MCQ; // fallback
+  return QuestionType.MCQ; 
 };
 
 /**
@@ -331,9 +331,12 @@ ${
     if (!transcriptText) {
       try {
         console.log("Starting fallback scrape...");
-        // Rotating User-Agents typically helps, but here we stick to a standard modern Chrome one
         const USER_AGENT =
           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36";
+
+        // Add timeout for YouTube fetch
+        const ytController = new AbortController();
+        const ytTimeout = setTimeout(() => ytController.abort(), 10000); // 10 second timeout
 
         const pageResp = await fetch(
           `https://www.youtube.com/watch?v=${videoId}`,
@@ -342,15 +345,15 @@ ${
               "User-Agent": USER_AGENT,
               "Accept-Language": "en-US,en;q=0.9",
             },
+            signal: ytController.signal,
           }
         );
+        clearTimeout(ytTimeout);
+
         const html = await pageResp.text();
 
         // Check for specific blocking indicators
-        if (
-          html.includes("Sign in to confirm your age") ||
-          html.includes("Sign in to continue")
-        ) {
+        if (html.includes("Sign in")) {
           console.warn("YouTube Sign-in/Age Restriction detected.");
           throw new Error(
             "This video is age-restricted or requires sign-in. The server cannot access it automatically."
@@ -378,14 +381,17 @@ ${
             const fetchHeaders = {
               "User-Agent": USER_AGENT,
               Referer: `https://www.youtube.com/watch?v=${videoId}`,
-              // Note: passing cookies often fails due to session mismatch with signature, so we omit them to rely on public access
             };
 
             // Try JSON3 format first
             console.log("Fetching transcript (json3)...");
+            const capController = new AbortController();
+            const capTimeout = setTimeout(() => capController.abort(), 10000);
             const capResp = await fetch(`${baseUrl}&fmt=json3`, {
               headers: fetchHeaders,
+              signal: capController.signal,
             });
+            clearTimeout(capTimeout);
             const capText = await capResp.text();
 
             if (capText.trim().startsWith("{")) {
@@ -400,7 +406,10 @@ ${
             // If JSON3 is empty/failed, try XML parsing fallback
             if (!transcriptText) {
               console.log("JSON3 failed/empty, trying XML...");
-              const xmlResp = await fetch(baseUrl, { headers: fetchHeaders });
+              const xmlController = new AbortController();
+              const xmlTimeout = setTimeout(() => xmlController.abort(), 10000);
+              const xmlResp = await fetch(baseUrl, { headers: fetchHeaders, signal: xmlController.signal });
+              clearTimeout(xmlTimeout);
               const xml = await xmlResp.text();
 
               // Check for empty body specifically
@@ -427,7 +436,7 @@ ${
         }
       } catch (scrapeErr) {
         console.warn("Scraping fallback failed:", scrapeErr.message);
-        // If we identified a specific error (like age restriction), re-throw it to be caught below
+        // If we identified a specific error (e.g; age restriction), re-throw it to be caught below
         if (
           scrapeErr.message.includes("age-restricted") ||
           scrapeErr.message.includes("requires sign-in")
@@ -437,7 +446,7 @@ ${
       }
     }
 
-    // FINAL CHECK: Only error out if EVERYTHING failed
+    // final check: Only error out if everything failed
     if (!transcriptText || transcriptText.trim().length === 0) {
       console.error(
         `Failed to fetch transcript for ${videoId} after all attempts.`
@@ -658,18 +667,26 @@ Guidelines:
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       }).then(async (res) => {
-        if (!res.ok) throw new Error("Gemini Review API Error");
+        if (!res.ok) {
+          const errorText = await res.text();
+          console.error(`Gemini Review API Error: ${res.status} - ${errorText}`);
+          throw new Error(`Gemini Review API Error: ${res.status}`);
+        }
         return res;
       })
     );
 
     const resultJson = await response.json();
-    return (
-      resultJson.candidates?.[0]?.content?.parts?.[0]?.text ||
-      "Review unavailable."
-    );
+    const reviewText = resultJson.candidates?.[0]?.content?.parts?.[0]?.text;
+
+    if (!reviewText) {
+      console.warn("Gemini returned an empty review candidate.");
+      return "Review unavailable at this moment.";
+    }
+
+    return reviewText;
   } catch (err) {
-    console.error("Review Error:", err);
+    console.error("Performance Review Logic Error:", err);
     throw new Error("Failed to generate performance review.");
   }
 };
@@ -782,11 +799,18 @@ export const gradeAnswerHelper = async (user, question, userAnswer, topic) => {
     if (!grading) throw new Error("Failed to parse grading result.");
 
     const max = question.marks || 1;
+
+    // Robust marks parsing: handle "4.5/5", "4.5", 4.5
+    let awarded = 0;
+    if (typeof grading.marksAwarded === "number") {
+      awarded = grading.marksAwarded;
+    } else if (typeof grading.marksAwarded === "string") {
+      const match = grading.marksAwarded.match(/([\d.]+)/);
+      awarded = match ? parseFloat(match[1]) : 0;
+    }
+
     return {
-      marksAwarded: Math.max(
-        0,
-        Math.min(max, Number(grading.marksAwarded) || 0)
-      ),
+      marksAwarded: Math.max(0, Math.min(max, awarded)),
       totalMarks: max,
       justification: grading.justification || "Evaluated by AI examiner.",
       suggestion: grading.suggestion || "Review the key concepts.",

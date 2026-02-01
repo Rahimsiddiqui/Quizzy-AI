@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { Sparkles, ArrowLeft, Loader2, Zap } from "lucide-react";
+import { Sparkles, Loader2, Zap } from "lucide-react";
 import DemoQuizTaker from "./DemoQuizTaker";
 import { generateDemoQuiz } from "../../services/geminiService";
 

@@ -6,6 +6,11 @@
  */
 
 const checkMonthlyReset = async (user, TIER_LIMITS) => {
+  // User validation
+  if (!user || !user.limits || !user.tier || !TIER_LIMITS[user.tier]) {
+    return user;
+  }
+
   const now = Date.now();
   const lastReset = new Date(user.limits.lastReset);
   const currentDate = new Date(now);
@@ -28,9 +33,10 @@ const checkMonthlyReset = async (user, TIER_LIMITS) => {
     user.limits.maxQuestions = limits.maxQuestions;
     user.limits.maxMarks = limits.maxMarks;
 
-    user.limits.lastReset = now; // Update the reset timestamp
+    user.limits.lastReset = now; 
 
-    await user.save(); // Persist changes to the database
+    // Save user to database
+    await user.save(); 
   }
   return user;
 };
